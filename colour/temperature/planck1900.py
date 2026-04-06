@@ -33,7 +33,15 @@ if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, DTypeFloat, NDArrayFloat
 
 from colour.models import UCS_to_uv, XYZ_to_UCS
-from colour.utilities import as_float, as_float_array, required
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    required,
+    xp_asarray,
+    xp_atleast_1d,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -94,15 +102,18 @@ def uv_to_CCT_Planck1900(
     from scipy.optimize import minimize  # noqa: PLC0415
 
     uv = as_float_array(uv)
+
+    xp = array_namespace(uv)
+
     cmfs, _illuminant = handle_spectral_arguments(cmfs)
 
     shape = uv.shape
-    uv = np.atleast_1d(np.reshape(uv, (-1, 2)))
+    uv = xp_atleast_1d(xp_reshape(uv, (-1, 2), xp=xp), xp=xp)
 
     def objective_function(CCT: NDArrayFloat, uv: NDArrayFloat) -> DTypeFloat:
         """Objective function."""
 
-        objective = np.linalg.norm(CCT_to_uv_Planck1900(CCT, cmfs) - uv)
+        objective = np.linalg.norm(CCT_to_uv_Planck1900(CCT, cmfs) - np.asarray(uv))
 
         return as_float(objective)
 
@@ -127,7 +138,8 @@ def uv_to_CCT_Planck1900(
         ]
     )
 
-    return as_float(np.reshape(CCT, shape[:-1]))
+    CCT = xp_asarray(CCT, xp=xp, like=uv)
+    return as_float(xp_reshape(CCT, shape[:-1], xp=xp))
 
 
 def CCT_to_uv_Planck1900(
@@ -163,10 +175,23 @@ def CCT_to_uv_Planck1900(
     """
 
     CCT = as_float_array(CCT)
+
+    xp = array_namespace(CCT)
+
     cmfs, _illuminant = handle_spectral_arguments(cmfs)
 
+    spd = (
+        planck_law(
+            cmfs.wavelengths * 1e-9,
+            xp_reshape(CCT, (-1,), xp=xp),
+        )
+        * 1e-9
+    )
+    if spd.ndim >= 2:
+        spd = xp.matrix_transpose(spd)
+
     XYZ = msds_to_XYZ_integration(
-        np.transpose(planck_law(cmfs.wavelengths * 1e-9, np.ravel(CCT)) * 1e-9),
+        spd,
         cmfs,
         shape=cmfs.shape,
     )
@@ -174,4 +199,4 @@ def CCT_to_uv_Planck1900(
     UVW = XYZ_to_UCS(XYZ)
     uv = UCS_to_uv(UVW)
 
-    return np.reshape(uv, [*list(CCT.shape), 2])
+    return xp_reshape(uv, [*list(CCT.shape), 2], xp=xp)

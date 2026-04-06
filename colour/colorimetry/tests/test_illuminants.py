@@ -16,10 +16,15 @@ from colour.colorimetry import (
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 
 if typing.TYPE_CHECKING:
-    from colour.hints import NDArrayFloat
+    from colour.hints import NDArrayFloat, ModuleType
 
 from colour.temperature import CCT_to_xy_CIE_D
-from colour.utilities import ignore_numpy_errors
+from colour.utilities import (
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -148,7 +153,7 @@ sd_CIE_standard_illuminant_A` definition unit tests methods.
 sd_CIE_standard_illuminant_A` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_CIE_standard_illuminant_A(SpectralShape(360, 830, 5)).values,
             DATA_A,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -178,7 +183,7 @@ sd_CIE_illuminant_D_series` definition.
             sd_r = SDS_ILLUMINANTS[name]
             sd_t = sd_CIE_illuminant_D_series(xy)
 
-            np.testing.assert_allclose(
+            xp_assert_close(
                 sd_r.values,
                 sd_t[sd_r.wavelengths],
                 atol=tolerance,
@@ -191,48 +196,48 @@ class TestDaylightLocusFunction:
     definition unit tests methods.
     """
 
-    def test_daylight_locus_function(self) -> None:
+    def test_daylight_locus_function(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.illuminants.daylight_locus_function`
         definition.
         """
 
-        np.testing.assert_allclose(
-            daylight_locus_function(0.31270),
+        xp_assert_close(
+            daylight_locus_function(xp_asarray(0.31270, xp=xp)),
             0.329105129999999,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            daylight_locus_function(0.34570),
+        xp_assert_close(
+            daylight_locus_function(xp_asarray(0.34570, xp=xp)),
             0.358633529999999,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            daylight_locus_function(0.44758),
+        xp_assert_close(
+            daylight_locus_function(xp_asarray(0.44758, xp=xp)),
             0.408571030799999,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_daylight_locus_function(self) -> None:
+    def test_n_dimensional_daylight_locus_function(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.illuminants.daylight_locus_function`
         definition n-dimensional support.
         """
 
-        x_D = np.array([0.31270])
-        y_D = daylight_locus_function(x_D)
+        x_D = xp_asarray([0.31270], xp=xp)
+        y_D = np.asarray(daylight_locus_function(x_D))
 
-        x_D = np.tile(x_D, (6, 1))
-        y_D = np.tile(y_D, (6, 1))
-        np.testing.assert_allclose(
+        x_D = xp.tile(xp_asarray(x_D, xp=xp), (6, 1))
+        y_D = xp.tile(xp_asarray(y_D, xp=xp), (6, 1))
+        xp_assert_close(
             daylight_locus_function(x_D), y_D, atol=TOLERANCE_ABSOLUTE_TESTS
         )
 
-        x_D = np.reshape(x_D, (2, 3, 1))
-        y_D = np.reshape(y_D, (2, 3, 1))
-        np.testing.assert_allclose(
+        x_D = xp_reshape(xp_asarray(x_D, xp=xp), (2, 3, 1), xp=xp)
+        y_D = xp_reshape(xp_asarray(y_D, xp=xp), (2, 3, 1), xp=xp)
+        xp_assert_close(
             daylight_locus_function(x_D), y_D, atol=TOLERANCE_ABSOLUTE_TESTS
         )
 

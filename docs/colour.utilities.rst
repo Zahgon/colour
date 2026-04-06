@@ -140,6 +140,60 @@ Array
     tstack
     zeros
 
+Array API
+---------
+
+``colour.utilities``
+
+.. currentmodule:: colour.utilities
+
+.. autosummary::
+    :toctree: generated/
+    :template: class.rst
+
+    array_api_enable
+    trace_array_namespace
+
+.. autosummary::
+    :toctree: generated/
+
+    ARRAY_API_ENABLED
+    array_namespace
+    xp_astype
+    xp_atleast_1d
+    xp_atleast_2d
+    xp_average
+    xp_create_diagonal
+    xp_degrees
+    xp_gradient
+    xp_insert
+    xp_interp
+    xp_isclose
+    xp_isin
+    xp_linspace
+    xp_lstsq
+    xp_median
+    xp_nan_to_num
+    xp_nanmean
+    xp_pad
+    xp_radians
+    xp_reshape
+    xp_resize
+    xp_round
+    xp_select
+    xp_setxor1d
+    xp_sinc
+    xp_trapezoid
+    xp_unique
+    as_ndarray
+    xp_assert_close
+    xp_assert_equal
+    is_array_api_enabled
+    is_non_ndarray
+    is_numpy_namespace
+    set_array_api_enabled
+    xp_asarray
+
 Data Structures
 ---------------
 

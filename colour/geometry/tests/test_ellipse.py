@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
@@ -11,6 +16,7 @@ from colour.geometry import (
     ellipse_fitting_Halir1998,
     point_at_angle_on_ellipse,
 )
+from colour.utilities import xp_asarray, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -33,23 +39,23 @@ class TestEllipseCoefficientsCanonicalForm:
     definition unit tests methods.
     """
 
-    def test_ellipse_coefficients_canonical_form(self) -> None:
+    def test_ellipse_coefficients_canonical_form(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.geometry.ellipse.\
 ellipse_coefficients_canonical_form` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ellipse_coefficients_canonical_form(
-                np.array([2.5, -3.0, 2.5, -1.0, -1.0, -3.5])
+                xp_asarray([2.5, -3.0, 2.5, -1.0, -1.0, -3.5], xp=xp)
             ),
             np.array([0.5, 0.5, 2, 1, 45]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ellipse_coefficients_canonical_form(
-                np.array([1.0, 0.0, 1.0, 0.0, 0.0, -1.0])
+                xp_asarray([1.0, 0.0, 1.0, 0.0, 0.0, -1.0], xp=xp)
             ),
             np.array([0.0, 0.0, 1, 1, 0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -62,20 +68,20 @@ class TestEllipseCoefficientsGeneralForm:
     definition unit tests methods.
     """
 
-    def test_ellipse_coefficients_general_form(self) -> None:
+    def test_ellipse_coefficients_general_form(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.geometry.ellipse.ellipse_coefficients_general_form`
         definition.
         """
 
-        np.testing.assert_allclose(
-            ellipse_coefficients_general_form(np.array([0.5, 0.5, 2, 1, 45])),
+        xp_assert_close(
+            ellipse_coefficients_general_form(xp_asarray([0.5, 0.5, 2, 1, 45], xp=xp)),
             np.array([2.5, -3.0, 2.5, -1.0, -1.0, -3.5]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            ellipse_coefficients_general_form(np.array([0.0, 0.0, 1, 1, 0])),
+        xp_assert_close(
+            ellipse_coefficients_general_form(xp_asarray([0.0, 0.0, 1, 1, 0], xp=xp)),
             np.array([1.0, 0.0, 1.0, 0.0, 0.0, -1.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
@@ -87,23 +93,25 @@ class TestPointAtAngleOnEllipse:
     definition unit tests methods.
     """
 
-    def test_point_at_angle_on_ellipse(self) -> None:
+    def test_point_at_angle_on_ellipse(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.geometry.ellipse.point_at_angle_on_ellipse`
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             point_at_angle_on_ellipse(
-                np.array([0, 90, 180, 270]), np.array([0.0, 0.0, 2, 1, 0])
+                xp_asarray([0, 90, 180, 270], xp=xp),
+                xp_asarray([0.0, 0.0, 2, 1, 0], xp=xp),
             ),
             np.array([[2, 0], [0, 1], [-2, 0], [0, -1]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             point_at_angle_on_ellipse(
-                np.linspace(0, 360, 10), np.array([0.5, 0.5, 2, 1, 45])
+                xp_asarray(np.linspace(0, 360, 10), xp=xp),
+                xp_asarray([0.5, 0.5, 2, 1, 45], xp=xp),
             ),
             np.array(
                 [
@@ -129,14 +137,16 @@ class TestEllipseFittingHalir1998:
     definition unit tests methods.
     """
 
-    def test_ellipse_fitting_Halir1998(self) -> None:
+    def test_ellipse_fitting_Halir1998(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.geometry.ellipse.ellipse_fitting_Halir1998`
         definition.
         """
 
-        np.testing.assert_allclose(
-            ellipse_fitting_Halir1998(np.array([[2, 0], [0, 1], [-2, 0], [0, -1]])),
+        xp_assert_close(
+            ellipse_fitting_Halir1998(
+                xp_asarray([[2, 0], [0, 1], [-2, 0], [0, -1]], xp=xp)
+            ),
             np.array(
                 [
                     0.24253563,

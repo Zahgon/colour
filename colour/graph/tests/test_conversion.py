@@ -21,7 +21,10 @@ from colour.models import (  # noqa: E402
     RGB_COLOURSPACE_ACES2065_1,
     XYZ_to_Lab,
 )
-from colour.utilities import get_domain_range_scale_metadata  # noqa: E402
+from colour.utilities import (  # noqa: E402
+    get_domain_range_scale_metadata,
+    xp_assert_close,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -77,14 +80,14 @@ class TestConvert:
             "Spectral Distribution",
             "sRGB",
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_a,
             np.array([0.49034776, 0.30185875, 0.23587685]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         Jpapbp = convert(RGB_a, "Output-Referred RGB", "CAM16UCS")
-        np.testing.assert_allclose(
+        xp_assert_close(
             Jpapbp,
             np.array([0.40738741, 0.12046560, 0.09284385]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -94,21 +97,21 @@ class TestConvert:
         # NOTE: The "CIE XYZ" tristimulus values to "sRGB" matrix is given
         # rounded at 4 decimals as per "IEC 61966-2-1:1999" and thus preventing
         # exact roundtrip.
-        np.testing.assert_allclose(RGB_a, RGB_b, atol=1e-4)
+        xp_assert_close(RGB_a, RGB_b, atol=TOLERANCE_ABSOLUTE_TESTS * 1000)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert("#808080", "Hexadecimal", "Scene-Referred RGB"),
             np.array([0.21586050, 0.21586050, 0.21586050]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert("#808080", "Hexadecimal", "RGB Luminance"),
             0.21586050,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert(
                 convert(
                     np.array([0.5, 0.5, 0.5]),
@@ -122,7 +125,7 @@ class TestConvert:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert(
                 RGB_a,
                 "RGB",
@@ -150,7 +153,7 @@ class TestConvert:
 
         a = np.array([0.20654008, 0.12197225, 0.05136952])
         illuminant = CCS_ILLUMINANTS["CIE 1931 2 Degree Standard Observer"]["D50"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert(a, "CIE XYZ", "CIE UVW", XYZ_to_UVW={"illuminant": illuminant}),
             convert(a, "CIE XYZ", "CIE UVW", illuminant=illuminant),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -184,7 +187,7 @@ class TestConvert:
         range_scale = metadata["range"]
         Lab_manual_scaled = Lab_manual * range_scale
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             Lab_auto,
             Lab_manual_scaled,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -202,7 +205,7 @@ class TestConvert:
         Lab_manual_normalized = Lab_native / range_scale
         XYZ_manual = convert(Lab_manual_normalized, "CIE Lab", "CIE XYZ")
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_auto,
             XYZ_manual,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -220,7 +223,7 @@ class TestConvert:
             from_reference_scale=True,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_roundtrip,
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -233,7 +236,7 @@ class TestConvert:
         LCHab = convert(XYZ, "CIE XYZ", "CIE LCHab", to_reference_scale=True)
 
         # L component should be identical
-        np.testing.assert_allclose(
+        xp_assert_close(
             Lab[0],
             LCHab[0],
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -241,7 +244,7 @@ class TestConvert:
 
         # C should equal sqrt(a^2 + b^2)
         expected_C = np.sqrt(Lab[1] ** 2 + Lab[2] ** 2)
-        np.testing.assert_allclose(
+        xp_assert_close(
             LCHab[1],
             expected_C,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -255,7 +258,7 @@ class TestConvert:
             from_reference_scale=True,
             to_reference_scale=True,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             Lab_roundtrip,
             Lab,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -268,7 +271,7 @@ class TestConvert:
             from_reference_scale=True,
             to_reference_scale=True,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             LCHab_roundtrip,
             LCHab,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -279,7 +282,7 @@ class TestConvert:
         LCHuv = convert(XYZ, "CIE XYZ", "CIE LCHuv", to_reference_scale=True)
 
         # L component should be identical
-        np.testing.assert_allclose(
+        xp_assert_close(
             Luv[0],
             LCHuv[0],
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -287,7 +290,7 @@ class TestConvert:
 
         # C should equal sqrt(u^2 + v^2)
         expected_C = np.sqrt(Luv[1] ** 2 + Luv[2] ** 2)
-        np.testing.assert_allclose(
+        xp_assert_close(
             LCHuv[1],
             expected_C,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -301,7 +304,7 @@ class TestConvert:
             from_reference_scale=True,
             to_reference_scale=True,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             Luv_roundtrip,
             Luv,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -314,7 +317,7 @@ class TestConvert:
             from_reference_scale=True,
             to_reference_scale=True,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             LCHuv_roundtrip,
             LCHuv,
             atol=TOLERANCE_ABSOLUTE_TESTS,

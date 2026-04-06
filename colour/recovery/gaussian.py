@@ -9,8 +9,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from colour.characterisation import SDS_COLOURCHECKERS
 from colour.colorimetry import (
     CCS_ILLUMINANTS,
@@ -30,7 +28,14 @@ from colour.colorimetry import (
 from colour.difference import delta_E
 from colour.models import RGB_Colourspace, RGB_COLOURSPACE_sRGB, XYZ_to_Lab, XYZ_to_RGB
 from colour.recovery.smits1999 import RGB_to_msds_Smits1999, RGB_to_sd_Smits1999
-from colour.utilities import as_float, optional, required
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    optional,
+    required,
+    xp_asarray,
+)
 
 if TYPE_CHECKING:
     from colour.hints import ArrayLike, Domain1, DTypeFloat, NDArrayFloat, Range1
@@ -244,21 +249,26 @@ def optimise_gaussian_basis_parameters(
 
     # XYZ values for round-trip optimization (RGB, CMY, grey)
     M = colourspace.matrix_RGB_to_XYZ
-    XYZ_c = np.array(
+
+    xp = array_namespace(M)
+
+    XYZ_c = xp_asarray(
         [
-            np.dot(M, [1, 0, 0]),  # Red
-            np.dot(M, [0, 1, 0]),  # Green
-            np.dot(M, [0, 0, 1]),  # Blue
-            np.dot(M, [0, 1, 1]),  # Cyan
-            np.dot(M, [1, 0, 1]),  # Magenta
-            np.dot(M, [1, 1, 0]),  # Yellow
-            np.dot(M, [0.5, 0.5, 0.5]),  # Grey
-        ]
+            xp.matmul(M, [1, 0, 0]),  # Red
+            xp.matmul(M, [0, 1, 0]),  # Green
+            xp.matmul(M, [0, 0, 1]),  # Blue
+            xp.matmul(M, [0, 1, 1]),  # Cyan
+            xp.matmul(M, [1, 0, 1]),  # Magenta
+            xp.matmul(M, [1, 1, 0]),  # Yellow
+            xp.matmul(M, [0.5, 0.5, 0.5]),  # Grey
+        ],
+        xp=xp,
     )
 
     sds_cc_r = list(SDS_COLOURCHECKERS["ISO 17321-1"].values())
-    XYZ_cc_r = np.array(
-        [sd_to_XYZ(sd, cmfs=cmfs, illuminant=illuminant) / 100 for sd in sds_cc_r]
+    XYZ_cc_r = xp_asarray(
+        [sd_to_XYZ(sd, cmfs=cmfs, illuminant=illuminant) / 100 for sd in sds_cc_r],
+        xp=xp,
     )
     RGB_cc_r = XYZ_to_RGB(XYZ_cc_r, colourspace)
     Lab_cc_r = XYZ_to_Lab(XYZ_cc_r)
@@ -325,30 +335,35 @@ def optimise_gaussian_basis_parameters(
             name="Gaussian Basis (Optimisation)",
         )
 
+        spd_vals = as_float_array(
+            RGB_to_msds_Smits1999(XYZ_to_RGB(XYZ_c, colourspace), basis)
+        )
+        xp = array_namespace(spd_vals)
         msds = MultiSpectralDistributions(
-            np.transpose(RGB_to_msds_Smits1999(XYZ_to_RGB(XYZ_c, colourspace), basis)),
+            xp.transpose(spd_vals),
             basis.wavelengths,
             labels=[str(i) for i in range(len(XYZ_c))],
         )
         XYZ_t = msds_to_XYZ_integration(msds, cmfs, illuminant) / 100
 
         # Colorimetric error for primaries/secondaries
-        colorimetric_error = np.sum((XYZ_t - XYZ_c) ** 2)
+        colorimetric_error = xp.sum(as_float_array((XYZ_t - XYZ_c) ** 2))
 
         # ColorChecker Delta E error
+        spd_vals_cc = as_float_array(RGB_to_msds_Smits1999(RGB_cc_r, basis))
         msds_cc_t = MultiSpectralDistributions(
-            np.transpose(RGB_to_msds_Smits1999(RGB_cc_r, basis)),
+            xp.transpose(spd_vals_cc),
             basis.wavelengths,
             labels=[str(i) for i in range(len(RGB_cc_r))],
         )
         XYZ_cc_t = msds_to_XYZ_integration(msds_cc_t, cmfs, illuminant) / 100
         Lab_cc_t = XYZ_to_Lab(XYZ_cc_t)
         delta_E_cc = delta_E(Lab_cc_r, Lab_cc_t, method="CIE 2000")
-        colorchecker_error = np.mean(delta_E_cc)
+        colorchecker_error = xp.mean(as_float_array(delta_E_cc))
 
         # Smoothness penalty: penalize deviation from standard Gaussian (exp=2)
-        exponents = np.array([R_exp, G_exp, B_exp, C_exp, M_exp, Y_exp])
-        smoothness_penalty = np.sum((exponents - 2.0) ** 2) * smoothness_penalty_weight
+        exponents = xp_asarray([R_exp, G_exp, B_exp, C_exp, M_exp, Y_exp], xp=xp)
+        smoothness_penalty = xp.sum((exponents - 2.0) ** 2) * smoothness_penalty_weight
 
         # Combined loss: colorimetric error + ColorChecker Delta E + smoothness
         return as_float(colorimetric_error + colorchecker_error + smoothness_penalty)

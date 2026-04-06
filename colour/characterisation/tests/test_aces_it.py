@@ -5,6 +5,7 @@ Define the unit tests for the :mod:`colour.characterisation.aces_it` module.
 from __future__ import annotations
 
 import os
+import typing
 
 import numpy as np
 
@@ -41,7 +42,17 @@ from colour.colorimetry import (
 )
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.io import read_sds_from_csv_file
-from colour.utilities import domain_range_scale, is_scipy_installed
+from colour.utilities import (
+    domain_range_scale,
+    is_scipy_installed,
+    xp_asarray,
+    xp_assert_close,
+    xp_assert_equal,
+    xp_reshape,
+)
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -101,39 +112,39 @@ sd_to_aces_relative_exposure_values` definition.
 
         shape = MSDS_ACES_RICD.shape
         grey_reflector = sd_constant(0.18, shape)
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_to_aces_relative_exposure_values(grey_reflector),
             np.array([0.18, 0.18, 0.18]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         perfect_reflector = sd_ones(shape)
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_to_aces_relative_exposure_values(perfect_reflector),
             np.array([0.97783784, 0.97783784, 0.97783784]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         dark_skin = SDS_COLOURCHECKERS["ColorChecker N Ohta"]["dark skin"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_to_aces_relative_exposure_values(dark_skin),
             np.array([0.11807796, 0.08690312, 0.05891252]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_to_aces_relative_exposure_values(dark_skin, SDS_ILLUMINANTS["A"]),
             np.array([0.12937082, 0.09120875, 0.06110636]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_to_aces_relative_exposure_values(dark_skin),
             np.array([0.11807796, 0.08690312, 0.05891252]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_to_aces_relative_exposure_values(
                 dark_skin,
                 chromatic_adaptation_transform="Bradford",
@@ -144,6 +155,7 @@ sd_to_aces_relative_exposure_values` definition.
 
     def test_domain_range_scale_spectral_to_aces_relative_exposure_values(
         self,
+        xp: ModuleType,  # noqa: ARG002
     ) -> None:
         """
                 Test :func:`colour.characterisation.aces_it.
@@ -158,7 +170,7 @@ sd_to_aces_relative_exposure_values` definition.
         d_r = (("reference", 1), ("1", 1), ("100", 100))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     sd_to_aces_relative_exposure_values(grey_reflector),
                     RGB * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -258,13 +270,13 @@ class TestWhiteBalanceMultipliers:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             white_balance_multipliers(MSDS_CANON_EOS_5DMARK_II, SDS_ILLUMINANTS["D55"]),
             np.array([2.34141541, 1.00000000, 1.51633759]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             white_balance_multipliers(
                 MSDS_CANON_EOS_5DMARK_II,
                 SDS_ILLUMINANTS["ISO 7589 Studio Tungsten"],
@@ -321,7 +333,7 @@ class TestNormaliseIlluminant:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.sum(
                 normalise_illuminant(
                     SDS_ILLUMINANTS["D55"], MSDS_CANON_EOS_5DMARK_II
@@ -349,7 +361,7 @@ class TestTrainingDataSdsToRGB:
             MSDS_CANON_EOS_5DMARK_II,
             SDS_ILLUMINANTS["D55"],
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB,
             np.array(
                 [
@@ -548,7 +560,7 @@ class TestTrainingDataSdsToRGB:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_w,
             np.array([2.34141541, 1.00000000, 1.51633759]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -560,7 +572,7 @@ class TestTrainingDataSdsToRGB:
         RGB, RGB_w = training_data_sds_to_RGB(
             training_data, MSDS_CANON_EOS_5DMARK_II, SDS_ILLUMINANTS["D55"]
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB,
             np.array(
                 [
@@ -593,7 +605,7 @@ class TestTrainingDataSdsToRGB:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_w,
             np.array([2.34141541, 1.00000000, 1.51633759]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -612,7 +624,7 @@ class TestTrainingDataSdsToXYZ:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             training_data_sds_to_XYZ(
                 read_training_data_rawtoaces_v1(),
                 MSDS_CMFS["CIE 1931 2 Degree Standard Observer"],
@@ -819,7 +831,7 @@ class TestTrainingDataSdsToXYZ:
             SDS_COLOURCHECKERS["BabelColor Average"].values()
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             training_data_sds_to_XYZ(
                 training_data,
                 MSDS_CMFS["CIE 1931 2 Degree Standard Observer"],
@@ -856,7 +868,7 @@ class TestTrainingDataSdsToXYZ:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             training_data_sds_to_XYZ(
                 training_data,
                 MSDS_CMFS["CIE 1931 2 Degree Standard Observer"],
@@ -901,25 +913,30 @@ class TestWhitepointPreservingMatrix:
     definition unit tests methods.
     """
 
-    def test_whitepoint_preserving_matrix(self) -> None:
+    def test_whitepoint_preserving_matrix(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.aces_it.\
 whitepoint_preserving_matrix` definition.
         """
 
-        np.testing.assert_array_equal(
-            whitepoint_preserving_matrix(np.reshape(np.arange(9), (3, 3))),
+        xp_assert_equal(
+            whitepoint_preserving_matrix(
+                xp_reshape(xp_asarray(np.arange(9), xp=xp), (3, 3), xp=xp)
+            ),
             np.array([[0, 1, 0], [3, 4, -6], [6, 7, -12]]),
         )
 
-        np.testing.assert_array_equal(
-            whitepoint_preserving_matrix(np.reshape(np.arange(12), (3, 4))),
+        xp_assert_equal(
+            whitepoint_preserving_matrix(
+                xp_reshape(xp_asarray(np.arange(12), xp=xp), (3, 4), xp=xp)
+            ),
             np.array([[0, 1, 2, -2], [4, 5, 6, -14], [8, 9, 10, -26]]),
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             whitepoint_preserving_matrix(
-                np.reshape(np.arange(9), (3, 3)), np.array([1, 2, 3])
+                xp_reshape(xp_asarray(np.arange(9), xp=xp), (3, 3), xp=xp),
+                xp_asarray([1, 2, 3], xp=xp),
             ),
             np.array([[0, 1, 0], [3, 4, -5], [6, 7, -10]]),
         )
@@ -990,7 +1007,7 @@ class TestMatrixIdt:
         # 0.864994 -0.026302 0.161308
         # 0.056527 1.122997 -0.179524
         # 0.023683 -0.202547 1.178864
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_idt(MSDS_CANON_EOS_5DMARK_II, SDS_ILLUMINANTS["D55"])[0],
             np.array(
                 [
@@ -999,7 +1016,7 @@ class TestMatrixIdt:
                     [0.02369089, -0.20253026, 1.17883937],
                 ]
             ),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
 
         # The *RAW to ACES* v1 matrix for the same camera and optimized by
@@ -1008,7 +1025,7 @@ class TestMatrixIdt:
         # 0.888492 -0.077505 0.189014
         # 0.021805 1.066614 -0.088418
         # -0.019718 -0.206664 1.226381
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_idt(MSDS_CANON_EOS_5DMARK_II, SD_AMPAS_ISO7589_STUDIO_TUNGSTEN)[0],
             np.array(
                 [
@@ -1017,7 +1034,7 @@ class TestMatrixIdt:
                     [-0.01971799, -0.20666347, 1.22638146],
                 ]
             ),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
 
         M, RGB_w = matrix_idt(
@@ -1026,7 +1043,7 @@ class TestMatrixIdt:
             optimisation_factory=optimisation_factory_Jzazbz,
             additional_data=False,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             M,
             np.array(
                 [
@@ -1035,12 +1052,12 @@ class TestMatrixIdt:
                     [0.02327675, -0.22372411, 1.20044737],
                 ]
             ),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_w,
             np.array([2.34141541, 1.00000000, 1.51633759]),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
         M, RGB_w = matrix_idt(
             MSDS_CANON_EOS_5DMARK_II,
@@ -1048,7 +1065,7 @@ class TestMatrixIdt:
             optimisation_factory=optimisation_factory_Oklab_15,
             additional_data=False,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             M,
             np.array(
                 [
@@ -1078,12 +1095,12 @@ class TestMatrixIdt:
                     ],
                 ]
             ),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_w,
             np.array([2.34141541, 1.00000000, 1.51633759]),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
 
         M, RGB_w = matrix_idt(
@@ -1092,7 +1109,7 @@ class TestMatrixIdt:
             optimisation_kwargs={"method": "Nelder-Mead"},
             additional_data=False,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             M,
             np.array(
                 [
@@ -1101,19 +1118,19 @@ class TestMatrixIdt:
                     [0.015048, -0.150215, 1.135168],
                 ]
             ),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_w,
             np.array([2.34141541, 1.00000000, 1.51633759]),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
 
         training_data = sds_and_msds_to_msds(
             SDS_COLOURCHECKERS["BabelColor Average"].values()
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_idt(
                 reshape_msds(
                     MSDS_CAMERA_SENSITIVITIES["Nikon 5100 (NPL)"],
@@ -1129,10 +1146,10 @@ class TestMatrixIdt:
                     [0.06964389, -0.31098445, 1.24134056],
                 ]
             ),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_idt(
                 MSDS_CANON_EOS_5DMARK_II,
                 SDS_ILLUMINANTS["D55"],
@@ -1145,7 +1162,7 @@ class TestMatrixIdt:
                     [0.02450723, -0.20931423, 1.18480700],
                 ]
             ),
-            atol=0.0001,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
 
         _M, RGB_w, XYZ, RGB = matrix_idt(
@@ -1154,11 +1171,13 @@ class TestMatrixIdt:
             additional_data=True,
         )
 
-        np.testing.assert_allclose(
-            RGB_w, np.array([2.34141541, 1.00000000, 1.51633759])
+        xp_assert_close(
+            RGB_w,
+            np.array([2.34141541, 1.00000000, 1.51633759]),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ[:5, ...],
             np.array(
                 [
@@ -1172,7 +1191,7 @@ class TestMatrixIdt:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB[:5, ...],
             np.array(
                 [
@@ -1193,7 +1212,7 @@ class TestCamera_RGB_to_ACES2065_1:
     definition unit tests methods.
     """
 
-    def test_camera_RGB_to_ACES2065_1(self) -> None:
+    def test_camera_RGB_to_ACES2065_1(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.aces_it.camera_RGB_to_ACES2065_1`
         definition.
@@ -1203,20 +1222,20 @@ class TestCamera_RGB_to_ACES2065_1:
             return
 
         B, b = matrix_idt(MSDS_CANON_EOS_5DMARK_II, SDS_ILLUMINANTS["D55"])  # pyright: ignore
-        np.testing.assert_allclose(
-            camera_RGB_to_ACES2065_1(np.array([0.1, 0.2, 0.3]), B, b),
+        xp_assert_close(
+            camera_RGB_to_ACES2065_1(xp_asarray([0.1, 0.2, 0.3], xp=xp), B, b),
             np.array([0.27064400, 0.15614871, 0.50129650]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            camera_RGB_to_ACES2065_1(np.array([1.5, 1.5, 1.5]), B, b),
+        xp_assert_close(
+            camera_RGB_to_ACES2065_1(xp_asarray([1.5, 1.5, 1.5], xp=xp), B, b),
             np.array([3.36538176, 1.47467189, 2.46068761]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            camera_RGB_to_ACES2065_1(np.array([1.0, 1.0, 1.0]), B, b, True),
+        xp_assert_close(
+            camera_RGB_to_ACES2065_1(xp_asarray([1.0, 1.0, 1.0], xp=xp), B, b, True),
             np.array([2.24358784, 0.98311459, 1.64045840]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )

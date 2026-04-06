@@ -19,8 +19,6 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.adaptation import CHROMATIC_ADAPTATION_TRANSFORMS
 from colour.algebra import sdiv, sdiv_mode, vecmul
 
@@ -34,11 +32,13 @@ from colour.hints import (  # noqa: TC001
     Range1,
 )
 from colour.utilities import (
+    array_namespace,
     as_float_array,
     from_range_1,
     row_as_diagonal,
     to_domain_1,
     validate_method,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -95,6 +95,7 @@ def matrix_chromatic_adaptation_VonKries(
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ_w = np.array([0.95045593, 1.00000000, 1.08905775])
     >>> XYZ_wr = np.array([0.96429568, 1.00000000, 0.82510460])
     >>> matrix_chromatic_adaptation_VonKries(XYZ_w, XYZ_wr)
@@ -118,13 +119,15 @@ def matrix_chromatic_adaptation_VonKries(
     XYZ_w = as_float_array(XYZ_w)
     XYZ_wr = as_float_array(XYZ_wr)
 
+    xp = array_namespace(XYZ_w, XYZ_wr)
+
     transform = validate_method(
         transform,
         tuple(CHROMATIC_ADAPTATION_TRANSFORMS),
         '"{0}" chromatic adaptation transform is invalid, it must be one of {1}!',
     )
 
-    M = CHROMATIC_ADAPTATION_TRANSFORMS[transform]
+    M = xp_asarray(CHROMATIC_ADAPTATION_TRANSFORMS[transform], xp=xp, like=XYZ_w)
 
     RGB_w = vecmul(M, XYZ_w)
     RGB_wr = vecmul(M, XYZ_wr)
@@ -134,9 +137,9 @@ def matrix_chromatic_adaptation_VonKries(
 
     D = row_as_diagonal(D)
 
-    M_CAT = np.matmul(np.linalg.inv(M), D)
+    M_CAT = xp.matmul(xp.linalg.inv(M), D)
 
-    return np.matmul(M_CAT, M)
+    return xp.matmul(M_CAT, M)
 
 
 def chromatic_adaptation_VonKries(
@@ -192,6 +195,7 @@ def chromatic_adaptation_VonKries(
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
     >>> XYZ_w = np.array([0.95045593, 1.00000000, 1.08905775])
     >>> XYZ_wr = np.array([0.96429568, 1.00000000, 0.82510460])

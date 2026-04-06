@@ -29,6 +29,7 @@ from colour.io.fichet2021 import (
     match_groups_to_nm,
     sds_and_msds_to_components_Fichet2021,
 )
+from colour.utilities import xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -60,19 +61,19 @@ class TestMatchGroupsToNm:
     def test_match_groups_to_nm(self) -> None:
         """Test :func:`colour.io.fichet2021.match_groups_to_nm` definition."""
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             match_groups_to_nm("555.5", "n", "m"),
             555.5,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             match_groups_to_nm("555.5", "", "m"),
             555500000000.0,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             match_groups_to_nm(str(CONSTANT_LIGHT_SPEED / (555 * 1e-9)), "", "Hz"),
             555.0,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -113,13 +114,13 @@ spectrum_attribute_to_sd_Fichet2021` definition.
             "300.00nm:0.03;305.00nm:1.66;310.00nm:3.29;315.00nm:11.77"
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd.wavelengths,
             np.array([300.0, 305.0, 310.0, 315.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd.values,
             np.array([0.03, 1.66, 3.29, 11.77]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -148,13 +149,13 @@ sds_and_msds_to_components_Fichet2021` definition.
 
         assert "S0" in components
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             components["S0"][0],
             SDS_ILLUMINANTS["D65"].wavelengths,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             components["S0"][1],
             np.reshape(SDS_ILLUMINANTS["D65"].values, (1, 1, -1)),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -185,7 +186,7 @@ class TestComponentsToSRGBFichet2021:
         )
         RGB, attributes = components_to_sRGB_Fichet2021(components, specification)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             cast("NDArrayFloat", RGB),
             np.array([[[0.17998291, 0.18000802, 0.18000908]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -203,7 +204,7 @@ class TestComponentsToSRGBFichet2021:
         for attribute in attributes:
             if attribute.name == "X":
                 sd_X = spectrum_attribute_to_sd_Fichet2021(attribute.value)
-                np.testing.assert_allclose(
+                xp_assert_close(
                     sd_X.values,
                     MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
                     .signals["x_bar"]
@@ -212,7 +213,7 @@ class TestComponentsToSRGBFichet2021:
                 )
             elif attribute.name == "illuminant":
                 sd_illuminant = spectrum_attribute_to_sd_Fichet2021(attribute.value)
-                np.testing.assert_allclose(
+                xp_assert_close(
                     sd_illuminant.values,
                     SDS_ILLUMINANTS["E"].values,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -235,7 +236,7 @@ class TestComponentsToSRGBFichet2021:
         )
         RGB, attributes = components_to_sRGB_Fichet2021(components, specification)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             cast("NDArrayFloat", RGB),
             np.array(
                 [
@@ -291,16 +292,16 @@ def _test_spectral_image_D65(path: str) -> None:
 
     assert "S0" in components
 
-    np.testing.assert_allclose(
+    xp_assert_close(
         components["S0"][0],
         SDS_ILLUMINANTS["D65"].wavelengths,
         atol=TOLERANCE_ABSOLUTE_TESTS,
     )
 
-    np.testing.assert_allclose(
+    xp_assert_close(
         components["S0"][1],
         np.reshape(SDS_ILLUMINANTS["D65"].values, (1, 1, -1)),
-        atol=0.05,
+        atol=TOLERANCE_ABSOLUTE_TESTS * 500000,
     )
 
     components, specification = read_spectral_image_Fichet2021(
@@ -335,7 +336,7 @@ def _test_spectral_image_D65(path: str) -> None:
             assert attribute.value == "W.m^-2.sr^-1"
         elif attribute.name == "illuminant":
             sd_illuminant = spectrum_attribute_to_sd_Fichet2021(attribute.value)
-            np.testing.assert_allclose(
+            xp_assert_close(
                 sd_illuminant.values,
                 SDS_ILLUMINANTS["D65"].values,
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -358,16 +359,16 @@ def _test_spectral_image_Ohta1997(path: str) -> None:
         ]
     )
 
-    np.testing.assert_allclose(
+    xp_assert_close(
         components["T"][0],
         msds.wavelengths,
         atol=TOLERANCE_ABSOLUTE_TESTS,
     )
 
-    np.testing.assert_allclose(
+    xp_assert_close(
         components["T"][1],
         np.reshape(np.transpose(msds.values), (4, 6, -1)),
-        atol=0.0005,
+        atol=TOLERANCE_ABSOLUTE_TESTS * 5000,
     )
 
     assert specification.is_emissive is False

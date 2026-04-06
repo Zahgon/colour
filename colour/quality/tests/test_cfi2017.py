@@ -9,7 +9,11 @@ Notes
 
 from __future__ import annotations
 
-import numpy as np
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import pytest
 
 from colour import MSDS_CMFS
@@ -20,6 +24,7 @@ from colour.colorimetry import (
     reshape_sd,
     sd_blackbody,
 )
+from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.quality.cfi2017 import (
     CCT_reference_illuminant,
     colour_fidelity_index_CIE2017,
@@ -27,7 +32,7 @@ from colour.quality.cfi2017 import (
     sd_reference_illuminant,
     tcs_colorimetry_data,
 )
-from colour.utilities import ColourUsageWarning
+from colour.utilities import ColourUsageWarning, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -556,16 +561,19 @@ class TestColourFidelityIndexCIE2017:
     definition unit tests methods.
     """
 
-    def test_colour_fidelity_index_CIE2017(self) -> None:
+    def test_colour_fidelity_index_CIE2017(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.quality.CIE2017.colour_fidelity_index_CIE2017`
         definition.
         """
 
         for sd in [SD_SAMPLE_5NM, SD_SAMPLE_1NM]:
-            specification = colour_fidelity_index_CIE2017(sd, additional_data=True)
-            np.testing.assert_allclose(specification.R_f, 81.6, atol=0.1)
-            np.testing.assert_allclose(
+            sd_xp = sd.copy(xp=xp)
+            specification = colour_fidelity_index_CIE2017(sd_xp, additional_data=True)
+            xp_assert_close(
+                specification.R_f, 81.6, atol=TOLERANCE_ABSOLUTE_TESTS * 1e06
+            )
+            xp_assert_close(
                 specification.R_s,
                 [
                     89.5,
@@ -668,14 +676,13 @@ class TestColourFidelityIndexCIE2017:
                     84.2,
                     77.4,
                 ],
-                atol=0.1,
+                atol=TOLERANCE_ABSOLUTE_TESTS * 1e06,
             )
 
-        specification = colour_fidelity_index_CIE2017(
-            SDS_ILLUMINANTS["FL1"], additional_data=True
-        )
-        np.testing.assert_allclose(specification.R_f, 80.6, atol=0.1)
-        np.testing.assert_allclose(
+        sd_fl1_xp = SDS_ILLUMINANTS["FL1"].copy(xp=xp)
+        specification = colour_fidelity_index_CIE2017(sd_fl1_xp, additional_data=True)
+        xp_assert_close(specification.R_f, 80.6, atol=TOLERANCE_ABSOLUTE_TESTS * 1e06)
+        xp_assert_close(
             specification.R_s,
             [
                 85.1,
@@ -778,14 +785,13 @@ class TestColourFidelityIndexCIE2017:
                 75.2,
                 55.5,
             ],
-            atol=0.1,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1e06,
         )
 
-        specification = colour_fidelity_index_CIE2017(
-            SDS_ILLUMINANTS["FL2"], additional_data=True
-        )
-        np.testing.assert_allclose(specification.R_f, 70.1, atol=0.1)
-        np.testing.assert_allclose(
+        sd_fl2_xp = SDS_ILLUMINANTS["FL2"].copy(xp=xp)
+        specification = colour_fidelity_index_CIE2017(sd_fl2_xp, additional_data=True)
+        xp_assert_close(specification.R_f, 70.1, atol=TOLERANCE_ABSOLUTE_TESTS * 1e06)
+        xp_assert_close(
             specification.R_s,
             [
                 78.9,
@@ -888,7 +894,7 @@ class TestColourFidelityIndexCIE2017:
                 67.0,
                 45.0,
             ],
-            atol=0.1,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1e06,
         )
 
     def test_raise_exception_colour_fidelity_index_CFI2017(self) -> None:
@@ -918,8 +924,10 @@ class TestCctReferenceIlluminant:
 
         for sd in [SD_SAMPLE_5NM, SD_SAMPLE_1NM]:
             CCT, D_uv = CCT_reference_illuminant(sd)
-            np.testing.assert_allclose(CCT, 3287.5, atol=0.5)
-            np.testing.assert_allclose(D_uv, -0.000300000000000, atol=0.0005)
+            xp_assert_close(CCT, 3287.5, atol=TOLERANCE_ABSOLUTE_TESTS * 5000000)
+            xp_assert_close(
+                D_uv, -0.000300000000000, atol=TOLERANCE_ABSOLUTE_TESTS * 5000
+            )
 
 
 class TestSdReferenceIlluminant:
@@ -928,23 +936,21 @@ class TestSdReferenceIlluminant:
     definition unit tests methods.
     """
 
-    def test_sd_reference_illuminant(self) -> None:
+    def test_sd_reference_illuminant(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.quality.CIE2017.sd_reference_illuminant`
         definition.
         """
 
-        for sd, shape in [
-            (SD_SAMPLE_5NM, SD_SAMPLE_5NM.shape),
-            (SD_SAMPLE_1NM, SD_SAMPLE_1NM.shape),
-        ]:
-            CCT, _D_uv = CCT_reference_illuminant(sd)
-            sd_reference = sd_reference_illuminant(CCT, shape)
+        for sd in [SD_SAMPLE_5NM, SD_SAMPLE_1NM]:
+            sd_xp = sd.copy(xp=xp)
+            CCT, _D_uv = CCT_reference_illuminant(sd_xp)
+            sd_reference = sd_reference_illuminant(CCT, sd_xp.shape)
 
-            np.testing.assert_allclose(
+            xp_assert_close(
                 sd_reference.values,
-                sd_blackbody(3288, shape).values,
-                atol=1.75,
+                sd_blackbody(3288, sd_xp.shape).values,
+                atol=TOLERANCE_ABSOLUTE_TESTS * 17500000,
             )
 
 
@@ -954,7 +960,7 @@ class TestTcsColorimetryData:
     definition unit tests methods.
     """
 
-    def test_tcs_colorimetry_data_single_sd(self) -> None:
+    def test_tcs_colorimetry_data_single_sd(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.quality.cfi2017.tcs_colorimetry_data` definition
         with a single spectral distribution (not a list).
@@ -962,8 +968,9 @@ class TestTcsColorimetryData:
 
         shape = SpectralShape(380, 780, 5)
         sd = SD_SAMPLE_5NM.copy().align(shape)
+        sd_xp = sd.copy(xp=xp)
         cmfs = MSDS_CMFS["CIE 1964 10 Degree Standard Observer"].copy().align(shape)
         test_sds = load_TCS_CIE2017(shape)
 
-        result = tcs_colorimetry_data(sd, test_sds, cmfs)
+        result = tcs_colorimetry_data(sd_xp, test_sds, cmfs)
         assert len(result) == 1

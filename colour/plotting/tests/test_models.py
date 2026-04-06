@@ -31,7 +31,7 @@ from colour.plotting.models import (
     plot_RGB_chromaticities_in_chromaticity_diagram,
     plot_RGB_colourspaces_in_chromaticity_diagram,
 )
-from colour.utilities import is_scipy_installed
+from colour.utilities import is_scipy_installed, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -76,25 +76,25 @@ class TestCommonColourspaceModelAxisReorder:
 
         a = np.array([0, 1, 2])
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colourspace_model_axis_reorder(a, "CIE Lab"),
             np.array([1, 2, 0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colourspace_model_axis_reorder(a, "IPT"),
             np.array([1, 2, 0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colourspace_model_axis_reorder(a, "OSA UCS"),
             np.array([1, 2, 0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colourspace_model_axis_reorder(
                 colourspace_model_axis_reorder(a, "OSA UCS"),
                 "OSA UCS",

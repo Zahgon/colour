@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
@@ -13,7 +18,12 @@ from colour.appearance.hke import (
     coefficient_q_Nayatani1997,
 )
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
-from colour.utilities import ignore_numpy_errors
+from colour.utilities import (
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Ilia Sibiryakov"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -36,16 +46,18 @@ class TestHelmholtzKohlrauschEffectObjectNayatani1997:
 HelmholtzKohlrausch_effect_object_Nayatani1997` definition unit tests methods.
     """
 
-    def test_HelmholtzKohlrausch_effect_object_Nayatani1997(self) -> None:
+    def test_HelmholtzKohlrausch_effect_object_Nayatani1997(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.appearance.hke.\
 HelmholtzKohlrausch_effect_object_Nayatani1997` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_object_Nayatani1997(
-                np.array([0.40351010, 0.53933673]),
-                np.array([0.19783001, 0.46831999]),
+                xp_asarray([0.40351010, 0.53933673], xp=xp),
+                xp_asarray([0.19783001, 0.46831999], xp=xp),
                 63.66,
                 method="VCC",
             ),
@@ -53,10 +65,10 @@ HelmholtzKohlrausch_effect_object_Nayatani1997` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_object_Nayatani1997(
-                np.array([0.40351010, 0.53933673]),
-                np.array([0.19783001, 0.46831999]),
+                xp_asarray([0.40351010, 0.53933673], xp=xp),
+                xp_asarray([0.19783001, 0.46831999], xp=xp),
                 63.66,
                 method="VAC",
             ),
@@ -65,7 +77,7 @@ HelmholtzKohlrausch_effect_object_Nayatani1997` definition.
         )
 
     def test_n_dimensional_HelmholtzKohlrausch_effect_object_Nayatani1997(
-        self,
+        self, xp: ModuleType
     ) -> None:
         """
         Test :func:`colour.appearance.hke.\
@@ -73,23 +85,27 @@ HelmholtzKohlrausch_effect_object_Nayatani1997` definition n_dimensional
         arrays support.
         """
 
-        uv_d65 = np.array([0.19783001, 0.46831999])
-        uv = np.array([0.40351010, 0.53933673])
+        uv_d65 = xp_asarray([0.19783001, 0.46831999], xp=xp)
+        uv = xp_asarray([0.40351010, 0.53933673], xp=xp)
         L_a = 63.66
 
-        result_vcc = HelmholtzKohlrausch_effect_object_Nayatani1997(
-            uv, uv_d65, L_a, method="VCC"
+        result_vcc = np.asarray(
+            HelmholtzKohlrausch_effect_object_Nayatani1997(
+                uv, uv_d65, L_a, method="VCC"
+            )
         )
-        result_vac = HelmholtzKohlrausch_effect_object_Nayatani1997(
-            uv, uv_d65, L_a, method="VAC"
+        result_vac = np.asarray(
+            HelmholtzKohlrausch_effect_object_Nayatani1997(
+                uv, uv_d65, L_a, method="VAC"
+            )
         )
 
-        uv_d65 = np.tile(uv_d65, (6, 1))
-        uv = np.tile(uv, (6, 1))
-        result_vcc = np.tile(result_vcc, 6)
-        result_vac = np.tile(result_vac, 6)
+        uv_d65 = xp.tile(xp_asarray(uv_d65, xp=xp), (6, 1))
+        uv = xp.tile(xp_asarray(uv, xp=xp), (6, 1))
+        result_vcc = xp.tile(xp_asarray(result_vcc, xp=xp), (6,))
+        result_vac = xp.tile(xp_asarray(result_vac, xp=xp), (6,))
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_object_Nayatani1997(
                 uv, uv_d65, L_a, method="VCC"
             ),
@@ -97,7 +113,7 @@ HelmholtzKohlrausch_effect_object_Nayatani1997` definition n_dimensional
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_object_Nayatani1997(
                 uv, uv_d65, L_a, method="VAC"
             ),
@@ -105,12 +121,12 @@ HelmholtzKohlrausch_effect_object_Nayatani1997` definition n_dimensional
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        uv_d65 = np.reshape(uv_d65, (2, 3, 2))
-        uv = np.reshape(uv, (2, 3, 2))
-        result_vcc = np.reshape(result_vcc, (2, 3))
-        result_vac = np.reshape(result_vac, (2, 3))
+        uv_d65 = xp_reshape(xp_asarray(uv_d65, xp=xp), (2, 3, 2), xp=xp)
+        uv = xp_reshape(xp_asarray(uv, xp=xp), (2, 3, 2), xp=xp)
+        result_vcc = xp_reshape(xp_asarray(result_vcc, xp=xp), (2, 3), xp=xp)
+        result_vac = xp_reshape(xp_asarray(result_vac, xp=xp), (2, 3), xp=xp)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_object_Nayatani1997(
                 uv, uv_d65, L_a, method="VCC"
             ),
@@ -118,7 +134,7 @@ HelmholtzKohlrausch_effect_object_Nayatani1997` definition n_dimensional
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_object_Nayatani1997(
                 uv, uv_d65, L_a, method="VAC"
             ),
@@ -146,16 +162,18 @@ HelmholtzKohlrausch_effect_luminous_Nayatani1997` definition unit tests
     methods.
     """
 
-    def test_HelmholtzKohlrausch_effect_luminous_Nayatani1997(self) -> None:
+    def test_HelmholtzKohlrausch_effect_luminous_Nayatani1997(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.appearance.hke.\
 HelmholtzKohlrausch_effect_luminous_Nayatani1997` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_luminous_Nayatani1997(
-                np.array([0.40351010, 0.53933673]),
-                np.array([0.19783001, 0.46831999]),
+                xp_asarray([0.40351010, 0.53933673], xp=xp),
+                xp_asarray([0.19783001, 0.46831999], xp=xp),
                 63.66,
                 method="VCC",
             ),
@@ -163,10 +181,10 @@ HelmholtzKohlrausch_effect_luminous_Nayatani1997` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_luminous_Nayatani1997(
-                np.array([0.40351010, 0.53933673]),
-                np.array([0.19783001, 0.46831999]),
+                xp_asarray([0.40351010, 0.53933673], xp=xp),
+                xp_asarray([0.19783001, 0.46831999], xp=xp),
                 63.66,
                 method="VAC",
             ),
@@ -175,7 +193,7 @@ HelmholtzKohlrausch_effect_luminous_Nayatani1997` definition.
         )
 
     def test_n_dimensional_HelmholtzKohlrausch_effect_luminous_Nayatani1997(
-        self,
+        self, xp: ModuleType
     ) -> None:
         """
         Test :func:`colour.appearance.hke.\
@@ -183,23 +201,27 @@ HelmholtzKohlrausch_effect_luminous_Nayatani1997` definition n_dimensional
         arrays support.
         """
 
-        uv_d65 = np.array([0.19783001, 0.46831999])
-        uv = np.array([0.40351010, 0.53933673])
+        uv_d65 = xp_asarray([0.19783001, 0.46831999], xp=xp)
+        uv = xp_asarray([0.40351010, 0.53933673], xp=xp)
         L_a = 63.66
 
-        result_vcc = HelmholtzKohlrausch_effect_luminous_Nayatani1997(
-            uv, uv_d65, L_a, method="VCC"
+        result_vcc = np.asarray(
+            HelmholtzKohlrausch_effect_luminous_Nayatani1997(
+                uv, uv_d65, L_a, method="VCC"
+            )
         )
-        result_vac = HelmholtzKohlrausch_effect_luminous_Nayatani1997(
-            uv, uv_d65, L_a, method="VAC"
+        result_vac = np.asarray(
+            HelmholtzKohlrausch_effect_luminous_Nayatani1997(
+                uv, uv_d65, L_a, method="VAC"
+            )
         )
 
-        uv_d65 = np.tile(uv_d65, (6, 1))
-        uv = np.tile(uv, (6, 1))
-        result_vcc = np.tile(result_vcc, 6)
-        result_vac = np.tile(result_vac, 6)
+        uv_d65 = xp.tile(xp_asarray(uv_d65, xp=xp), (6, 1))
+        uv = xp.tile(xp_asarray(uv, xp=xp), (6, 1))
+        result_vcc = xp.tile(xp_asarray(result_vcc, xp=xp), (6,))
+        result_vac = xp.tile(xp_asarray(result_vac, xp=xp), (6,))
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_luminous_Nayatani1997(
                 uv, uv_d65, L_a, method="VCC"
             ),
@@ -207,7 +229,7 @@ HelmholtzKohlrausch_effect_luminous_Nayatani1997` definition n_dimensional
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_luminous_Nayatani1997(
                 uv, uv_d65, L_a, method="VAC"
             ),
@@ -215,12 +237,12 @@ HelmholtzKohlrausch_effect_luminous_Nayatani1997` definition n_dimensional
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        uv_d65 = np.reshape(uv_d65, (2, 3, 2))
-        uv = np.reshape(uv, (2, 3, 2))
-        result_vcc = np.reshape(result_vcc, (2, 3))
-        result_vac = np.reshape(result_vac, (2, 3))
+        uv_d65 = xp_reshape(xp_asarray(uv_d65, xp=xp), (2, 3, 2), xp=xp)
+        uv = xp_reshape(xp_asarray(uv, xp=xp), (2, 3, 2), xp=xp)
+        result_vcc = xp_reshape(xp_asarray(result_vcc, xp=xp), (2, 3), xp=xp)
+        result_vac = xp_reshape(xp_asarray(result_vac, xp=xp), (2, 3), xp=xp)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_luminous_Nayatani1997(
                 uv, uv_d65, L_a, method="VCC"
             ),
@@ -228,7 +250,7 @@ HelmholtzKohlrausch_effect_luminous_Nayatani1997` definition n_dimensional
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HelmholtzKohlrausch_effect_luminous_Nayatani1997(
                 uv, uv_d65, L_a, method="VAC"
             ),
@@ -255,37 +277,37 @@ class TestCoefficient_K_Br_Nayatani1997:
     definition unit tests methods.
     """
 
-    def test_coefficient_K_Br_Nayatani1997(self) -> None:
+    def test_coefficient_K_Br_Nayatani1997(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hke.coefficient_K_Br_Nayatani1997`
         definition.
         """
 
-        np.testing.assert_allclose(
-            coefficient_K_Br_Nayatani1997(10.00000000),
+        xp_assert_close(
+            coefficient_K_Br_Nayatani1997(xp_asarray([10.0], xp=xp)),
             0.71344817765758839,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            coefficient_K_Br_Nayatani1997(63.66000000),
+        xp_assert_close(
+            coefficient_K_Br_Nayatani1997(xp_asarray([63.66], xp=xp)),
             1.000128455584031,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            coefficient_K_Br_Nayatani1997(1000.00000000),
+        xp_assert_close(
+            coefficient_K_Br_Nayatani1997(xp_asarray([1000.0], xp=xp)),
             1.401080840298197,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            coefficient_K_Br_Nayatani1997(10000.00000000),
+        xp_assert_close(
+            coefficient_K_Br_Nayatani1997(xp_asarray([10000.0], xp=xp)),
             1.592511806930447,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_coefficient_K_Br_Nayatani1997(self) -> None:
+    def test_n_dimensional_coefficient_K_Br_Nayatani1997(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hke.coefficient_K_Br_Nayatani1997`
         definition n_dimensional arrays support.
@@ -294,25 +316,25 @@ class TestCoefficient_K_Br_Nayatani1997:
         L_a = 63.66
         K_Br = coefficient_K_Br_Nayatani1997(L_a)
 
-        L_a = np.tile(L_a, 6)
-        K_Br = np.tile(K_Br, 6)
-        np.testing.assert_allclose(
+        L_a = xp.tile(xp_asarray(L_a, xp=xp), (6,))
+        K_Br = xp.tile(xp_asarray(K_Br, xp=xp), (6,))
+        xp_assert_close(
             coefficient_K_Br_Nayatani1997(L_a),
             K_Br,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        L_a = np.reshape(L_a, (2, 3))
-        K_Br = np.reshape(K_Br, (2, 3))
-        np.testing.assert_allclose(
+        L_a = xp_reshape(xp_asarray(L_a, xp=xp), (2, 3), xp=xp)
+        K_Br = xp_reshape(xp_asarray(K_Br, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(
             coefficient_K_Br_Nayatani1997(L_a),
             K_Br,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        L_a = np.reshape(L_a, (2, 3, 1))
-        K_Br = np.reshape(K_Br, (2, 3, 1))
-        np.testing.assert_allclose(
+        L_a = xp_reshape(xp_asarray(L_a, xp=xp), (2, 3, 1), xp=xp)
+        K_Br = xp_reshape(xp_asarray(K_Br, xp=xp), (2, 3, 1), xp=xp)
+        xp_assert_close(
             coefficient_K_Br_Nayatani1997(L_a),
             K_Br,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -335,37 +357,37 @@ class TestCoefficient_q_Nayatani1997:
     definition unit tests methods.
     """
 
-    def test_coefficient_q_Nayatani1997(self) -> None:
+    def test_coefficient_q_Nayatani1997(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hke.coefficient_q_Nayatani1997`
         definition.
         """
 
-        np.testing.assert_allclose(
-            coefficient_q_Nayatani1997(0.00000000),
+        xp_assert_close(
+            coefficient_q_Nayatani1997(xp_asarray([0.0], xp=xp)),
             -0.121200000000000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            coefficient_q_Nayatani1997(0.78539816),
+        xp_assert_close(
+            coefficient_q_Nayatani1997(xp_asarray([0.78539816], xp=xp)),
             0.125211117768464,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            coefficient_q_Nayatani1997(1.57079633),
+        xp_assert_close(
+            coefficient_q_Nayatani1997(xp_asarray([1.57079633], xp=xp)),
             0.191679999416415,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            coefficient_q_Nayatani1997(2.35619449),
+        xp_assert_close(
+            coefficient_q_Nayatani1997(xp_asarray([2.35619449], xp=xp)),
             0.028480866426611,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_coefficient_q_Nayatani1997(self) -> None:
+    def test_n_dimensional_coefficient_q_Nayatani1997(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hke.coefficient_q_Nayatani1997`
         definition n_dimensional arrays support.
@@ -374,22 +396,28 @@ class TestCoefficient_q_Nayatani1997:
         L_a = 63.66
         q = coefficient_q_Nayatani1997(L_a)
 
-        L_a = np.tile(L_a, 6)
-        q = np.tile(q, 6)
-        np.testing.assert_allclose(
-            coefficient_q_Nayatani1997(L_a), q, atol=TOLERANCE_ABSOLUTE_TESTS
+        L_a = xp.tile(xp_asarray(L_a, xp=xp), (6,))
+        q = xp.tile(xp_asarray(q, xp=xp), (6,))
+        xp_assert_close(
+            coefficient_q_Nayatani1997(L_a),
+            q,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        L_a = np.reshape(L_a, (2, 3))
-        q = np.reshape(q, (2, 3))
-        np.testing.assert_allclose(
-            coefficient_q_Nayatani1997(L_a), q, atol=TOLERANCE_ABSOLUTE_TESTS
+        L_a = xp_reshape(xp_asarray(L_a, xp=xp), (2, 3), xp=xp)
+        q = xp_reshape(xp_asarray(q, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(
+            coefficient_q_Nayatani1997(L_a),
+            q,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        L_a = np.reshape(L_a, (2, 3, 1))
-        q = np.reshape(q, (2, 3, 1))
-        np.testing.assert_allclose(
-            coefficient_q_Nayatani1997(L_a), q, atol=TOLERANCE_ABSOLUTE_TESTS
+        L_a = xp_reshape(xp_asarray(L_a, xp=xp), (2, 3, 1), xp=xp)
+        q = xp_reshape(xp_asarray(q, xp=xp), (2, 3, 1), xp=xp)
+        xp_assert_close(
+            coefficient_q_Nayatani1997(L_a),
+            q,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
     @ignore_numpy_errors

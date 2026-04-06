@@ -28,8 +28,6 @@ from __future__ import annotations
 import typing
 from dataclasses import astuple, dataclass, field
 
-import numpy as np
-
 from colour.algebra import sdiv, sdiv_mode, spow, vecmul
 from colour.appearance.cam16 import MATRIX_16, MATRIX_INVERSE_16
 from colour.appearance.ciecam02 import (
@@ -62,6 +60,7 @@ from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArithmetic,
     MixinDataclassIterable,
+    array_namespace,
     as_float,
     as_float_array,
     from_range_100,
@@ -72,6 +71,8 @@ from colour.utilities import (
     to_domain_degrees,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_radians,
 )
 
 __author__ = "Colour Developers"
@@ -287,6 +288,7 @@ def XYZ_to_Hellwig2022(
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ = np.array([19.01, 20.00, 21.78])
     >>> XYZ_w = np.array([95.05, 100.00, 108.88])
     >>> L_A = 318.31
@@ -303,9 +305,15 @@ J_HK=np.float64(41.8802782...), Q_HK=np.float64(56.0518358...))
 
     XYZ = to_domain_100(XYZ)
     XYZ_w = to_domain_100(XYZ_w)
-    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
     L_A = as_float_array(L_A)
     Y_b = as_float_array(Y_b)
+
+    xp = array_namespace(XYZ)
+
+    XYZ_w = xp_asarray(XYZ_w, xp=xp, like=XYZ)
+    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ)
+    Y_b = xp_asarray(Y_b, xp=xp, like=XYZ)
 
     # Step 0
     # Converting *CIE XYZ* tristimulus values to sharpened *RGB* values.
@@ -313,7 +321,7 @@ J_HK=np.float64(41.8802782...), Q_HK=np.float64(56.0518358...))
 
     # Computing degree of adaptation :math:`D`.
     D = (
-        np.clip(degree_of_adaptation(surround.F, L_A), 0, 1)
+        xp.clip(degree_of_adaptation(surround.F, L_A), 0, 1)
         if not discount_illuminant
         else ones(L_A.shape)
     )
@@ -352,7 +360,7 @@ J_HK=np.float64(41.8802782...), Q_HK=np.float64(56.0518358...))
     e_t = eccentricity_factor(h)
 
     # Computing hue :math:`h` quadrature :math:`H`.
-    H = hue_quadrature(h) if compute_H else np.full(h.shape, np.nan)
+    H = hue_quadrature(h) if compute_H else xp.full(h.shape, float("nan"))
     # TODO: Compute hue composition.
 
     # Step 6
@@ -487,6 +495,7 @@ def Hellwig2022_to_XYZ(
 
     Examples
     --------
+    >>> import numpy as np
     >>> specification = CAM_Specification_Hellwig2022(
     ...     J=41.731207905126638, C=0.025763615829912909, h=217.06795976739301
     ... )
@@ -528,6 +537,15 @@ def Hellwig2022_to_XYZ(
 
     L_A = as_float_array(L_A)
     XYZ_w = to_domain_100(XYZ_w)
+
+    xp = array_namespace(XYZ_w, L_A)
+
+    J = xp_asarray(J, xp=xp, like=XYZ_w)
+    C = xp_asarray(C, xp=xp, like=XYZ_w)
+    h = xp_asarray(h, xp=xp, like=XYZ_w)
+    M = xp_asarray(M, xp=xp, like=XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ_w)
+
     _X_w, Y_w, _Z_w = tsplit(XYZ_w)
 
     # Step 0
@@ -536,9 +554,13 @@ def Hellwig2022_to_XYZ(
 
     # Computing degree of adaptation :math:`D`.
     D = (
-        np.clip(degree_of_adaptation(surround.F, L_A), 0, 1)
+        xp.clip(
+            xp_asarray(degree_of_adaptation(surround.F, L_A), xp=xp, like=XYZ_w),
+            0,
+            1,
+        )
         if not discount_illuminant
-        else ones(L_A.shape)
+        else xp_asarray(ones(L_A.shape), xp=xp, like=XYZ_w)
     )
 
     F_L, z = viewing_conditions_dependent_parameters(Y_b, Y_w, L_A)
@@ -655,6 +677,7 @@ def achromatic_response_forward(RGB: ArrayLike) -> NDArrayFloat:
 
     Examples
     --------
+    >>> import numpy as np
     >>> RGB = np.array([7.94634384, 7.94713791, 7.9488967])
     >>> achromatic_response_forward(RGB)  # doctest: +ELLIPSIS
     np.float64(23.9322704...)
@@ -699,13 +722,15 @@ def opponent_colour_dimensions_inverse(
     P_p_1 = as_float_array(P_p_1)
     M = as_float_array(M)
 
-    hr = np.radians(h)
+    xp = array_namespace(P_p_1, M)
+
+    hr = xp_radians(h)
 
     with sdiv_mode():
         gamma = M / P_p_1
 
-    a = gamma * np.cos(hr)
-    b = gamma * np.sin(hr)
+    a = gamma * xp.cos(hr)
+    b = gamma * xp.sin(hr)
 
     return tstack([a, b])
 
@@ -733,7 +758,9 @@ def eccentricity_factor(h: ArrayLike) -> NDArrayFloat:
 
     h = as_float_array(h)
 
-    hr = np.radians(h)
+    xp = array_namespace(h)
+
+    hr = xp_radians(h)
 
     _h = hr
     _2_h = 2 * hr
@@ -741,14 +768,14 @@ def eccentricity_factor(h: ArrayLike) -> NDArrayFloat:
     _4_h = 4 * hr
 
     return (
-        -0.0582 * np.cos(_h)
-        - 0.0258 * np.cos(_2_h)
-        - 0.1347 * np.cos(_3_h)
-        + 0.0289 * np.cos(_4_h)
-        - 0.1475 * np.sin(_h)
-        - 0.0308 * np.sin(_2_h)
-        + 0.0385 * np.sin(_3_h)
-        + 0.0096 * np.sin(_4_h)
+        -0.0582 * xp.cos(_h)
+        - 0.0258 * xp.cos(_2_h)
+        - 0.1347 * xp.cos(_3_h)
+        + 0.0289 * xp.cos(_4_h)
+        - 0.1475 * xp.sin(_h)
+        - 0.0308 * xp.sin(_2_h)
+        + 0.0385 * xp.sin(_3_h)
+        + 0.0096 * xp.sin(_4_h)
         + 1
     )
 
@@ -832,7 +859,9 @@ def colourfulness_correlate(
     a = as_float_array(a)
     b = as_float_array(b)
 
-    return 43.0 * N_c * e_t * np.hypot(a, b)
+    xp = array_namespace(a, b)
+
+    return 43.0 * N_c * e_t * xp.hypot(a, b)
 
 
 def chroma_correlate(
@@ -971,12 +1000,14 @@ def hue_angle_dependency_Hellwig2022(
 
     h = as_float_array(h)
 
-    h_r = np.radians(h)
+    xp = array_namespace(h)
+
+    h_r = xp_radians(h)
 
     return as_float(
-        -0.160 * np.cos(h_r)
-        + 0.132 * np.cos(2 * h_r)
-        - 0.405 * np.sin(h_r)
-        + 0.080 * np.sin(2 * h_r)
+        -0.160 * xp.cos(h_r)
+        + 0.132 * xp.cos(2 * h_r)
+        - 0.405 * xp.sin(h_r)
+        + 0.080 * xp.sin(2 * h_r)
         + 0.792
     )

@@ -31,12 +31,15 @@ from colour.hints import Annotated, ArrayLike, Domain100, NDArrayFloat  # noqa: 
 from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArray,
+    array_namespace,
     as_float,
     as_float_array,
     from_range_degrees,
     row_as_diagonal,
     to_domain_100,
     tsplit,
+    xp_asarray,
+    xp_degrees,
 )
 
 __author__ = "Colour Developers"
@@ -257,18 +260,31 @@ b=np.float64(-52.6142956...))
     D = as_float_array(D)
     sigma = as_float_array(sigma)
 
+    xp = array_namespace(XYZ, XYZ_n)
+
+    XYZ_n = xp_asarray(XYZ_n, xp=xp, like=XYZ)
+    Y_n = xp_asarray(Y_n, xp=xp, like=XYZ)
+    D = xp_asarray(D, xp=xp, like=XYZ)
+    sigma = xp_asarray(sigma, xp=xp, like=XYZ)
+
     # Converting to cone responses.
     LMS_n = XYZ_to_rgb(XYZ_n)
 
     # Computing the :math:`A` matrix.
-    LMS_l_E = 3 * LMS_n / np.sum(LMS_n, axis=-1)[..., None]
+    LMS_l_E = 3 * LMS_n / xp.sum(LMS_n, axis=-1)[..., None]
     LMS_p_L = (1 + spow(Y_n[..., None], 1 / 3) + LMS_l_E) / (
         1 + spow(Y_n[..., None], 1 / 3) + 1 / LMS_l_E
     )
 
     LMS_a_L = (LMS_p_L + D[..., None] * (1 - LMS_p_L)) / LMS_n
 
-    M = np.matmul(np.matmul(MATRIX_R, row_as_diagonal(LMS_a_L)), MATRIX_XYZ_TO_HPE)
+    M = xp.matmul(
+        xp.matmul(
+            xp_asarray(MATRIX_R, xp=xp, like=XYZ),
+            row_as_diagonal(LMS_a_L),
+        ),
+        xp_asarray(MATRIX_XYZ_TO_HPE, xp=xp, like=XYZ),
+    )
     XYZ_ref = vecmul(M, XYZ)
 
     Y_ref: NDArrayFloat
@@ -282,11 +298,11 @@ b=np.float64(-52.6142956...))
     bR = 170 * (spow(Y_ref, sigma) - spow(Z_ref, sigma))
 
     # Computing the *hue* angle :math:`h^R`.
-    hR = np.degrees(np.arctan2(bR, aR)) % 360
+    hR = xp_degrees(xp.atan2(bR, aR)) % 360
     # TODO: Implement hue composition computation.
 
     # Computing the correlate of *chroma* :math:`C^R`.
-    CR = np.hypot(aR, bR)
+    CR = xp.hypot(aR, bR)
 
     # Computing the correlate of *saturation* :math:`s^R`.
     with sdiv_mode():

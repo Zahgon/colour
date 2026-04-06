@@ -780,12 +780,16 @@ def is_integer(a: Any) -> bool:
     Examples
     --------
     >>> is_integer(1)
-    np.True_
+    True
     >>> is_integer(1.01)
-    np.False_
+    False
     """
 
-    return abs(a - np.around(a)) <= THRESHOLD_INTEGER
+    try:
+        a_float = float(a)
+        return abs(a_float - round(a_float)) <= THRESHOLD_INTEGER
+    except (OverflowError, ValueError, TypeError):
+        return False
 
 
 def is_sibling(element: Any, mapping: Mapping) -> bool:

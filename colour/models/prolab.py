@@ -26,7 +26,14 @@ from colour.hints import (  # noqa: TC001
     Range1,
 )
 from colour.models import xy_to_xyY, xyY_to_XYZ
-from colour.utilities import as_float_array, from_range_1, ones, to_domain_1
+from colour.utilities import (
+    array_namespace,
+    as_float_array,
+    from_range_1,
+    ones,
+    to_domain_1,
+    xp_asarray,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -34,6 +41,7 @@ __license__ = "BSD-3-Clause - https://opensource.org/licenses/BSD-3-Clause"
 __maintainer__ = "Colour Developers"
 __email__ = "colour-developers@colour-science.org"
 __status__ = "Production"
+
 
 __all__ = [
     "MATRIX_Q",
@@ -75,12 +83,16 @@ def projective_transformation(a: ArrayLike, Q: ArrayLike) -> NDArrayFloat:
     """
 
     a = as_float_array(a)
-    Q = as_float_array(Q)
+
+    xp = array_namespace(a)
+
+    Q = xp_asarray(Q, xp=xp, like=a)
 
     # Concatenate array with ones along last axis for homogeneous coordinates
-    M = np.concatenate([a, ones((*a.shape[:-1], 1))], axis=-1)
 
-    homography = np.dot(M, np.transpose(Q))
+    M = xp.concat([a, xp_asarray(ones((*a.shape[:-1], 1)), xp=xp, like=a)], axis=-1)
+
+    homography = xp.matmul(M, xp.matrix_transpose(Q))
 
     return homography[..., 0:-1] / homography[..., -1][..., None]
 
@@ -133,7 +145,10 @@ def XYZ_to_ProLab(
     """
 
     XYZ = to_domain_1(XYZ)
-    XYZ_n = xyY_to_XYZ(xy_to_xyY(illuminant))
+
+    xp = array_namespace(XYZ)
+
+    XYZ_n = xp_asarray(xyY_to_XYZ(xy_to_xyY(illuminant)), xp=xp, like=XYZ)
 
     ProLab = projective_transformation(XYZ / XYZ_n, MATRIX_Q)
 
@@ -188,7 +203,10 @@ def ProLab_to_XYZ(
     """
 
     ProLab = to_domain_1(ProLab)
-    XYZ_n = xyY_to_XYZ(xy_to_xyY(illuminant))
+
+    xp = array_namespace(ProLab)
+
+    XYZ_n = xp_asarray(xyY_to_XYZ(xy_to_xyY(illuminant)), xp=xp, like=ProLab)
 
     XYZ = projective_transformation(ProLab, MATRIX_INVERSE_Q)
 

@@ -35,10 +35,12 @@ if typing.TYPE_CHECKING:
 
 from colour.utilities import (
     CanonicalMapping,
+    array_namespace,
     as_float,
     as_float_array,
     filter_kwargs,
     validate_method,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -98,8 +100,11 @@ def reaction_rate_MichaelisMenten_Michaelis1913(
     """
 
     S = as_float_array(S)
-    V_max = as_float_array(V_max)
-    K_m = as_float_array(K_m)
+
+    xp = array_namespace(S)
+
+    V_max = xp_asarray(V_max, xp=xp, like=S)
+    K_m = xp_asarray(K_m, xp=xp, like=S)
 
     v = (V_max * S) / (K_m + S)
 
@@ -152,6 +157,12 @@ def reaction_rate_MichaelisMenten_Abebe2017(
     V_max = as_float_array(V_max)
     K_m = as_float_array(K_m)
     b_m = as_float_array(b_m)
+
+    xp = array_namespace(S, V_max)
+
+    V_max = xp_asarray(V_max, xp=xp, like=S)
+    K_m = xp_asarray(K_m, xp=xp, like=S)
+    b_m = xp_asarray(b_m, xp=xp, like=S)
 
     v = (V_max * S) / (b_m * S + K_m)
 
@@ -269,8 +280,11 @@ def substrate_concentration_MichaelisMenten_Michaelis1913(
     """
 
     v = as_float_array(v)
-    V_max = as_float_array(V_max)
-    K_m = as_float_array(K_m)
+
+    xp = array_namespace(v)
+
+    V_max = xp_asarray(V_max, xp=xp, like=v)
+    K_m = xp_asarray(K_m, xp=xp, like=v)
 
     S = (v * K_m) / (V_max - v)
 
@@ -323,6 +337,12 @@ def substrate_concentration_MichaelisMenten_Abebe2017(
     V_max = as_float_array(V_max)
     K_m = as_float_array(K_m)
     b_m = as_float_array(b_m)
+
+    xp = array_namespace(v, V_max)
+
+    V_max = xp_asarray(V_max, xp=xp, like=v)
+    K_m = xp_asarray(K_m, xp=xp, like=v)
+    b_m = xp_asarray(b_m, xp=xp, like=v)
 
     S = (v * K_m) / (V_max - b_m * v)
 

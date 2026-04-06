@@ -17,7 +17,7 @@ from colour.models import XYZ_to_RGB
 from colour.recovery import MSDS_GAUSSIAN_BASIS, XYZ_to_msds, XYZ_to_sd
 from colour.recovery.gaussian import RGB_COLOURSPACE_GAUSSIAN
 from colour.recovery.smits1999 import RGB_to_msds_Smits1999
-from colour.utilities import domain_range_scale, is_scipy_installed
+from colour.utilities import domain_range_scale, is_scipy_installed, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -78,7 +78,7 @@ class TestXYZ_to_sd:
         for method, value in zip(m, v, strict=True):
             for scale, factor_a, factor_b in d_r:
                 with domain_range_scale(scale):
-                    np.testing.assert_allclose(
+                    xp_assert_close(
                         sd_to_XYZ_integration(
                             XYZ_to_sd(
                                 XYZ * factor_a,
@@ -124,7 +124,7 @@ class TestXYZ_to_msds:
 
         assert msds_gaussian_10nm.shape == (3, 43)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             msds_gaussian_10nm,
             np.array(
                 [
@@ -272,7 +272,7 @@ class TestXYZ_to_msds:
         msds_smits = XYZ_to_msds(XYZ, method="Smits 1999")
         assert msds_smits.shape == (3, 10)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             msds_smits,
             np.array(
                 [
@@ -330,7 +330,7 @@ class TestXYZ_to_msds:
         d_r = (("reference", 1), ("1", 1), ("100", 100))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     XYZ_to_msds(XYZ * factor, method="Gaussian"),
                     msds_reference,
                     atol=TOLERANCE_ABSOLUTE_TESTS,

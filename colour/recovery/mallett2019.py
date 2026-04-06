@@ -33,7 +33,13 @@ if typing.TYPE_CHECKING:
 
 from colour.hints import Domain1  # noqa: TC001
 from colour.recovery import MSDS_BASIS_FUNCTIONS_sRGB_MALLETT2019
-from colour.utilities import required, to_domain_1
+from colour.utilities import (
+    array_namespace,
+    as_float_array,
+    required,
+    to_domain_1,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -174,25 +180,29 @@ def spectral_primary_decomposition_Mallett2019(
 
     N = len(cmfs.shape)
 
-    R_to_XYZ = np.transpose(
+    cmfs_values = as_float_array(cmfs.values)
+
+    xp = array_namespace(cmfs_values)
+
+    R_to_XYZ = xp.transpose(
         illuminant.values[..., None]
-        * cmfs.values
-        / (np.sum(cmfs.values[:, 1] * illuminant.values))
+        * cmfs_values
+        / (xp.sum(cmfs_values[:, 1] * illuminant.values))
     )
-    R_to_RGB = np.dot(colourspace.matrix_XYZ_to_RGB, R_to_XYZ)
+    R_to_RGB = xp.matmul(colourspace.matrix_XYZ_to_RGB, R_to_XYZ)
     basis_to_RGB = block_diag(R_to_RGB, R_to_RGB, R_to_RGB)
 
-    primaries = np.reshape(np.identity(3), 9)
+    primaries = xp_reshape(xp.eye(3, dtype=R_to_XYZ.dtype), 9, xp=xp)
 
     # Ensure that the reflectances correspond to the correct RGB colours.
     colour_match = LinearConstraint(basis_to_RGB, primaries, primaries)
 
     # Ensure that the reflectances are bounded by [0, 1].
-    energy_conservation = Bounds(np.zeros(3 * N), np.ones(3 * N))
+    energy_conservation = Bounds(xp.zeros(3 * N), xp.ones(3 * N))
 
     # Ensure that the sum of the three bases is bounded by [0, 1].
-    sum_matrix = np.transpose(np.tile(np.identity(N), (3, 1)))
-    sum_constraint = LinearConstraint(sum_matrix, np.zeros(N), np.ones(N))
+    sum_matrix = xp.transpose(xp.tile(xp.eye(N, dtype=R_to_XYZ.dtype), (3, 1)))
+    sum_constraint = LinearConstraint(sum_matrix, xp.zeros(N), xp.ones(N))
 
     optimisation_settings = {
         "method": "SLSQP",
@@ -207,10 +217,10 @@ def spectral_primary_decomposition_Mallett2019(
         optimisation_settings.update(optimisation_kwargs)
 
     result = minimize(
-        metric, args=metric_args, x0=np.zeros(3 * N), **optimisation_settings
+        metric, args=metric_args, x0=xp.zeros(3 * N), **optimisation_settings
     )
 
-    basis_functions = np.transpose(np.reshape(result.x, (3, N)))
+    basis_functions = xp.transpose(xp_reshape(result.x, (3, N), xp=xp))
 
     return MultiSpectralDistributions(
         basis_functions,
@@ -372,8 +382,10 @@ def RGB_to_sd_Mallett2019(
 
     RGB = to_domain_1(RGB)
 
+    xp = array_namespace(RGB)
+
     sd = SpectralDistribution(
-        np.dot(RGB, np.transpose(basis_functions.values)),
+        xp.matmul(RGB, xp.transpose(basis_functions.values)),
         basis_functions.wavelengths,
     )
     sd.name = f"{RGB} (RGB) - Mallett (2019)"

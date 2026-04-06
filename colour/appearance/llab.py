@@ -38,12 +38,16 @@ from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArithmetic,
     MixinDataclassIterable,
+    array_namespace,
     as_float,
     as_float_array,
     from_range_degrees,
     to_domain_100,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_degrees,
+    xp_radians,
 )
 
 __author__ = "Colour Developers"
@@ -332,7 +336,10 @@ HC=None, a=np.float64(...), b=np.float64(-0.0190185...))
     RGB_0 = XYZ_to_RGB_LLAB(to_domain_100(XYZ_0))
 
     # Reference illuminant *CIE Standard Illuminant D Series* *D65*.
-    XYZ_0r = np.array([95.05, 100.00, 108.88])
+
+    xp = array_namespace(XYZ, XYZ_0)
+
+    XYZ_0r = xp_asarray([95.05, 100.00, 108.88], xp=xp)
     RGB_0r = XYZ_to_RGB_LLAB(XYZ_0r)
 
     # Computing chromatic adaptation.
@@ -454,10 +461,17 @@ def chromatic_adaptation(
     """
 
     R, G, B = tsplit(RGB)
-    R_0, G_0, B_0 = tsplit(RGB_0)
-    R_0r, G_0r, B_0r = tsplit(RGB_0r)
     Y = as_float_array(Y)
     D = as_float_array(D)
+
+    xp = array_namespace(R)
+
+    RGB_0 = xp_asarray(RGB_0, xp=xp, like=R)
+    RGB_0r = xp_asarray(RGB_0r, xp=xp, like=R)
+    R_0, G_0, B_0 = tsplit(RGB_0)
+    R_0r, G_0r, B_0r = tsplit(RGB_0r)
+    Y = xp_asarray(Y, xp=xp, like=R)
+    D = xp_asarray(D, xp=xp, like=R)
 
     beta = spow(B_0 / B_0r, 0.0834)
 
@@ -500,9 +514,11 @@ def f(x: ArrayLike, F_S: ArrayLike) -> NDArrayFloat:
     x = as_float_array(x)
     F_S = as_float_array(F_S)
 
+    xp = array_namespace(x)
+
     one_F_s = 1 / F_S
 
-    x_m = np.where(
+    x_m = xp.where(
         x > 0.008856,
         spow(x, one_F_s),
         ((spow(0.008856, one_F_s) - (16 / 116)) / 0.008856) * x + (16 / 116),
@@ -555,6 +571,12 @@ def opponent_colour_dimensions(
     F_S = as_float_array(F_S)
     F_L = as_float_array(F_L)
 
+    xp = array_namespace(XYZ)
+
+    Y_b = xp_asarray(Y_b, xp=xp, like=XYZ)
+    F_S = xp_asarray(F_S, xp=xp, like=XYZ)
+    F_L = xp_asarray(F_L, xp=xp, like=XYZ)
+
     # Account for background lightness contrast.
     z = 1 + F_L * spow(Y_b / 100, 0.5)
 
@@ -592,7 +614,9 @@ def hue_angle(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
     a = as_float_array(a)
     b = as_float_array(b)
 
-    h_L = np.degrees(np.arctan2(b, a)) % 360
+    xp = array_namespace(a, b)
+
+    h_L = xp_degrees(xp.atan2(b, a)) % 360
 
     return as_float(h_L)
 
@@ -625,8 +649,10 @@ def chroma_correlate(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
     a = as_float_array(a)
     b = as_float_array(b)
 
+    xp = array_namespace(a, b)
+
     c = spow(a**2 + b**2, 0.5)
-    Ch_L = 25 * np.log1p(0.05 * c)
+    Ch_L = 25 * xp.log1p(0.05 * c)
 
     return as_float(Ch_L)
 
@@ -672,7 +698,12 @@ def colourfulness_correlate(
     Ch_L = as_float_array(Ch_L)
     F_C = as_float_array(F_C)
 
-    S_C = 1 + 0.47 * np.log10(L) - 0.057 * np.log10(L) ** 2
+    xp = array_namespace(L, L_L)
+
+    L = xp_asarray(L, xp=xp, like=L_L)
+    F_C = xp_asarray(F_C, xp=xp, like=L_L)
+
+    S_C = 1 + 0.47 * xp.log10(L) - 0.057 * xp.log10(L) ** 2
     S_M = 0.7 + 0.02 * L_L - 0.0002 * L_L**2
     C_L = Ch_L * S_M * S_C * F_C
 
@@ -733,4 +764,4 @@ def final_opponent_signals(C_L: ArrayLike, h_L: ArrayLike) -> NDArrayFloat:
     array([-0.0119478..., -0.0139711...])
     """
 
-    return polar_to_cartesian(tstack([as_float_array(C_L), np.radians(h_L)]))
+    return polar_to_cartesian(tstack([as_float_array(C_L), xp_radians(h_L)]))

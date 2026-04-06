@@ -95,6 +95,7 @@ __all__ = [
     "NDArrayComplex",
     "NDArrayBoolean",
     "NDArrayStr",
+    "Array",
     "Domain1",
     "Domain10",
     "Domain100",
@@ -156,6 +157,9 @@ NDArrayReal: TypeAlias = NDArray[DTypeInt | DTypeFloat]
 NDArrayComplex: TypeAlias = NDArray[DTypeComplex]
 NDArrayBoolean: TypeAlias = NDArray[DTypeBoolean]
 NDArrayStr: TypeAlias = NDArray[np.str_]
+
+Array: TypeAlias = NDArray
+"""Array API compatible array type alias."""
 
 # Domain-Range Scale Type Aliases
 Domain1: TypeAlias = Annotated[ArrayLike, 1]

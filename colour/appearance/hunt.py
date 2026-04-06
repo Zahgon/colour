@@ -35,15 +35,16 @@ from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArithmetic,
     MixinDataclassIterable,
+    array_namespace,
     as_float,
     as_float_array,
     from_range_degrees,
-    ones,
     to_domain_100,
     tsplit,
     tstack,
     usage_warning,
-    zeros,
+    xp_asarray,
+    xp_interp,
 )
 
 __author__ = "Colour Developers"
@@ -379,6 +380,14 @@ M=np.float64(0.1238964...), H=None, HC=None)
     XYZ = to_domain_100(XYZ)
     XYZ_w = to_domain_100(XYZ_w)
     XYZ_b = to_domain_100(XYZ_b)
+    L_A = as_float_array(L_A)
+
+    xp = array_namespace(XYZ, XYZ_w)
+
+    XYZ_w = xp_asarray(XYZ_w, xp=xp, like=XYZ)
+    XYZ_b = xp_asarray(XYZ_b, xp=xp, like=XYZ)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ)
+
     _X, Y, _Z = tsplit(XYZ)
     _X_w, Y_w, _Z_w = tsplit(XYZ_w)
     X_b, Y_b, _Z_b = tsplit(XYZ_b)
@@ -398,9 +407,13 @@ M=np.float64(0.1238964...), H=None, HC=None)
     if surround.N_cb is None:
         N_cb = 0.725 * spow(Y_w / Y_b, 0.2)
         usage_warning(f'Unspecified "N_cb" argument, using approximation: "{N_cb}"')
+    else:
+        N_cb = surround.N_cb
     if surround.N_bb is None:
         N_bb = 0.725 * spow(Y_w / Y_b, 0.2)
         usage_warning(f'Unspecified "N_bb" argument, using approximation: "{N_bb}"')
+    else:
+        N_bb = surround.N_bb
 
     if L_AS is None and CCT_w is None:
         error = (
@@ -655,9 +668,8 @@ def f_n(x: ArrayLike) -> NDArrayFloat:
     """
 
     x_p = spow(x, 0.73)
-    x_m = 40 * (x_p / (x_p + 2))
 
-    return as_float_array(x_m)
+    return 40 * (x_p / (x_p + 2))  # pyright: ignore
 
 
 def chromatic_adaptation(
@@ -736,26 +748,33 @@ def chromatic_adaptation(
     L_A = as_float_array(L_A)
     F_L = as_float_array(F_L)
 
+    xp = array_namespace(XYZ, XYZ_w)
+
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ)
+    F_L = xp_asarray(F_L, xp=xp, like=XYZ)
+    XYZ_b = xp_asarray(XYZ_b, xp=xp, like=XYZ)
+    XYZ_w = xp_asarray(XYZ_w, xp=xp, like=XYZ)
+
     rgb = XYZ_to_rgb(XYZ)
     rgb_w = XYZ_to_rgb(XYZ_w)
     Y_w = XYZ_w[..., 1]
     Y_b = XYZ_b[..., 1]
 
-    h_rgb = 3 * rgb_w / np.sum(rgb_w, axis=-1)[..., None]
+    h_rgb = 3 * rgb_w / xp.sum(rgb_w, axis=-1)[..., None]
 
     # Computing chromatic adaptation factors.
     if not discount_illuminant:
         L_A_p = spow(L_A, 1 / 3)
         F_rgb = cast("NDArrayFloat", (1 + L_A_p + h_rgb) / (1 + L_A_p + (1 / h_rgb)))
     else:
-        F_rgb = ones(cast("NDArrayFloat", h_rgb).shape)
+        F_rgb = xp.ones_like(h_rgb)
 
     # Computing Helson-Judd effect parameters.
     if helson_judd_effect:
         Y_b_Y_w = Y_b / Y_w
         D_rgb = f_n(Y_b_Y_w * F_L * F_rgb[..., 1]) - f_n(Y_b_Y_w * F_L * F_rgb)
     else:
-        D_rgb = zeros(F_rgb.shape)
+        D_rgb = xp.zeros_like(F_rgb)
 
     # Computing cone bleach factors.
     B_rgb = 10**7 / (10**7 + 5 * L_A[..., None] * (rgb_w / 100))
@@ -912,7 +931,9 @@ def hue_angle(C: ArrayLike) -> NDArrayFloat:
 
     C_1, C_2, C_3 = tsplit(C)
 
-    hue = (180 * np.arctan2(0.5 * (C_2 - C_3) / 4.5, C_1 - (C_2 / 11)) / np.pi) % 360
+    xp = array_namespace(C_1, C_2, C_3)
+
+    hue = (180 * xp.atan2(0.5 * (C_2 - C_3) / 4.5, C_1 - (C_2 / 11)) / np.pi) % 360
 
     return as_float(hue)
 
@@ -940,12 +961,14 @@ def eccentricity_factor(hue: ArrayLike) -> NDArrayFloat:
 
     hue = as_float_array(hue)
 
+    xp = array_namespace(hue)
+
     h_s = HUE_DATA_FOR_HUE_QUADRATURE["h_s"]
     e_s = HUE_DATA_FOR_HUE_QUADRATURE["e_s"]
 
-    x = np.interp(hue, h_s, e_s)
-    x = np.where(hue < 20.14, 0.856 - (hue / 20.14) * 0.056, x)
-    x = np.where(hue > 237.53, 0.856 + 0.344 * (360 - hue) / (360 - 237.53), x)
+    x = xp_interp(hue, h_s, e_s, xp=xp)
+    x = xp.where(hue < 20.14, 0.856 - (hue / 20.14) * 0.056, x)
+    x = xp.where(hue > 237.53, 0.856 + 0.344 * (360 - hue) / (360 - 237.53), x)
 
     return as_float(x)
 
@@ -1026,6 +1049,13 @@ def yellowness_blueness_response(
     N_cb = as_float_array(N_cb)
     F_t = as_float_array(F_t)
 
+    xp = array_namespace(C)
+
+    e_s = xp_asarray(e_s, xp=xp, like=C)
+    N_c = xp_asarray(N_c, xp=xp, like=C)
+    N_cb = xp_asarray(N_cb, xp=xp, like=C)
+    F_t = xp_asarray(F_t, xp=xp, like=C)
+
     M_yb = 100 * (0.5 * (C_2 - C_3) / 4.5) * (e_s * (10 / 13) * N_c * N_cb * F_t)
 
     return as_float(M_yb)
@@ -1070,6 +1100,12 @@ def redness_greenness_response(
     e_s = as_float_array(e_s)
     N_c = as_float_array(N_c)
     N_cb = as_float_array(N_cb)
+
+    xp = array_namespace(C)
+
+    e_s = xp_asarray(e_s, xp=xp, like=C)
+    N_c = xp_asarray(N_c, xp=xp, like=C)
+    N_cb = xp_asarray(N_cb, xp=xp, like=C)
 
     M_rg = 100 * (C_1 - (C_2 / 11)) * (e_s * (10 / 13) * N_c * N_cb)
 
@@ -1134,7 +1170,9 @@ def saturation_correlate(M: ArrayLike, rgb_a: ArrayLike) -> NDArrayFloat:
     M = as_float_array(M)
     rgb_a = as_float_array(rgb_a)
 
-    s = 50 * M / np.sum(rgb_a, axis=-1)
+    xp = array_namespace(M, rgb_a)
+
+    s = 50 * M / xp.sum(rgb_a, axis=-1)
 
     return as_float(s)
 
@@ -1202,7 +1240,7 @@ def achromatic_signal(
     A_S = (f_n(F_LS * S_S_w) * 3.05 * B_S) + 0.3
 
     # Computing achromatic signal :math:`A`.
-    A = N_bb * (A_a - 1 + A_S - 0.3 + np.sqrt(1 + (0.3**2)))
+    A = N_bb * (A_a - 1 + A_S - 0.3 + spow(1 + (0.3**2), 0.5))
 
     return as_float(A)
 

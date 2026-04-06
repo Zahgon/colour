@@ -13,6 +13,7 @@ from colour.geometry import (
     primitive_vertices_quad_mpl,
     primitive_vertices_sphere,
 )
+from colour.utilities import xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -41,25 +42,25 @@ class TestPrimitiveVerticesQuadMpl:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_quad_mpl(),
             np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_quad_mpl(axis="+y"),
             np.array([[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_quad_mpl(axis="+x"),
             np.array([[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_quad_mpl(
                 width=0.2,
                 height=0.4,
@@ -78,7 +79,7 @@ class TestPrimitiveVerticesQuadMpl:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_quad_mpl(
                 width=-0.2,
                 height=-0.4,
@@ -98,7 +99,7 @@ class TestPrimitiveVerticesQuadMpl:
         )
 
         for plane in ("xy", "xz", "yz"):
-            np.testing.assert_allclose(
+            xp_assert_close(
                 primitive_vertices_quad_mpl(axis=plane),
                 primitive_vertices_quad_mpl(axis=MAPPING_PLANE_TO_AXIS[plane]),
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -119,25 +120,25 @@ class TestPrimitiveVerticesGridMpl:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_grid_mpl(),
             np.array([[[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_grid_mpl(axis="+y"),
             np.array([[[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_grid_mpl(axis="+x"),
             np.array([[[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_grid_mpl(
                 width=0.2,
                 height=0.4,
@@ -166,7 +167,7 @@ class TestPrimitiveVerticesGridMpl:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_grid_mpl(
                 width=-0.2,
                 height=-0.4,
@@ -208,7 +209,7 @@ class TestPrimitiveVerticesCubeMpl:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_cube_mpl(),
             np.array(
                 [
@@ -253,43 +254,43 @@ class TestPrimitiveVerticesCubeMpl:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_cube_mpl(planes=["+x"]),
             np.array([[[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_cube_mpl(planes=["-x"]),
             np.array([[[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_cube_mpl(planes=["+y"]),
             np.array([[[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_cube_mpl(planes=["-y"]),
             np.array([[[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_cube_mpl(planes=["+z"]),
             np.array([[[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_cube_mpl(planes=["-z"]),
             np.array([[[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_cube_mpl(
                 width=0.2,
                 height=0.4,
@@ -438,7 +439,7 @@ class TestPrimitiveVerticesCubeMpl:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_cube_mpl(
                 width=-0.2,
                 height=-0.4,
@@ -588,7 +589,7 @@ class TestPrimitiveVerticesCubeMpl:
         )
 
         for plane in MAPPING_PLANE_TO_AXIS:
-            np.testing.assert_allclose(
+            xp_assert_close(
                 primitive_vertices_cube_mpl(planes=[plane]),
                 primitive_vertices_cube_mpl(planes=[MAPPING_PLANE_TO_AXIS[plane]]),
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -607,7 +608,7 @@ class TestPrimitiveVerticesSphere:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_sphere(),
             np.array(
                 [
@@ -704,7 +705,7 @@ class TestPrimitiveVerticesSphere:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_sphere(intermediate=True),
             np.array(
                 [
@@ -793,7 +794,7 @@ class TestPrimitiveVerticesSphere:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_sphere(segments=6, axis="+y"),
             np.array(
                 [
@@ -856,7 +857,7 @@ class TestPrimitiveVerticesSphere:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_sphere(segments=6, axis="+x"),
             np.array(
                 [
@@ -919,7 +920,7 @@ class TestPrimitiveVerticesSphere:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             primitive_vertices_sphere(
                 radius=100,
                 segments=6,
@@ -988,7 +989,7 @@ class TestPrimitiveVerticesSphere:
         )
 
         for plane in ("xy", "xz", "yz"):
-            np.testing.assert_allclose(
+            xp_assert_close(
                 primitive_vertices_sphere(axis=plane),
                 primitive_vertices_sphere(axis=MAPPING_PLANE_TO_AXIS[plane]),
                 atol=TOLERANCE_ABSOLUTE_TESTS,

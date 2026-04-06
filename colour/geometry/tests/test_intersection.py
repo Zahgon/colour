@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
@@ -10,6 +15,7 @@ from colour.geometry import (
     intersect_line_segments,
     intersect_ray_circle_2d,
 )
+from colour.utilities import xp_asarray, xp_assert_close, xp_assert_equal
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -31,32 +37,32 @@ class TestExtendLineSegment:
     tests methods.
     """
 
-    def test_extend_line_segment(self) -> None:
+    def test_extend_line_segment(self, xp: ModuleType) -> None:
         """Test :func:`colour.geometry.intersection.extend_line_segment` definition."""
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             extend_line_segment(
-                np.array([0.95694934, 0.13720932]),
-                np.array([0.28382835, 0.60608318]),
+                xp_asarray([0.95694934, 0.13720932], xp=xp),
+                xp_asarray([0.28382835, 0.60608318], xp=xp),
             ),
             np.array([-0.5367248, 1.17765341]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             extend_line_segment(
-                np.array([0.95694934, 0.13720932]),
-                np.array([0.28382835, 0.60608318]),
+                xp_asarray([0.95694934, 0.13720932], xp=xp),
+                xp_asarray([0.28382835, 0.60608318], xp=xp),
                 5,
             ),
             np.array([-3.81893739, 3.46393435]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             extend_line_segment(
-                np.array([0.95694934, 0.13720932]),
-                np.array([0.28382835, 0.60608318]),
+                xp_asarray([0.95694934, 0.13720932], xp=xp),
+                xp_asarray([0.28382835, 0.60608318], xp=xp),
                 -1,
             ),
             np.array([1.1043815, 0.03451295]),
@@ -70,30 +76,32 @@ class TestIntersectLineSegments:
     definition unit tests methods.
     """
 
-    def test_intersect_line_segments(self) -> None:
+    def test_intersect_line_segments(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.geometry.intersection.intersect_line_segments`
         definition.
         """
 
-        l_1 = np.array(
+        l_1 = xp_asarray(
             [
                 [[0.15416284, 0.7400497], [0.26331502, 0.53373939]],
                 [[0.01457496, 0.91874701], [0.90071485, 0.03342143]],
-            ]
+            ],
+            xp=xp,
         )
-        l_2 = np.array(
+        l_2 = xp_asarray(
             [
                 [[0.95694934, 0.13720932], [0.28382835, 0.60608318]],
                 [[0.94422514, 0.85273554], [0.00225923, 0.52122603]],
                 [[0.55203763, 0.48537741], [0.76813415, 0.16071675]],
                 [[0.01457496, 0.91874701], [0.90071485, 0.03342143]],
-            ]
+            ],
+            xp=xp,
         )
 
         s = intersect_line_segments(l_1, l_2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             s.xy,
             np.array(
                 [
@@ -114,17 +122,17 @@ class TestIntersectLineSegments:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             s.intersect,
             np.array([[False, True, False, False], [True, True, True, False]]),
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             s.parallel,
             np.array([[False, False, False, False], [False, False, False, True]]),
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             s.coincident,
             np.array([[False, False, False, False], [False, False, False, True]]),
         )
@@ -136,36 +144,72 @@ class TestIntersectRayCircle2D:
     definition unit tests methods.
     """
 
-    def test_intersect_ray_circle_2d(self) -> None:
+    def test_intersect_ray_circle_2d(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.geometry.intersection.\
 intersect_ray_circle_2d` definition.
         """
 
         # Ray pointing up from inside a circle.
-        d = intersect_ray_circle_2d([0, 5], [0, 1], 10.0)
+        d = float(
+            np.asarray(
+                intersect_ray_circle_2d(
+                    xp_asarray([0.0, 5.0], xp=xp), xp_asarray([0.0, 1.0], xp=xp), 10.0
+                )
+            )
+        )
         assert d > 0.0
-        np.testing.assert_allclose(d, 5.0, atol=1e-10)
+        xp_assert_close(d, 5.0, atol=TOLERANCE_ABSOLUTE_TESTS * 0.001)
 
         # Ray pointing down from inside, should hit far side.
-        d = intersect_ray_circle_2d([0, 5], [0, -1], 10.0)
+        d = float(
+            np.asarray(
+                intersect_ray_circle_2d(
+                    xp_asarray([0.0, 5.0], xp=xp), xp_asarray([0.0, -1.0], xp=xp), 10.0
+                )
+            )
+        )
         assert d > 0.0
-        np.testing.assert_allclose(d, 15.0, atol=1e-10)
+        xp_assert_close(d, 15.0, atol=TOLERANCE_ABSOLUTE_TESTS * 0.001)
 
         # No intersection (outside, pointing away).
-        d = intersect_ray_circle_2d([0, 15], [0, 1], 10.0)
+        d = float(
+            np.asarray(
+                intersect_ray_circle_2d(
+                    xp_asarray([0.0, 15.0], xp=xp), xp_asarray([0.0, 1.0], xp=xp), 10.0
+                )
+            )
+        )
         assert d < 0.0
 
         # Horizontal ray from offset origin (3,0) -> hits circle r=5 at x=5.
-        d = intersect_ray_circle_2d([3, 0], [1, 0], 5.0)
+        d = float(
+            np.asarray(
+                intersect_ray_circle_2d(
+                    xp_asarray([3.0, 0.0], xp=xp), xp_asarray([1.0, 0.0], xp=xp), 5.0
+                )
+            )
+        )
         assert d > 0.0
-        np.testing.assert_allclose(d, 2.0, atol=1e-10)
+        xp_assert_close(d, 2.0, atol=TOLERANCE_ABSOLUTE_TESTS * 0.001)
 
         # Tangent (touch only) returns negative.
-        d = intersect_ray_circle_2d([0, 10], [1, 0], 10.0)
+        d = float(
+            np.asarray(
+                intersect_ray_circle_2d(
+                    xp_asarray([0.0, 10.0], xp=xp), xp_asarray([1.0, 0.0], xp=xp), 10.0
+                )
+            )
+        )
         assert d <= 0.0
 
         # Ray from origin pointing outward.
-        d = intersect_ray_circle_2d([0, 0], [1, 0], 5.0)
+        d = float(
+            np.asarray(
+                intersect_ray_circle_2d(
+                    xp_asarray([0.0, 0.0], xp=xp), xp_asarray([1.0, 0.0], xp=xp), 5.0
+                )
+            )
+        )
         assert d > 0.0
-        np.testing.assert_allclose(d, 5.0, atol=1e-10)
+        xp_assert_close(d, 5.0, atol=TOLERANCE_ABSOLUTE_TESTS * 0.001)

@@ -33,7 +33,7 @@ from colour.recovery.otsu2018 import (
     Node_Otsu2018,
     PartitionAxis,
 )
-from colour.utilities import domain_range_scale, metric_mse
+from colour.utilities import domain_range_scale, metric_mse, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -227,11 +227,11 @@ class TestXYZ_to_sd_Otsu2018:
         # Tests the round-trip with values of a colour checker.
         for sd in SDS_COLOURCHECKERS["ColorChecker N Ohta"].values():
             XYZ = sd_to_XYZ(sd, self._cmfs, self._sd_D65) / 100
-            Lab = XYZ_to_Lab(XYZ, self._xy_D65)
+            Lab = np.asarray(XYZ_to_Lab(XYZ, self._xy_D65))
 
             recovered_sd = XYZ_to_sd_Otsu2018(XYZ, self._cmfs, self._sd_D65, clip=False)
             recovered_XYZ = sd_to_XYZ(recovered_sd, self._cmfs, self._sd_D65) / 100
-            recovered_Lab = XYZ_to_Lab(recovered_XYZ, self._xy_D65)
+            recovered_Lab = np.asarray(XYZ_to_Lab(recovered_XYZ, self._xy_D65))
 
             error = metric_mse(
                 reshape_sd(sd, SPECTRAL_SHAPE_OTSU2018).values,
@@ -273,7 +273,7 @@ class TestXYZ_to_sd_Otsu2018:
         d_r = (("reference", 1, 1), ("1", 1, 0.01), ("100", 100, 1))
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     sd_to_XYZ(
                         XYZ_to_sd_Otsu2018(XYZ_i * factor_a, self._cmfs, self._sd_D65),
                         self._cmfs,
@@ -399,7 +399,7 @@ class TestData_Otsu2018:
     def test_origin(self) -> None:
         """Test :meth:`colour.recovery.otsu2018.Data_Otsu2018.origin` method."""
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data.origin(4, 1),
             0.255284008578559,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -450,7 +450,7 @@ class TestData_Otsu2018:
 
         assert data.basis_functions is not None
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.abs(data.basis_functions),
             np.array(
                 [
@@ -575,7 +575,7 @@ class TestData_Otsu2018:
 
         assert data.mean is not None
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.mean,
             np.array(
                 [
@@ -630,7 +630,7 @@ class TestData_Otsu2018:
 
         data.PCA()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.reconstruct(
                 np.array(
                     [
@@ -703,7 +703,7 @@ reconstruction_error` method.
 
         data = Data_Otsu2018(self._reflectances, self._cmfs, self._sd_D65)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.reconstruction_error(),
             2.753352549148681,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -820,12 +820,8 @@ class TestNode_Otsu2018:
 
         assert (len(partition[0].data), len(partition[1].data)) == (10, 14)
 
-        np.testing.assert_allclose(
-            axis.origin, 0.324111380117147, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
-        np.testing.assert_allclose(
-            partition_error, 2.0402980027, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xp_assert_close(axis.origin, 0.324111380117147, atol=TOLERANCE_ABSOLUTE_TESTS)
+        xp_assert_close(partition_error, 2.0402980027, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     def test_leaf_reconstruction_error(self) -> None:
         """
@@ -833,7 +829,7 @@ class TestNode_Otsu2018:
 leaf_reconstruction_error` method.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._node_b.leaf_reconstruction_error(),
             1.145340908277367e-29,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -845,7 +841,7 @@ leaf_reconstruction_error` method.
 branch_reconstruction_error` method.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._node_a.branch_reconstruction_error(),
             3.900015991807948e-25,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -905,7 +901,7 @@ class TestTree_Otsu2018:
         property.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._tree.reflectances,
             np.transpose(
                 reshape_msds(
@@ -942,13 +938,13 @@ class TestTree_Otsu2018:
 
         for sd in SDS_COLOURCHECKERS["ColorChecker N Ohta"].values():
             XYZ = sd_to_XYZ(sd, self._cmfs, self._sd_D65) / 100
-            Lab = XYZ_to_Lab(XYZ, self._xy_D65)
+            Lab = np.asarray(XYZ_to_Lab(XYZ, self._xy_D65))
 
             recovered_sd = XYZ_to_sd_Otsu2018(
                 XYZ, self._cmfs, self._sd_D65, dataset, False
             )
             recovered_XYZ = sd_to_XYZ(recovered_sd, self._cmfs, self._sd_D65) / 100
-            recovered_Lab = XYZ_to_Lab(recovered_XYZ, self._xy_D65)
+            recovered_Lab = np.asarray(XYZ_to_Lab(recovered_XYZ, self._xy_D65))
 
             error = metric_mse(
                 reshape_sd(sd, SPECTRAL_SHAPE_OTSU2018).values,

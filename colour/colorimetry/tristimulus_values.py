@@ -45,8 +45,6 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import lagrange_coefficients, sdiv, sdiv_mode
 from colour.colorimetry import (
     SPECTRAL_SHAPE_DEFAULT,
@@ -72,8 +70,10 @@ from colour.hints import Real, cast
 from colour.utilities import (
     CACHE_REGISTRY,
     CanonicalMapping,
+    array_namespace,
     as_float_array,
     as_int_scalar,
+    as_ndarray,
     attest,
     filter_kwargs,
     from_range_100,
@@ -83,6 +83,8 @@ from colour.utilities import (
     optional,
     runtime_warning,
     validate_method,
+    xp_asarray,
+    xp_reshape,
 )
 
 __author__ = "Colour Developers"
@@ -273,10 +275,14 @@ def lagrange_coefficients_ASTME2022(
 
     hash_key = hash((interval, interval_type))
 
-    if is_caching_enabled() and hash_key in _CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS:
-        return np.copy(_CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS[hash_key])
+    xp = array_namespace()
 
-    r_n = np.linspace(1 / interval, 1 - (1 / interval), interval - 1)
+    if is_caching_enabled() and hash_key in _CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS:
+        return xp.asarray(
+            _CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS[hash_key], copy=True
+        )
+
+    r_n = xp.linspace(1 / interval, 1 - (1 / interval), interval - 1)
     d = 3
     if interval_type == "inner":
         r_n += 1
@@ -284,7 +290,7 @@ def lagrange_coefficients_ASTME2022(
 
     lica = as_float_array([lagrange_coefficients(r, d) for r in r_n])
 
-    _CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS[hash_key] = np.copy(lica)
+    _CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS[hash_key] = xp.asarray(lica, copy=True)
 
     return lica
 
@@ -407,16 +413,29 @@ def tristimulus_weighting_factors_ASTME2022(
 
     global _CACHE_TRISTIMULUS_WEIGHTING_FACTORS  # noqa: PLW0602
 
-    hash_key = hash((cmfs, illuminant, shape, k, get_domain_range_scale()))
+    hash_key = hash(
+        (
+            cmfs,
+            illuminant,
+            shape,
+            k,
+            get_domain_range_scale(),
+            type(illuminant.values).__module__,
+        )
+    )
+
+    xp = array_namespace()
 
     if is_caching_enabled() and hash_key in _CACHE_TRISTIMULUS_WEIGHTING_FACTORS:
-        return np.copy(_CACHE_TRISTIMULUS_WEIGHTING_FACTORS[hash_key])
+        return xp.asarray(_CACHE_TRISTIMULUS_WEIGHTING_FACTORS[hash_key], copy=True)
 
     Y = cmfs.values
     S = illuminant.values
 
     interval_i = int(shape.interval)
     W = S[::interval_i, None] * Y[::interval_i, :]
+
+    xp = array_namespace(W)
 
     # First and last measurement intervals *Lagrange Coefficients*.
     c_c = lagrange_coefficients_ASTME2022(interval_i, "boundary")
@@ -437,49 +456,47 @@ def tristimulus_weighting_factors_ASTME2022(
     # Only apply Lagrange interpolation when interval > 1
     if r_c > 0:
         # First interval: W[:3, :] += sum over h of c_c[h, g] * S[h+1] * Y[h+1, :]
-        first_interval = np.sum(
+        first_interval = xp.sum(
             c_c[:, :, None] * (S[1 : r_c + 1, None, None] * Y[1 : r_c + 1, None, :]),
             axis=0,
         )
-        W = np.concatenate([W[:3, :] + first_interval, W[3:, :]], axis=0)
+        W = xp.concat([W[:3, :] + first_interval, W[3:, :]], axis=0)
 
         # Last interval: W[i_cm-2:i_cm+1, :] += contributions with reversed c_c
-        last_interval = np.sum(
+        last_interval = xp.sum(
             c_c[::-1, :, None]
             * (S[w_lif : w_lif + r_c, None, None] * Y[w_lif : w_lif + r_c, None, :]),
             axis=0,
         )
-        W = np.concatenate(
+        W = xp.concat(
             [W[: i_cm - 2, :], W[i_cm - 2 : i_cm + 1, :] + last_interval[::-1, :]],
             axis=0,
         )
 
         # Intermediate intervals: accumulate c_b contributions
         for h in range(i_c - 3):
-            w_indices = (r_c + 1) * (h + 1) + 1 + np.arange(r_c)
-            contrib = np.sum(
+            w_indices = (r_c + 1) * (h + 1) + 1 + xp.arange(r_c)
+            contrib = xp.sum(
                 c_b[:, :, None] * (S[w_indices, None, None] * Y[w_indices, None, :]),
                 axis=0,
             )
-            W = np.concatenate(
-                [W[:h, :], W[h : h + 4, :] + contrib, W[h + 4 :, :]], axis=0
-            )
+            W = xp.concat([W[:h, :], W[h : h + 4, :] + contrib, W[h + 4 :, :]], axis=0)
 
         # Extrapolation of potential incomplete interval
         extrap_start = as_int_scalar(w_c - ((w_c - 1) % interval_i))
         if extrap_start < w_c:
-            extrap_contrib = np.sum(
+            extrap_contrib = xp.sum(
                 S[extrap_start:w_c, None] * Y[extrap_start:w_c, :], axis=0
             )
-            W = np.concatenate(
+            W = xp.concat(
                 [W[:i_cm, :], W[i_cm : i_cm + 1, :] + extrap_contrib, W[i_cm + 1 :, :]],
                 axis=0,
             )
 
     with sdiv_mode():
-        W = W * optional(k, sdiv(100, np.sum(W, axis=0)[1]))
+        W = W * optional(k, sdiv(100, xp.sum(W, axis=0)[1]))
 
-    _CACHE_TRISTIMULUS_WEIGHTING_FACTORS[hash_key] = np.copy(W)
+    _CACHE_TRISTIMULUS_WEIGHTING_FACTORS[hash_key] = xp.asarray(W, copy=True)
 
     return W
 
@@ -553,12 +570,14 @@ def adjust_tristimulus_weighting_factors_ASTME308(
 
     W = as_float_array(W)
 
+    xp = array_namespace(W)
+
     start_index = int((shape_t.start - shape_r.start) / shape_r.interval)
     end_index = int((shape_r.end - shape_t.end) / shape_r.interval)
 
     # Compute sums of trimmed portions
-    first_summation = np.sum(W[:start_index], axis=0) if start_index > 0 else 0
-    last_summation = np.sum(W[-end_index:], axis=0) if end_index > 0 else 0
+    first_summation = xp.sum(W[:start_index], axis=0) if start_index > 0 else 0
+    last_summation = xp.sum(W[-end_index:], axis=0) if end_index > 0 else 0
 
     # Get the result slice
     end_slice = -end_index if end_index > 0 else None
@@ -566,7 +585,7 @@ def adjust_tristimulus_weighting_factors_ASTME308(
 
     # Build adjustment array using row index broadcasting
     n = W_slice.shape[0]
-    row_indices = np.arange(n)
+    row_indices = xp.arange(n)
     adjustment = (row_indices == 0)[:, None] * first_summation + (row_indices == n - 1)[
         :, None
     ] * last_summation
@@ -657,15 +676,20 @@ def tristimulus_weighting_factors_integration(
     XYZ_b = cmfs.values
     S = illuminant.values
 
+    xp = array_namespace(XYZ_b, S)
+
+    XYZ_b = xp_asarray(XYZ_b, xp=xp)
+    S = xp_asarray(S, xp=xp)
+
     d_w = cmfs.shape.interval
 
     # normalisation constant k from Y = 100 of perfect diffuser
     with sdiv_mode():
-        k = cast("Real", optional(k, sdiv(100, (np.sum(XYZ_b[..., 1] * S) * d_w))))
+        k = cast("Real", optional(k, sdiv(100, (xp.sum(XYZ_b[..., 1] * S) * d_w))))
 
     # --- weights matrix A (DIN EN ISO 18314-4, eq. 7-8) ---
     # A[i, :] = k * S(λ_i) * [x̄(λ_i), ȳ(λ_i), z̄(λ_i)] * Δλ
-    return k * S[..., np.newaxis] * XYZ_b * d_w  # shape: (n, 3)
+    return k * S[..., None] * XYZ_b * d_w  # shape: (n, 3)
 
 
 def sd_to_XYZ_integration(
@@ -746,6 +770,7 @@ def sd_to_XYZ_integration(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SDS_ILLUMINANTS
     >>> cmfs = MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
     >>> illuminant = SDS_ILLUMINANTS["D65"]
@@ -818,7 +843,11 @@ def sd_to_XYZ_integration(
                 else reshape_msds(sd, shape, copy=False)
             )
 
-        R = np.transpose(sd.values)
+        R = as_float_array(sd.values)
+
+        xp = array_namespace(R)
+
+        R = xp.matrix_transpose(R) if R.ndim >= 2 else R
         shape_R = R.shape
         wl_c_r = R.shape[-1]
     else:
@@ -830,6 +859,9 @@ def sd_to_XYZ_integration(
         shape = cast("SpectralShape", shape)
 
         R = as_float_array(sd)
+
+        xp = array_namespace(R)
+
         shape_R = R.shape
         wl_c_r = R.shape[-1]
         wl_c = len(shape.wavelengths)
@@ -848,13 +880,18 @@ def sd_to_XYZ_integration(
         runtime_warning(f'Aligning "{illuminant.name}" illuminant shape to "{shape}".')
         illuminant = reshape_sd(illuminant, shape, copy=False)
 
-    R = np.reshape(R, (-1, wl_c_r))
+    R = xp_reshape(R, (-1, wl_c_r), xp=xp)
 
     A = tristimulus_weighting_factors_integration(cmfs, illuminant, shape, k)
 
-    XYZ = np.dot(R, A)
+    xp = array_namespace(R, A)
 
-    XYZ = from_range_100(np.reshape(XYZ, [*list(shape_R[:-1]), 3]))
+    R = xp_asarray(R, xp=xp)
+    A = xp_asarray(A, xp=xp, like=R)
+
+    XYZ = xp.matmul(R, A)
+
+    XYZ = from_range_100(xp_reshape(XYZ, [*list(shape_R[:-1]), 3], xp=xp))
 
     if as_percentage:
         XYZ /= 100
@@ -920,6 +957,7 @@ def sd_to_XYZ_tristimulus_weighting_factors_ASTME308(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SDS_ILLUMINANTS
     >>> cmfs = MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
     >>> illuminant = SDS_ILLUMINANTS["D65"]
@@ -1001,9 +1039,11 @@ def sd_to_XYZ_tristimulus_weighting_factors_ASTME308(
         W, SpectralShape(start_w, end_w, sd.shape.interval), sd.shape
     )
 
-    R = sd.values
+    R = as_float_array(sd.values)
 
-    XYZ = np.sum(W * R[..., None], axis=0)
+    xp = array_namespace(R)
+
+    XYZ = xp.sum(W * R[..., None], axis=0)
 
     return from_range_100(XYZ)
 
@@ -1084,6 +1124,7 @@ def sd_to_XYZ_ASTME308(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SDS_ILLUMINANTS
     >>> cmfs = MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
     >>> illuminant = SDS_ILLUMINANTS["D65"]
@@ -1337,6 +1378,7 @@ def sd_to_XYZ(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SDS_ILLUMINANTS
     >>> cmfs = MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
     >>> illuminant = SDS_ILLUMINANTS["D65"]
@@ -1396,7 +1438,7 @@ def sd_to_XYZ(
             (
                 sd
                 if isinstance(sd, (SpectralDistribution, MultiSpectralDistributions))
-                else int_digest(np.asarray(sd).tobytes())
+                else int_digest(as_ndarray(sd).tobytes())
             ),
             cmfs,
             illuminant,
@@ -1404,11 +1446,18 @@ def sd_to_XYZ(
             method,
             tuple(kwargs.items()),
             get_domain_range_scale(),
+            type(
+                sd.values if hasattr(sd, "values") else sd  # pyright: ignore
+            ).__module__,
         )
     )
 
     if is_caching_enabled() and hash_key in _CACHE_SD_TO_XYZ:
-        return np.copy(_CACHE_SD_TO_XYZ[hash_key])
+        XYZ = _CACHE_SD_TO_XYZ[hash_key]
+
+        xp = array_namespace(XYZ)
+
+        return xp.asarray(XYZ, copy=True)
 
     if isinstance(sd, MultiSpectralDistributions):
         runtime_warning(
@@ -1420,7 +1469,9 @@ def sd_to_XYZ(
 
     XYZ = function(sd, cmfs, illuminant, k=k, **filter_kwargs(function, **kwargs))
 
-    _CACHE_SD_TO_XYZ[hash_key] = np.copy(XYZ)
+    xp = array_namespace(XYZ)
+
+    _CACHE_SD_TO_XYZ[hash_key] = xp.asarray(XYZ, copy=True)
 
     return XYZ
 
@@ -1517,6 +1568,7 @@ def msds_to_XYZ_integration(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SDS_ILLUMINANTS
     >>> cmfs = MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
     >>> illuminant = SDS_ILLUMINANTS["D65"]
@@ -1739,6 +1791,7 @@ def msds_to_XYZ_ASTME308(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SDS_ILLUMINANTS
     >>> cmfs = MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
     >>> illuminant = SDS_ILLUMINANTS["D65"]
@@ -2033,6 +2086,7 @@ def msds_to_XYZ(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SDS_ILLUMINANTS
     >>> cmfs = MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
     >>> illuminant = SDS_ILLUMINANTS["D65"]
@@ -2236,10 +2290,13 @@ def wavelength_to_XYZ(
     """
 
     wavelength = as_float_array(wavelength)
+
+    xp = array_namespace(wavelength)
+
     cmfs, _illuminant = handle_spectral_arguments(cmfs)
 
     shape = cmfs.shape
-    if np.min(wavelength) < shape.start or np.max(wavelength) > shape.end:
+    if xp.min(wavelength) < shape.start or xp.max(wavelength) > shape.end:
         error = (
             f'"{wavelength}nm" wavelength is not in '
             f'"[{shape.start}, {shape.end}]" domain!'
@@ -2247,4 +2304,8 @@ def wavelength_to_XYZ(
 
         raise ValueError(error)
 
-    return np.reshape(cmfs[np.ravel(wavelength)], (*wavelength.shape, 3))
+    return xp_reshape(
+        cmfs[xp_reshape(wavelength, (-1,), xp=xp)],
+        (*wavelength.shape, 3),
+        xp=xp,
+    )

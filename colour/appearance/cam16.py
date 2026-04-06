@@ -61,6 +61,7 @@ from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArithmetic,
     MixinDataclassIterable,
+    array_namespace,
     as_float,
     as_float_array,
     from_range_100,
@@ -70,6 +71,7 @@ from colour.utilities import (
     to_domain_100,
     to_domain_degrees,
     tsplit,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -270,9 +272,15 @@ M=np.float64(0.1074367...), H=np.float64(275.5949861...), HC=None)
 
     XYZ = to_domain_100(XYZ)
     XYZ_w = to_domain_100(XYZ_w)
-    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
     L_A = as_float_array(L_A)
     Y_b = as_float_array(Y_b)
+
+    xp = array_namespace(XYZ)
+
+    XYZ_w = xp_asarray(XYZ_w, xp=xp, like=XYZ)
+    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ)
+    Y_b = xp_asarray(Y_b, xp=xp, like=XYZ)
 
     # Step 0
     # Converting *CIE XYZ* tristimulus values to sharpened *RGB* values.
@@ -280,9 +288,13 @@ M=np.float64(0.1074367...), H=np.float64(275.5949861...), HC=None)
 
     # Computing degree of adaptation :math:`D`.
     D = (
-        np.clip(degree_of_adaptation(surround.F, L_A), 0, 1)
+        xp.clip(
+            xp_asarray(degree_of_adaptation(surround.F, L_A), xp=xp, like=XYZ_w),
+            0,
+            1,
+        )
         if not discount_illuminant
-        else ones(L_A.shape)
+        else xp_asarray(ones(L_A.shape), xp=xp, like=XYZ_w)
     )
 
     n, F_L, N_bb, N_cb, z = viewing_conditions_dependent_parameters(Y_b, Y_w, L_A)
@@ -319,7 +331,7 @@ M=np.float64(0.1074367...), H=np.float64(275.5949861...), HC=None)
     e_t = eccentricity_factor(h)
 
     # Computing hue :math:`h` quadrature :math:`H`.
-    H = hue_quadrature(h) if compute_H else np.full(h.shape, np.nan)
+    H = hue_quadrature(h) if compute_H else xp.full(h.shape, float("nan"))
     # TODO: Compute hue composition.
 
     # Step 6
@@ -460,6 +472,15 @@ def CAM16_to_XYZ(
     M = to_domain_100(M)
     L_A = as_float_array(L_A)
     XYZ_w = to_domain_100(XYZ_w)
+
+    xp = array_namespace(XYZ_w, L_A)
+
+    J = xp_asarray(J, xp=xp, like=XYZ_w)
+    C = xp_asarray(C, xp=xp, like=XYZ_w)
+    h = xp_asarray(h, xp=xp, like=XYZ_w)
+    M = xp_asarray(M, xp=xp, like=XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ_w)
+
     _X_w, Y_w, _Z_w = tsplit(XYZ_w)
 
     # Step 0
@@ -468,9 +489,13 @@ def CAM16_to_XYZ(
 
     # Computing degree of adaptation :math:`D`.
     D = (
-        np.clip(degree_of_adaptation(surround.F, L_A), 0, 1)
+        xp.clip(
+            xp_asarray(degree_of_adaptation(surround.F, L_A), xp=xp, like=XYZ_w),
+            0,
+            1,
+        )
         if not discount_illuminant
-        else ones(L_A.shape)
+        else xp_asarray(ones(L_A.shape), xp=xp, like=XYZ_w)
     )
 
     n, F_L, N_bb, N_cb, z = viewing_conditions_dependent_parameters(Y_b, Y_w, L_A)
@@ -512,7 +537,7 @@ def CAM16_to_XYZ(
     # Step 3
     # Computing opponent colour dimensions :math:`a` and :math:`b`.
     ab = opponent_colour_dimensions_inverse(P_n, h)
-    a, b = tsplit(ab) * np.where(t == 0, 0, 1)
+    a, b = tsplit(ab) * xp.where(t == 0, 0, 1)
 
     # Step 4
     # Applying post-adaptation non-linear response compression matrix.

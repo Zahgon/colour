@@ -23,7 +23,7 @@ from colour.io import (
     write_image_Imageio,
     write_image_OpenImageIO,
 )
-from colour.utilities import attest, full
+from colour.utilities import attest, full, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -111,7 +111,7 @@ class TestConvertBitDepth:
         )
 
         assert convert_bit_depth(a, "float16").dtype is np.dtype("float16")
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert_bit_depth(a, "float16"),
             np.array(
                 [
@@ -127,11 +127,11 @@ class TestConvertBitDepth:
                     1.0000,
                 ]
             ),
-            atol=5e-4,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 5000,
         )
 
         assert convert_bit_depth(a, "float32").dtype is np.dtype("float32")
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert_bit_depth(a, "float32"),
             np.array(
                 [
@@ -166,7 +166,7 @@ class TestConvertBitDepth:
         np.testing.assert_equal(convert_bit_depth(a, "uint16"), a)
 
         assert convert_bit_depth(a, "float16").dtype is np.dtype("float16")
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert_bit_depth(a, "float16"),
             np.array(
                 [
@@ -182,11 +182,11 @@ class TestConvertBitDepth:
                     1.0000,
                 ]
             ),
-            atol=5e-2,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 500000,
         )
 
         assert convert_bit_depth(a, "float32").dtype is np.dtype("float32")
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert_bit_depth(a, "float32"),
             np.array(
                 [
@@ -237,7 +237,7 @@ class TestConvertBitDepth:
         )
 
         assert convert_bit_depth(a, "float16").dtype is np.dtype("float16")
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert_bit_depth(a, "float16"),
             np.array(
                 [
@@ -253,11 +253,11 @@ class TestConvertBitDepth:
                     1.0000,
                 ]
             ),
-            atol=5e-4,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 5000,
         )
 
         assert convert_bit_depth(a, "float32").dtype is np.dtype("float32")
-        np.testing.assert_allclose(
+        xp_assert_close(
             convert_bit_depth(a, "float32"), a, atol=TOLERANCE_ABSOLUTE_TESTS
         )
 
@@ -439,7 +439,7 @@ class TestWriteImageOpenImageIO:
                 if write_attribute.name == read_attribute.name:
                     attribute_exists = True
                     if isinstance(write_attribute.value, tuple):
-                        np.testing.assert_allclose(
+                        xp_assert_close(
                             write_attribute.value,
                             read_attribute.value,
                             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -552,9 +552,7 @@ class TestWriteImageImageio:
         target_path = os.path.join(self._temporary_directory, "CMS_Test_Pattern.exr")
         write_image_Imageio(source_image, target_path)
         target_image = read_image_Imageio(target_path)
-        np.testing.assert_allclose(
-            source_image, target_image, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xp_assert_close(source_image, target_image, atol=TOLERANCE_ABSOLUTE_TESTS)
         assert target_image.shape == (1267, 1274, 3)
         assert target_image.dtype is np.dtype("float32")
 
@@ -612,9 +610,7 @@ class TestWriteImage:
         target_path = os.path.join(self._temporary_directory, "CMS_Test_Pattern.exr")
         write_image(source_image, target_path)
         target_image = read_image(target_path)
-        np.testing.assert_allclose(
-            source_image, target_image, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xp_assert_close(source_image, target_image, atol=TOLERANCE_ABSOLUTE_TESTS)
         assert target_image.shape == (1267, 1274, 3)
         assert target_image.dtype is np.dtype("float32")
 

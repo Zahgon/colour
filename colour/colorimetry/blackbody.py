@@ -30,7 +30,13 @@ from colour.constants import CONSTANT_BOLTZMANN, CONSTANT_LIGHT_SPEED
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, NDArrayFloat
 
-from colour.utilities import as_float, as_float_array
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    xp_asarray,
+    xp_reshape,
+)
 from colour.utilities.common import attest
 
 __author__ = "Colour Developers"
@@ -131,15 +137,21 @@ def planck_law(
     l = as_float_array(wavelength)  # noqa: E741
     t = as_float_array(temperature)
 
-    attest(np.all(l > 0), "Wavelengths must be positive real numbers!")
+    xp = array_namespace(l, t)
 
-    l = np.ravel(l)[..., None]  # noqa: E741
-    t = np.ravel(t)[None, ...]
+    l = xp_asarray(l, xp=xp, like=t)  # noqa: E741
+    t = xp_asarray(t, xp=xp, like=l)
 
-    d = 1 / np.expm1(c2 / (n * l * t))
-    p = ((c1 * n**-2 * l**-5) / np.pi) * d
+    attest(xp.all(l > 0), "Wavelengths must be positive real numbers!")
 
-    return as_float(np.squeeze(p))
+    l = xp_reshape(l, (-1,), xp=xp)[..., None]  # noqa: E741
+    t = xp_reshape(t, (-1,), xp=xp)[None, ...]
+
+    d = 1 / xp.expm1(c2 / (n * l * t))
+    p = ((c1 * n**-2 * l**-5) / xp_asarray(np.pi, xp=xp, like=l)) * d
+
+    axes = tuple(i for i, s in enumerate(p.shape) if s == 1)
+    return as_float(xp.squeeze(p, axis=axes) if axes else p)
 
 
 blackbody_spectral_radiance = planck_law
@@ -277,15 +289,21 @@ def rayleigh_jeans_law(wavelength: ArrayLike, temperature: ArrayLike) -> NDArray
     l = as_float_array(wavelength)  # noqa: E741
     t = as_float_array(temperature)
 
-    l = np.ravel(l)[..., None]  # noqa: E741
-    t = np.ravel(t)[None, ...]
+    xp = array_namespace(l, t)
+
+    l = xp_asarray(l, xp=xp, like=t)  # noqa: E741
+    t = xp_asarray(t, xp=xp, like=l)
+
+    l = xp_reshape(l, (-1,), xp=xp)[..., None]  # noqa: E741
+    t = xp_reshape(t, (-1,), xp=xp)[None, ...]
 
     c = CONSTANT_LIGHT_SPEED
     k_B = CONSTANT_BOLTZMANN
 
     B = (2 * c * k_B * t) / (l**4)
 
-    return as_float(np.squeeze(B))
+    axes = tuple(i for i in range(B.ndim) if B.shape[i] == 1)
+    return as_float(xp.squeeze(B, axis=axes) if axes else B)
 
 
 def sd_rayleigh_jeans(

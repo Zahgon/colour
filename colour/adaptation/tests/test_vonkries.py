@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
@@ -11,7 +16,13 @@ from colour.adaptation import (
     matrix_chromatic_adaptation_VonKries,
 )
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
-from colour.utilities import domain_range_scale, ignore_numpy_errors
+from colour.utilities import (
+    domain_range_scale,
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -32,16 +43,16 @@ class TestMatrixChromaticAdaptationVonKries:
 matrix_chromatic_adaptation_VonKries` definition unit tests methods.
     """
 
-    def test_matrix_chromatic_adaptation_VonKries(self) -> None:
+    def test_matrix_chromatic_adaptation_VonKries(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.adaptation.vonkries.\
 matrix_chromatic_adaptation_VonKries` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_chromatic_adaptation_VonKries(
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.96429568, 1.00000000, 0.82510460]),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp),
             ),
             np.array(
                 [
@@ -53,10 +64,10 @@ matrix_chromatic_adaptation_VonKries` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_chromatic_adaptation_VonKries(
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([1.09846607, 1.00000000, 0.35582280]),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([1.09846607, 1.00000000, 0.35582280], xp=xp),
             ),
             np.array(
                 [
@@ -68,24 +79,26 @@ matrix_chromatic_adaptation_VonKries` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_chromatic_adaptation_VonKries(
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.99144661, 1.00000000, 0.67315942]),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.99144661, 1.00000000, 0.67315942], xp=xp),
             ),
             np.linalg.inv(
-                matrix_chromatic_adaptation_VonKries(
-                    np.array([0.99144661, 1.00000000, 0.67315942]),
-                    np.array([0.95045593, 1.00000000, 1.08905775]),
+                np.asarray(
+                    matrix_chromatic_adaptation_VonKries(
+                        xp_asarray([0.99144661, 1.00000000, 0.67315942], xp=xp),
+                        xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                    )
                 )
             ),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_chromatic_adaptation_VonKries(
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.96429568, 1.00000000, 0.82510460]),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp),
                 transform="XYZ Scaling",
             ),
             np.array(
@@ -98,10 +111,10 @@ matrix_chromatic_adaptation_VonKries` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_chromatic_adaptation_VonKries(
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.96429568, 1.00000000, 0.82510460]),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp),
                 transform="Bradford",
             ),
             np.array(
@@ -114,10 +127,10 @@ matrix_chromatic_adaptation_VonKries` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_chromatic_adaptation_VonKries(
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.96429568, 1.00000000, 0.82510460]),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp),
                 transform="Von Kries",
             ),
             np.array(
@@ -130,49 +143,53 @@ matrix_chromatic_adaptation_VonKries` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_matrix_chromatic_adaptation_VonKries(self) -> None:
+    def test_n_dimensional_matrix_chromatic_adaptation_VonKries(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.adaptation.vonkries.\
 matrix_chromatic_adaptation_VonKries` definition n-dimensional arrays support.
         """
 
-        XYZ_w = np.array([0.95045593, 1.00000000, 1.08905775])
-        XYZ_wr = np.array([0.96429568, 1.00000000, 0.82510460])
-        M = matrix_chromatic_adaptation_VonKries(XYZ_w, XYZ_wr)
+        XYZ_w = xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp)
+        XYZ_wr = xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp)
+        M = np.asarray(matrix_chromatic_adaptation_VonKries(XYZ_w, XYZ_wr))
 
-        XYZ_w = np.tile(XYZ_w, (6, 1))
-        XYZ_wr = np.tile(XYZ_wr, (6, 1))
-        M = np.reshape(np.tile(M, (6, 1)), (6, 3, 3))
-        np.testing.assert_allclose(
+        XYZ_w = xp.tile(xp_asarray(XYZ_w, xp=xp), (6, 1))
+        XYZ_wr = xp.tile(xp_asarray(XYZ_wr, xp=xp), (6, 1))
+        M = xp_reshape(xp.tile(xp_asarray(M, xp=xp), (6, 1)), (6, 3, 3), xp=xp)
+        xp_assert_close(
             matrix_chromatic_adaptation_VonKries(XYZ_w, XYZ_wr),
             M,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        XYZ_wr = np.reshape(XYZ_wr, (2, 3, 3))
-        M = np.reshape(M, (2, 3, 3, 3))
-        np.testing.assert_allclose(
+        XYZ_w = xp_reshape(xp_asarray(XYZ_w, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_wr = xp_reshape(xp_asarray(XYZ_wr, xp=xp), (2, 3, 3), xp=xp)
+        M = xp_reshape(xp_asarray(M, xp=xp), (2, 3, 3, 3), xp=xp)
+        xp_assert_close(
             matrix_chromatic_adaptation_VonKries(XYZ_w, XYZ_wr),
             M,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_range_scale_matrix_chromatic_adaptation_VonKries(self) -> None:
+    def test_domain_range_scale_matrix_chromatic_adaptation_VonKries(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.adaptation.vonkries.\
 matrix_chromatic_adaptation_VonKries` definition domain and range scale
         support.
         """
 
-        XYZ_w = np.array([0.95045593, 1.00000000, 1.08905775])
-        XYZ_wr = np.array([0.96429568, 1.00000000, 0.82510460])
-        M = matrix_chromatic_adaptation_VonKries(XYZ_w, XYZ_wr)
+        XYZ_w = xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp)
+        XYZ_wr = xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp)
+        M = np.asarray(matrix_chromatic_adaptation_VonKries(XYZ_w, XYZ_wr))
 
         d_r = (("reference", 1), ("1", 1), ("100", 100))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     matrix_chromatic_adaptation_VonKries(
                         XYZ_w * factor, XYZ_wr * factor
                     ),
@@ -198,121 +215,123 @@ class TestChromaticAdaptationVonKries:
     definition unit tests methods.
     """
 
-    def test_chromatic_adaptation_VonKries(self) -> None:
+    def test_chromatic_adaptation_VonKries(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.adaptation.vonkries.chromatic_adaptation_VonKries`
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_VonKries(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.96429568, 1.00000000, 0.82510460]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp),
             ),
             np.array([0.21638819, 0.12570000, 0.03847494]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_VonKries(
-                np.array([0.14222010, 0.23042768, 0.10495772]),
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([1.09846607, 1.00000000, 0.35582280]),
+                xp_asarray([0.14222010, 0.23042768, 0.10495772], xp=xp),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([1.09846607, 1.00000000, 0.35582280], xp=xp),
             ),
             np.array([0.18673833, 0.23111171, 0.03285972]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_VonKries(
-                np.array([0.07818780, 0.06157201, 0.28099326]),
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.99144661, 1.00000000, 0.67315942]),
+                xp_asarray([0.07818780, 0.06157201, 0.28099326], xp=xp),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.99144661, 1.00000000, 0.67315942], xp=xp),
             ),
             np.array([0.06385467, 0.05509729, 0.17506386]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_VonKries(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.96429568, 1.00000000, 0.82510460]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp),
                 transform="XYZ Scaling",
             ),
             np.array([0.20954755, 0.12197225, 0.03891917]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_VonKries(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.96429568, 1.00000000, 0.82510460]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp),
                 transform="Bradford",
             ),
             np.array([0.21666003, 0.12604777, 0.03855068]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_VonKries(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
-                np.array([0.95045593, 1.00000000, 1.08905775]),
-                np.array([0.96429568, 1.00000000, 0.82510460]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
+                xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp),
+                xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp),
                 transform="Von Kries",
             ),
             np.array([0.21394049, 0.12262315, 0.03891917]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_chromatic_adaptation_VonKries(self) -> None:
+    def test_n_dimensional_chromatic_adaptation_VonKries(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.adaptation.vonkries.chromatic_adaptation_VonKries`
         definition n-dimensional arrays support.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        XYZ_w = np.array([0.95045593, 1.00000000, 1.08905775])
-        XYZ_wr = np.array([0.96429568, 1.00000000, 0.82510460])
-        XYZ_a = chromatic_adaptation_VonKries(XYZ, XYZ_w, XYZ_wr)
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        XYZ_w = xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp)
+        XYZ_wr = xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp)
+        XYZ_a = np.asarray(chromatic_adaptation_VonKries(XYZ, XYZ_w, XYZ_wr))
 
-        XYZ = np.tile(XYZ, (6, 1))
-        XYZ_w = np.tile(XYZ_w, (6, 1))
-        XYZ_wr = np.tile(XYZ_wr, (6, 1))
-        XYZ_a = np.tile(XYZ_a, (6, 1))
-        np.testing.assert_allclose(
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        XYZ_w = xp.tile(xp_asarray(XYZ_w, xp=xp), (6, 1))
+        XYZ_wr = xp.tile(xp_asarray(XYZ_wr, xp=xp), (6, 1))
+        XYZ_a = xp.tile(xp_asarray(XYZ_a, xp=xp), (6, 1))
+        xp_assert_close(
             chromatic_adaptation_VonKries(XYZ, XYZ_w, XYZ_wr),
             XYZ_a,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        XYZ_wr = np.reshape(XYZ_wr, (2, 3, 3))
-        XYZ_a = np.reshape(XYZ_a, (2, 3, 3))
-        np.testing.assert_allclose(
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_w = xp_reshape(xp_asarray(XYZ_w, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_wr = xp_reshape(xp_asarray(XYZ_wr, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_a = xp_reshape(xp_asarray(XYZ_a, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(
             chromatic_adaptation_VonKries(XYZ, XYZ_w, XYZ_wr),
             XYZ_a,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_range_scale_chromatic_adaptation_VonKries(self) -> None:
+    def test_domain_range_scale_chromatic_adaptation_VonKries(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.adaptation.vonkries.chromatic_adaptation_VonKries`
         definition domain and range scale support.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        XYZ_w = np.array([0.95045593, 1.00000000, 1.08905775])
-        XYZ_wr = np.array([0.96429568, 1.00000000, 0.82510460])
-        XYZ_a = chromatic_adaptation_VonKries(XYZ, XYZ_w, XYZ_wr)
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        XYZ_w = xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp)
+        XYZ_wr = xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp)
+        XYZ_a = np.asarray(chromatic_adaptation_VonKries(XYZ, XYZ_w, XYZ_wr))
 
         d_r = (("reference", 1), ("1", 1), ("100", 100))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     chromatic_adaptation_VonKries(
                         XYZ * factor, XYZ_w * factor, XYZ_wr * factor
                     ),

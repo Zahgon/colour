@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.models.rgb import RGB_to_YCoCg, YCoCg_to_RGB
-from colour.utilities import ignore_numpy_errors
+from colour.utilities import (
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_assert_equal,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -29,56 +40,50 @@ class TestRGB_to_YCoCg:
     methods.
     """
 
-    def test_RGB_to_YCoCg(self) -> None:
+    def test_RGB_to_YCoCg(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.rgb.ycocg.RGB_to_YCoCg` definition."""
 
-        np.testing.assert_array_equal(
-            RGB_to_YCoCg(np.array([0.75, 0.75, 0.0])),
+        xp_assert_equal(
+            RGB_to_YCoCg(xp_asarray([0.75, 0.75, 0.0], xp=xp)),
             np.array([0.5625, 0.375, 0.1875]),
         )
 
-        np.testing.assert_array_equal(
-            RGB_to_YCoCg(np.array([0.25, 0.5, 0.75])),
+        xp_assert_equal(
+            RGB_to_YCoCg(xp_asarray([0.25, 0.5, 0.75], xp=xp)),
             np.array([0.5, -0.25, 0.0]),
         )
 
-        np.testing.assert_array_equal(
-            RGB_to_YCoCg(np.array([0.0, 0.75, 0.75])),
+        xp_assert_equal(
+            RGB_to_YCoCg(xp_asarray([0.0, 0.75, 0.75], xp=xp)),
             np.array([0.5625, -0.375, 0.1875]),
         )
 
-    def test_n_dimensional_RGB_to_YCoCg(self) -> None:
+    def test_n_dimensional_RGB_to_YCoCg(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ycocg.RGB_to_YCoCg` definition
         n-dimensional arrays support.
         """
 
-        RGB = np.array([0.75, 0.75, 0.0])
-        YCoCg = RGB_to_YCoCg(RGB)
+        RGB = xp_asarray([0.75, 0.75, 0.0], xp=xp)
+        YCoCg = np.asarray(RGB_to_YCoCg(RGB))
 
-        RGB = np.tile(RGB, 4)
-        RGB = np.reshape(RGB, (4, 3))
-        YCoCg = np.tile(YCoCg, 4)
-        YCoCg = np.reshape(YCoCg, (4, 3))
-        np.testing.assert_allclose(
-            RGB_to_YCoCg(RGB), YCoCg, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (4,))
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (4, 3), xp=xp)
+        YCoCg = xp.tile(xp_asarray(YCoCg, xp=xp), (4,))
+        YCoCg = xp_reshape(xp_asarray(YCoCg, xp=xp), (4, 3), xp=xp)
+        xp_assert_close(RGB_to_YCoCg(RGB), YCoCg, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        RGB = np.tile(RGB, 4)
-        RGB = np.reshape(RGB, (4, 4, 3))
-        YCoCg = np.tile(YCoCg, 4)
-        YCoCg = np.reshape(YCoCg, (4, 4, 3))
-        np.testing.assert_allclose(
-            RGB_to_YCoCg(RGB), YCoCg, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (4,))
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (4, 4, 3), xp=xp)
+        YCoCg = xp.tile(xp_asarray(YCoCg, xp=xp), (4,))
+        YCoCg = xp_reshape(xp_asarray(YCoCg, xp=xp), (4, 4, 3), xp=xp)
+        xp_assert_close(RGB_to_YCoCg(RGB), YCoCg, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        RGB = np.tile(RGB, 4)
-        RGB = np.reshape(RGB, (4, 4, 4, 3))
-        YCoCg = np.tile(YCoCg, 4)
-        YCoCg = np.reshape(YCoCg, (4, 4, 4, 3))
-        np.testing.assert_allclose(
-            RGB_to_YCoCg(RGB), YCoCg, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (4,))
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (4, 4, 4, 3), xp=xp)
+        YCoCg = xp.tile(xp_asarray(YCoCg, xp=xp), (4,))
+        YCoCg = xp_reshape(xp_asarray(YCoCg, xp=xp), (4, 4, 4, 3), xp=xp)
+        xp_assert_close(RGB_to_YCoCg(RGB), YCoCg, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_RGB_to_YCoCg(self) -> None:
@@ -98,56 +103,50 @@ class TestYCoCg_to_RGB:
     methods.
     """
 
-    def test_YCoCg_to_RGB(self) -> None:
+    def test_YCoCg_to_RGB(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.rgb.ycocg.YCoCg_to_RGB` definition."""
 
-        np.testing.assert_array_equal(
-            YCoCg_to_RGB(np.array([0.5625, 0.375, 0.1875])),
+        xp_assert_equal(
+            YCoCg_to_RGB(xp_asarray([0.5625, 0.375, 0.1875], xp=xp)),
             np.array([0.75, 0.75, 0.0]),
         )
 
-        np.testing.assert_array_equal(
-            YCoCg_to_RGB(np.array([0.5, -0.25, 0.0])),
+        xp_assert_equal(
+            YCoCg_to_RGB(xp_asarray([0.5, -0.25, 0.0], xp=xp)),
             np.array([0.25, 0.5, 0.75]),
         )
 
-        np.testing.assert_array_equal(
-            YCoCg_to_RGB(np.array([0.5625, -0.375, 0.1875])),
+        xp_assert_equal(
+            YCoCg_to_RGB(xp_asarray([0.5625, -0.375, 0.1875], xp=xp)),
             np.array([0.0, 0.75, 0.75]),
         )
 
-    def test_n_dimensional_YCoCg_to_RGB(self) -> None:
+    def test_n_dimensional_YCoCg_to_RGB(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ycocg.YCoCg_to_RGB` definition
         n-dimensional arrays support.
         """
 
-        YCoCg = np.array([0.5625, 0.375, 0.1875])
-        RGB = YCoCg_to_RGB(YCoCg)
+        YCoCg = xp_asarray([0.5625, 0.375, 0.1875], xp=xp)
+        RGB = np.asarray(YCoCg_to_RGB(YCoCg))
 
-        RGB = np.tile(RGB, 4)
-        RGB = np.reshape(RGB, (4, 3))
-        YCoCg = np.tile(YCoCg, 4)
-        YCoCg = np.reshape(YCoCg, (4, 3))
-        np.testing.assert_allclose(
-            YCoCg_to_RGB(YCoCg), RGB, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (4,))
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (4, 3), xp=xp)
+        YCoCg = xp.tile(xp_asarray(YCoCg, xp=xp), (4,))
+        YCoCg = xp_reshape(xp_asarray(YCoCg, xp=xp), (4, 3), xp=xp)
+        xp_assert_close(YCoCg_to_RGB(YCoCg), RGB, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        RGB = np.tile(RGB, 4)
-        RGB = np.reshape(RGB, (4, 4, 3))
-        YCoCg = np.tile(YCoCg, 4)
-        YCoCg = np.reshape(YCoCg, (4, 4, 3))
-        np.testing.assert_allclose(
-            YCoCg_to_RGB(YCoCg), RGB, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (4,))
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (4, 4, 3), xp=xp)
+        YCoCg = xp.tile(xp_asarray(YCoCg, xp=xp), (4,))
+        YCoCg = xp_reshape(xp_asarray(YCoCg, xp=xp), (4, 4, 3), xp=xp)
+        xp_assert_close(YCoCg_to_RGB(YCoCg), RGB, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        RGB = np.tile(RGB, 4)
-        RGB = np.reshape(RGB, (4, 4, 4, 3))
-        YCoCg = np.tile(YCoCg, 4)
-        YCoCg = np.reshape(YCoCg, (4, 4, 4, 3))
-        np.testing.assert_allclose(
-            YCoCg_to_RGB(YCoCg), RGB, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (4,))
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (4, 4, 4, 3), xp=xp)
+        YCoCg = xp.tile(xp_asarray(YCoCg, xp=xp), (4,))
+        YCoCg = xp_reshape(xp_asarray(YCoCg, xp=xp), (4, 4, 4, 3), xp=xp)
+        xp_assert_close(YCoCg_to_RGB(YCoCg), RGB, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_YCoCg_to_RGB(self) -> None:

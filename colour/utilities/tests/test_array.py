@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import types
 import typing
-import unittest
 from copy import deepcopy
 from dataclasses import dataclass, field, fields
 from functools import partial
@@ -29,6 +29,7 @@ if typing.TYPE_CHECKING:
         Domain100_100_360,
         Domain360,
         DType,
+        ModuleType,
         NDArray,
         NDArrayFloat,
         Range1,
@@ -63,6 +64,8 @@ from colour.utilities import (
     MixinDataclassArray,
     MixinDataclassFields,
     MixinDataclassIterable,
+    array_api_enable,
+    array_namespace,
     as_array,
     as_complex_array,
     as_float,
@@ -71,6 +74,7 @@ from colour.utilities import (
     as_int,
     as_int_array,
     as_int_scalar,
+    as_ndarray,
     centroid,
     closest,
     closest_indexes,
@@ -89,8 +93,11 @@ from colour.utilities import (
     in_array,
     index_along_last_axis,
     interval,
+    is_array_api_enabled,
     is_ndarray_copy_enabled,
     is_networkx_installed,
+    is_non_ndarray,
+    is_numpy_namespace,
     is_scipy_installed,
     is_uniform,
     ndarray_copy,
@@ -99,6 +106,7 @@ from colour.utilities import (
     ones,
     orient,
     row_as_diagonal,
+    set_array_api_enabled,
     set_default_float_dtype,
     set_default_int_dtype,
     set_domain_range_scale,
@@ -110,6 +118,35 @@ from colour.utilities import (
     to_domain_int,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_assert_close,
+    xp_assert_equal,
+    xp_astype,
+    xp_atleast_1d,
+    xp_atleast_2d,
+    xp_average,
+    xp_create_diagonal,
+    xp_degrees,
+    xp_gradient,
+    xp_insert,
+    xp_interp,
+    xp_isclose,
+    xp_isin,
+    xp_linspace,
+    xp_lstsq,
+    xp_median,
+    xp_nan_to_num,
+    xp_nanmean,
+    xp_pad,
+    xp_radians,
+    xp_reshape,
+    xp_resize,
+    xp_round,
+    xp_select,
+    xp_setxor1d,
+    xp_sinc,
+    xp_trapezoid,
+    xp_unique,
     zeros,
 )
 
@@ -173,13 +210,13 @@ __all__ = [
 ]
 
 
-class TestMixinDataclassFields(unittest.TestCase):
+class TestMixinDataclassFields:
     """
     Define :class:`colour.utilities.array.MixinDataclassFields` class unit
     tests methods.
     """
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Initialise the common tests attributes."""
 
         @dataclass
@@ -207,13 +244,13 @@ class TestMixinDataclassFields(unittest.TestCase):
         assert self._data.fields == fields(self._data)
 
 
-class TestMixinDataclassIterable(unittest.TestCase):
+class TestMixinDataclassIterable:
     """
     Define :class:`colour.utilities.array.MixinDataclassIterable` class unit
     tests methods.
     """
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Initialise the common tests attributes."""
 
         @dataclass
@@ -279,13 +316,13 @@ class TestMixinDataclassIterable(unittest.TestCase):
         assert tuple(self._data.items) == (("a", "Foo"), ("b", "Bar"), ("c", "Baz"))
 
 
-class TestMixinDataclassArray(unittest.TestCase):
+class TestMixinDataclassArray:
     """
     Define :class:`colour.utilities.array.MixinDataclassArray` class unit
     tests methods.
     """
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Initialise the common tests attributes."""
 
         @dataclass
@@ -327,18 +364,18 @@ class TestMixinDataclassArray(unittest.TestCase):
         method.
         """
 
-        np.testing.assert_array_equal(self._data, self._array)
+        xp_assert_equal(self._data, self._array)
 
         assert np.array(self._data, dtype=DTYPE_INT_DEFAULT).dtype == DTYPE_INT_DEFAULT
 
 
-class TestMixinDataclassArithmetic(unittest.TestCase):
+class TestMixinDataclassArithmetic:
     """
     Define :class:`colour.utilities.array.MixinDataclassArithmetic` class unit
     tests methods.
     """
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Initialise the common tests attributes."""
 
         @dataclass
@@ -393,61 +430,61 @@ class TestMixinDataclassArithmetic(unittest.TestCase):
 arithmetical_operation` method.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data.arithmetical_operation(10, "+", False),
             self._array + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data.arithmetical_operation(10, "-", False),
             self._array - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data.arithmetical_operation(10, "*", False),
             self._array * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data.arithmetical_operation(10, "/", False),
             self._array / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data.arithmetical_operation(10, "**", False),
             self._array**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data + 10,
             self._array + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data - 10,
             self._array - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data * 10,
             self._array * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data / 10,
             self._array / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._data**10,
             self._array**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -455,31 +492,31 @@ arithmetical_operation` method.
 
         data = deepcopy(self._data)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.arithmetical_operation(10, "+", True),
             self._array + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.arithmetical_operation(10, "-", True),
             self._array,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.arithmetical_operation(10, "*", True),
             self._array * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.arithmetical_operation(10, "/", True),
             self._array,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.arithmetical_operation(10, "**", True),
             self._array**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -487,13 +524,13 @@ arithmetical_operation` method.
 
         data = deepcopy(self._data)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.arithmetical_operation(self._array, "+", False),
             data + self._array,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             data.arithmetical_operation(data, "+", False),
             data + data,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -517,16 +554,18 @@ arithmetical_operation` method.
         assert data.a == 1
 
 
-class TestAsArray(unittest.TestCase):
+class TestAsArray:
     """
     Define :func:`colour.utilities.array.as_array` definition unit tests
     methods.
     """
 
-    def test_as_array(self) -> None:
+    def test_as_array(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.as_array` definition."""
 
-        np.testing.assert_equal(as_array([1, 2, 3]), np.array([1, 2, 3]))
+        np.testing.assert_equal(
+            np.asarray(as_array(xp_asarray([1, 2, 3], xp=xp))), np.array([1, 2, 3])
+        )
 
         assert as_array([1, 2, 3], DTYPE_FLOAT_DEFAULT).dtype == DTYPE_FLOAT_DEFAULT
 
@@ -538,99 +577,106 @@ class TestAsArray(unittest.TestCase):
         )
 
 
-class TestAsInt(unittest.TestCase):
+class TestAsInt:
     """
     Define :func:`colour.utilities.array.as_int` definition unit tests
     methods.
     """
 
-    def test_as_int(self) -> None:
+    def test_as_int(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.as_int` definition."""
 
         assert as_int(1) == 1
 
-        assert as_int(np.array([1])).ndim == 1
+        assert as_int(xp_asarray([1], xp=xp)).ndim == 1
 
-        assert as_int(np.array([[1]])).ndim == 2
+        assert as_int(xp_asarray([[1]], xp=xp)).ndim == 2
 
-        np.testing.assert_array_equal(
-            as_int(np.array([1.0, 2.0, 3.0])), np.array([1, 2, 3])
-        )
+        xp_assert_equal(as_int(xp_asarray([1.0, 2.0, 3.0], xp=xp)), np.array([1, 2, 3]))
 
         assert as_int(np.array([1.0, 2.0, 3.0])).dtype == DTYPE_INT_DEFAULT
 
         assert isinstance(as_int(1), DTYPE_INT_DEFAULT)
 
 
-class TestAsFloat(unittest.TestCase):
+class TestAsFloat:
     """
     Define :func:`colour.utilities.array.as_float` definition unit tests
     methods.
     """
 
-    def test_as_float(self) -> None:
+    def test_as_float(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.as_float` definition."""
 
         assert as_float(1) == 1.0
 
-        assert as_float(np.array([1])).ndim == 1
+        assert as_float(xp_asarray([1], xp=xp)).ndim == 1
 
-        assert as_float(np.array([[1]])).ndim == 2
+        assert as_float(xp_asarray([[1]], xp=xp)).ndim == 2
 
-        np.testing.assert_allclose(
-            as_float(np.array([1, 2, 3])),
+        xp_assert_close(
+            as_float(xp_asarray([1, 2, 3], xp=xp)),
             np.array([1.0, 2.0, 3.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         assert as_float(np.array([1, 2, 3])).dtype == DTYPE_FLOAT_DEFAULT
 
-        assert isinstance(as_float(1), DTYPE_FLOAT_DEFAULT)
+        if is_numpy_namespace(xp):
+            assert isinstance(as_float(1), DTYPE_FLOAT_DEFAULT)
 
 
-class TestAsIntArray(unittest.TestCase):
+class TestAsIntArray:
     """
     Define :func:`colour.utilities.array.as_int_array` definition unit tests
     methods.
     """
 
-    def test_as_int_array(self) -> None:
+    def test_as_int_array(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.as_int_array` definition."""
 
-        np.testing.assert_equal(as_int_array([1.0, 2.0, 3.0]), np.array([1, 2, 3]))
+        np.testing.assert_equal(
+            np.asarray(as_int_array(xp_asarray([1.0, 2.0, 3.0], xp=xp))),
+            np.array([1, 2, 3]),
+        )
 
         assert as_int_array([1, 2, 3]).dtype == DTYPE_INT_DEFAULT
 
 
-class TestAsFloatArray(unittest.TestCase):
+class TestAsFloatArray:
     """
     Define :func:`colour.utilities.array.as_float_array` definition unit tests
     methods.
     """
 
-    def test_as_float_array(self) -> None:
+    def test_as_float_array(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.as_float_array` definition."""
 
-        np.testing.assert_equal(as_float_array([1, 2, 3]), np.array([1, 2, 3]))
+        np.testing.assert_equal(
+            np.asarray(as_float_array(xp_asarray([1, 2, 3], xp=xp))),
+            np.array([1, 2, 3]),
+        )
 
         assert as_float_array([1, 2, 3]).dtype == DTYPE_FLOAT_DEFAULT
 
 
-class TestAsComplexArray(unittest.TestCase):
+class TestAsComplexArray:
     """
     Define :func:`colour.utilities.array.as_complex_array` definition unit tests
     methods.
     """
 
-    def test_as_complex_array(self) -> None:
+    def test_as_complex_array(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.as_complex_array` definition."""
 
         np.testing.assert_equal(
-            as_complex_array([1, 2, 3]), np.array([1 + 0j, 2 + 0j, 3 + 0j])
+            np.asarray(as_complex_array(xp_asarray([1, 2, 3], xp=xp))),
+            np.array([1 + 0j, 2 + 0j, 3 + 0j]),
         )
 
         np.testing.assert_equal(
-            as_complex_array([1 + 2j, 3 + 4j]), np.array([1 + 2j, 3 + 4j])
+            np.asarray(as_complex_array(xp_asarray([1 + 2j, 3 + 4j], xp=xp))),
+            np.array([1 + 2j, 3 + 4j]),
         )
 
         assert as_complex_array([1, 2, 3]).dtype == DTYPE_COMPLEX_DEFAULT
@@ -638,7 +684,7 @@ class TestAsComplexArray(unittest.TestCase):
         assert as_complex_array([1, 2, 3], np.complex64).dtype == np.complex64
 
 
-class TestAsIntScalar(unittest.TestCase):
+class TestAsIntScalar:
     """
     Define :func:`colour.utilities.array.as_int_scalar` definition unit tests
     methods.
@@ -647,12 +693,12 @@ class TestAsIntScalar(unittest.TestCase):
     def test_as_int_scalar(self) -> None:
         """Test :func:`colour.utilities.array.as_int_scalar` definition."""
 
-        assert as_int_scalar(1.0) == 1
+        assert float(as_int_scalar(1.0)) == 1
 
         assert as_int_scalar(1.0).dtype == DTYPE_INT_DEFAULT  # pyright: ignore
 
 
-class TestAsFloatScalar(unittest.TestCase):
+class TestAsFloatScalar:
     """
     Define :func:`colour.utilities.array.as_float_scalar` definition unit
     tests methods.
@@ -661,12 +707,12 @@ class TestAsFloatScalar(unittest.TestCase):
     def test_as_float_scalar(self) -> None:
         """Test :func:`colour.utilities.array.as_float_scalar` definition."""
 
-        assert as_float_scalar(1) == 1.0
+        assert float(as_float_scalar(1)) == 1.0
 
         assert as_float_scalar(1).dtype == DTYPE_FLOAT_DEFAULT  # pyright: ignore
 
 
-class TestSetDefaultIntegerDtype(unittest.TestCase):
+class TestSetDefaultIntegerDtype:
     """
     Define :func:`colour.utilities.array.set_default_int_dtype` definition unit
     tests methods.
@@ -693,7 +739,7 @@ class TestSetDefaultIntegerDtype(unittest.TestCase):
         set_default_int_dtype(np.int64)
 
 
-class TestSetDefaultFloatDtype(unittest.TestCase):
+class TestSetDefaultFloatDtype:
     """
     Define :func:`colour.utilities.array.set_default_float_dtype` definition unit
     tests methods.
@@ -832,7 +878,7 @@ class TestSetDefaultFloatDtype(unittest.TestCase):
             set_default_float_dtype(np.float64)
 
 
-class TestGetDomainRangeScale(unittest.TestCase):
+class TestGetDomainRangeScale:
     """
     Define :func:`colour.utilities.common.get_domain_range_scale` definition
     unit tests methods.
@@ -854,7 +900,7 @@ class TestGetDomainRangeScale(unittest.TestCase):
             assert get_domain_range_scale() == "100"
 
 
-class TestSetDomainRangeScale(unittest.TestCase):
+class TestSetDomainRangeScale:
     """
     Define :func:`colour.utilities.common.set_domain_range_scale` definition
     unit tests methods.
@@ -882,7 +928,7 @@ class TestSetDomainRangeScale(unittest.TestCase):
             set_domain_range_scale("Invalid")
 
 
-class TestDomainRangeScale(unittest.TestCase):
+class TestDomainRangeScale:
     """
     Define :func:`colour.utilities.common.domain_range_scale` definition
     unit tests methods.
@@ -951,7 +997,7 @@ class TestDomainRangeScale(unittest.TestCase):
         assert fn_b(10) == 2.0
 
 
-class TestGetDomainRangeScaleMetadata(unittest.TestCase):
+class TestGetDomainRangeScaleMetadata:
     """
     Define :func:`colour.utilities.array.get_domain_range_scale_metadata`
     definition unit tests methods.
@@ -1139,7 +1185,7 @@ class TestGetDomainRangeScaleMetadata(unittest.TestCase):
         assert metadata["range"] == "another_undefined"
 
 
-class TestToDomain1(unittest.TestCase):
+class TestToDomain1:
     """
     Define :func:`colour.utilities.common.to_domain_1` definition unit
     tests methods.
@@ -1149,22 +1195,22 @@ class TestToDomain1(unittest.TestCase):
         """Test :func:`colour.utilities.common.to_domain_1` definition."""
 
         with domain_range_scale("Reference"):
-            assert to_domain_1(1) == 1
+            assert float(to_domain_1(1)) == 1
 
         with domain_range_scale("1"):
-            assert to_domain_1(1) == 1
+            assert float(to_domain_1(1)) == 1
 
         with domain_range_scale("100"):
-            assert to_domain_1(1) == 0.01
+            assert float(to_domain_1(1)) == 0.01
 
         with domain_range_scale("100"):
-            assert to_domain_1(1, np.pi) == 1 / np.pi
+            assert float(to_domain_1(1, np.pi)) == 1 / np.pi
 
         with domain_range_scale("100"):
             assert to_domain_1(1, dtype=np.float16).dtype == np.float16
 
 
-class TestToDomain10(unittest.TestCase):
+class TestToDomain10:
     """
     Define :func:`colour.utilities.common.to_domain_10` definition unit
     tests methods.
@@ -1174,22 +1220,22 @@ class TestToDomain10(unittest.TestCase):
         """Test :func:`colour.utilities.common.to_domain_10` definition."""
 
         with domain_range_scale("Reference"):
-            assert to_domain_10(1) == 1
+            assert float(to_domain_10(1)) == 1
 
         with domain_range_scale("1"):
-            assert to_domain_10(1) == 10
+            assert float(to_domain_10(1)) == 10
 
         with domain_range_scale("100"):
-            assert to_domain_10(1) == 0.1
+            assert float(to_domain_10(1)) == 0.1
 
         with domain_range_scale("100"):
-            assert to_domain_10(1, np.pi) == 1 / np.pi
+            assert float(to_domain_10(1, np.pi)) == 1 / np.pi
 
         with domain_range_scale("100"):
             assert to_domain_10(1, dtype=np.float16).dtype == np.float16
 
 
-class TestToDomain100(unittest.TestCase):
+class TestToDomain100:
     """
     Define :func:`colour.utilities.common.to_domain_100` definition unit
     tests methods.
@@ -1199,22 +1245,22 @@ class TestToDomain100(unittest.TestCase):
         """Test :func:`colour.utilities.common.to_domain_100` definition."""
 
         with domain_range_scale("Reference"):
-            assert to_domain_100(1) == 1
+            assert float(to_domain_100(1)) == 1
 
         with domain_range_scale("1"):
-            assert to_domain_100(1) == 100
+            assert float(to_domain_100(1)) == 100
 
         with domain_range_scale("100"):
-            assert to_domain_100(1) == 1
+            assert float(to_domain_100(1)) == 1
 
         with domain_range_scale("1"):
-            assert to_domain_100(1, np.pi) == np.pi
+            assert float(to_domain_100(1, np.pi)) == np.pi
 
         with domain_range_scale("100"):
             assert to_domain_100(1, dtype=np.float16).dtype == np.float16
 
 
-class TestToDomainDegrees(unittest.TestCase):
+class TestToDomainDegrees:
     """
     Define :func:`colour.utilities.common.to_domain_degrees` definition unit
     tests methods.
@@ -1224,22 +1270,22 @@ class TestToDomainDegrees(unittest.TestCase):
         """Test :func:`colour.utilities.common.to_domain_degrees` definition."""
 
         with domain_range_scale("Reference"):
-            assert to_domain_degrees(1) == 1
+            assert float(to_domain_degrees(1)) == 1
 
         with domain_range_scale("1"):
-            assert to_domain_degrees(1) == 360
+            assert float(to_domain_degrees(1)) == 360
 
         with domain_range_scale("100"):
-            assert to_domain_degrees(1) == 3.6
+            assert float(to_domain_degrees(1)) == 3.6
 
         with domain_range_scale("100"):
-            assert to_domain_degrees(1, np.pi) == np.pi / 100
+            assert float(to_domain_degrees(1, np.pi)) == np.pi / 100
 
         with domain_range_scale("100"):
             assert to_domain_degrees(1, dtype=np.float16).dtype == np.float16
 
 
-class TestToDomainInt(unittest.TestCase):
+class TestToDomainInt:
     """
     Define :func:`colour.utilities.common.to_domain_int` definition unit
     tests methods.
@@ -1249,22 +1295,22 @@ class TestToDomainInt(unittest.TestCase):
         """Test :func:`colour.utilities.common.to_domain_int` definition."""
 
         with domain_range_scale("Reference"):
-            assert to_domain_int(1) == 1
+            assert float(to_domain_int(1)) == 1
 
         with domain_range_scale("1"):
-            assert to_domain_int(1) == 255
+            assert float(to_domain_int(1)) == 255
 
         with domain_range_scale("100"):
-            assert to_domain_int(1) == 2.55
+            assert float(to_domain_int(1)) == 2.55
 
         with domain_range_scale("100"):
-            assert to_domain_int(1, 10) == 10.23
+            assert float(to_domain_int(1, 10)) == 10.23
 
         with domain_range_scale("100"):
             assert to_domain_int(1, dtype=np.float16).dtype == np.float16
 
 
-class TestFromRange1(unittest.TestCase):
+class TestFromRange1:
     """
     Define :func:`colour.utilities.common.from_range_1` definition unit
     tests methods.
@@ -1274,19 +1320,19 @@ class TestFromRange1(unittest.TestCase):
         """Test :func:`colour.utilities.common.from_range_1` definition."""
 
         with domain_range_scale("Reference"):
-            assert from_range_1(1) == 1
+            assert float(from_range_1(1)) == 1
 
         with domain_range_scale("1"):
-            assert from_range_1(1) == 1
+            assert float(from_range_1(1)) == 1
 
         with domain_range_scale("100"):
-            assert from_range_1(1) == 100
+            assert float(from_range_1(1)) == 100
 
         with domain_range_scale("100"):
-            assert from_range_1(1, np.pi) == 1 * np.pi
+            assert float(from_range_1(1, np.pi)) == 1 * np.pi
 
 
-class TestFromRange10(unittest.TestCase):
+class TestFromRange10:
     """
     Define :func:`colour.utilities.common.from_range_10` definition unit
     tests methods.
@@ -1296,19 +1342,19 @@ class TestFromRange10(unittest.TestCase):
         """Test :func:`colour.utilities.common.from_range_10` definition."""
 
         with domain_range_scale("Reference"):
-            assert from_range_10(1) == 1
+            assert float(from_range_10(1)) == 1
 
         with domain_range_scale("1"):
-            assert from_range_10(1) == 0.1
+            assert float(from_range_10(1)) == 0.1
 
         with domain_range_scale("100"):
-            assert from_range_10(1) == 10
+            assert float(from_range_10(1)) == 10
 
         with domain_range_scale("100"):
-            assert from_range_10(1, np.pi) == 1 * np.pi
+            assert float(from_range_10(1, np.pi)) == 1 * np.pi
 
 
-class TestFromRange100(unittest.TestCase):
+class TestFromRange100:
     """
     Define :func:`colour.utilities.common.from_range_100` definition unit
     tests methods.
@@ -1318,19 +1364,19 @@ class TestFromRange100(unittest.TestCase):
         """Test :func:`colour.utilities.common.from_range_100` definition."""
 
         with domain_range_scale("Reference"):
-            assert from_range_100(1) == 1
+            assert float(from_range_100(1)) == 1
 
         with domain_range_scale("1"):
-            assert from_range_100(1) == 0.01
+            assert float(from_range_100(1)) == 0.01
 
         with domain_range_scale("100"):
-            assert from_range_100(1) == 1
+            assert float(from_range_100(1)) == 1
 
         with domain_range_scale("1"):
-            assert from_range_100(1, np.pi) == 1 / np.pi
+            assert float(from_range_100(1, np.pi)) == 1 / np.pi
 
 
-class TestFromRangeDegrees(unittest.TestCase):
+class TestFromRangeDegrees:
     """
     Define :func:`colour.utilities.common.from_range_degrees` definition unit
     tests methods.
@@ -1340,19 +1386,19 @@ class TestFromRangeDegrees(unittest.TestCase):
         """Test :func:`colour.utilities.common.from_range_degrees` definition."""
 
         with domain_range_scale("Reference"):
-            assert from_range_degrees(1) == 1
+            assert float(from_range_degrees(1)) == 1
 
         with domain_range_scale("1"):
-            assert from_range_degrees(1) == 1 / 360
+            assert float(from_range_degrees(1)) == 1 / 360
 
         with domain_range_scale("100"):
-            assert from_range_degrees(1) == 1 / 3.6
+            assert float(from_range_degrees(1)) == 1 / 3.6
 
         with domain_range_scale("100"):
-            assert from_range_degrees(1, np.pi) == 1 / (np.pi / 100)
+            assert float(from_range_degrees(1, np.pi)) == 1 / (np.pi / 100)
 
 
-class TestFromRangeInt(unittest.TestCase):
+class TestFromRangeInt:
     """
     Define :func:`colour.utilities.common.from_range_int` definition unit
     tests methods.
@@ -1362,22 +1408,22 @@ class TestFromRangeInt(unittest.TestCase):
         """Test :func:`colour.utilities.common.from_range_int` definition."""
 
         with domain_range_scale("Reference"):
-            assert from_range_int(1) == 1
+            assert float(from_range_int(1)) == 1
 
         with domain_range_scale("1"):
-            assert from_range_int(1) == 1 / 255
+            assert float(from_range_int(1)) == 1 / 255
 
         with domain_range_scale("100"):
-            assert from_range_int(1) == 1 / 2.55
+            assert float(from_range_int(1)) == 1 / 2.55
 
         with domain_range_scale("100"):
-            assert from_range_int(1, 10) == 1 / (1023 / 100)
+            assert float(from_range_int(1, 10)) == 1 / (1023 / 100)
 
         with domain_range_scale("100"):
             assert from_range_int(1, dtype=np.float16).dtype == np.float16
 
 
-class TestIsNdarrayCopyEnabled(unittest.TestCase):
+class TestIsNdarrayCopyEnabled:
     """
     Define :func:`colour.utilities.array.is_ndarray_copy_enabled` definition
     unit tests methods.
@@ -1395,7 +1441,7 @@ class TestIsNdarrayCopyEnabled(unittest.TestCase):
             assert not is_ndarray_copy_enabled()
 
 
-class TestSetNdarrayCopyEnabled(unittest.TestCase):
+class TestSetNdarrayCopyEnabled:
     """
     Define :func:`colour.utilities.array.set_ndarray_copy_enable` definition
     unit tests methods.
@@ -1415,7 +1461,7 @@ class TestSetNdarrayCopyEnabled(unittest.TestCase):
             assert not is_ndarray_copy_enabled()
 
 
-class TestNdarrayCopyEnable(unittest.TestCase):
+class TestNdarrayCopyEnable:
     """
     Define :func:`colour.utilities.array.ndarray_copy_enable` definition unit
     tests methods.
@@ -1449,16 +1495,16 @@ class TestNdarrayCopyEnable(unittest.TestCase):
         fn_b()
 
 
-class TestNdarrayCopy(unittest.TestCase):
+class TestNdarrayCopy:
     """
     Define :func:`colour.utilities.array.ndarray_copy` definition unit
     tests methods.
     """
 
-    def test_ndarray_copy(self) -> None:
+    def test_ndarray_copy(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.ndarray_copy` definition."""
 
-        a = np.linspace(0, 1, 10)
+        a = xp_asarray(np.linspace(0, 1, 10), xp=xp)
         with ndarray_copy_enable(True):
             assert id(ndarray_copy(a)) != id(a)
 
@@ -1466,16 +1512,16 @@ class TestNdarrayCopy(unittest.TestCase):
             assert id(ndarray_copy(a)) == id(a)
 
 
-class TestClosestIndexes(unittest.TestCase):
+class TestClosestIndexes:
     """
     Define :func:`colour.utilities.array.closest_indexes` definition unit
     tests methods.
     """
 
-    def test_closest_indexes(self) -> None:
+    def test_closest_indexes(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.closest_indexes` definition."""
 
-        a = np.array(
+        a = xp_asarray(
             [
                 24.31357115,
                 63.62396289,
@@ -1483,31 +1529,32 @@ class TestClosestIndexes(unittest.TestCase):
                 62.70988028,
                 46.84480573,
                 25.40026416,
-            ]
+            ],
+            xp=xp,
         )
 
-        assert closest_indexes(a, 63.05) == 3
+        assert np.asarray(closest_indexes(a, 63.05)).item() == 3
 
-        assert closest_indexes(a, 51.15) == 4
+        assert np.asarray(closest_indexes(a, 51.15)).item() == 4
 
-        assert closest_indexes(a, 24.90) == 5
+        assert np.asarray(closest_indexes(a, 24.90)).item() == 5
 
-        np.testing.assert_array_equal(
-            closest_indexes(a, np.array([63.05, 51.15, 24.90])),
+        xp_assert_equal(
+            closest_indexes(a, xp_asarray([63.05, 51.15, 24.90], xp=xp)),
             np.array([3, 4, 5]),
         )
 
 
-class TestClosest(unittest.TestCase):
+class TestClosest:
     """
     Define :func:`colour.utilities.array.closest` definition unit tests
     methods.
     """
 
-    def test_closest(self) -> None:
+    def test_closest(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.closest` definition."""
 
-        a = np.array(
+        a = xp_asarray(
             [
                 24.31357115,
                 63.62396289,
@@ -1515,124 +1562,133 @@ class TestClosest(unittest.TestCase):
                 62.70988028,
                 46.84480573,
                 25.40026416,
-            ]
+            ],
+            xp=xp,
         )
 
-        assert closest(a, 63.05) == 62.70988028
+        assert np.asarray(closest(a, 63.05)).item() == 62.70988028
 
-        assert closest(a, 51.15) == 46.84480573
+        assert np.asarray(closest(a, 51.15)).item() == 46.84480573
 
-        assert closest(a, 24.90) == 25.40026416
+        assert np.asarray(closest(a, 24.90)).item() == 25.40026416
 
-        np.testing.assert_allclose(
-            closest(a, np.array([63.05, 51.15, 24.90])),
+        xp_assert_close(
+            closest(a, xp_asarray([63.05, 51.15, 24.90], xp=xp)),
             np.array([62.70988028, 46.84480573, 25.40026416]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
 
-class TestInterval(unittest.TestCase):
+class TestInterval:
     """
     Define :func:`colour.utilities.array.interval` definition unit tests
     methods.
     """
 
-    def test_interval(self) -> None:
+    def test_interval(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.interval` definition."""
 
-        np.testing.assert_array_equal(interval(range(0, 10, 2)), np.array([2]))
-
-        np.testing.assert_array_equal(
-            interval(range(0, 10, 2), False), np.array([2, 2, 2, 2])
+        xp_assert_equal(
+            interval(xp_asarray(np.arange(0, 10, 2, dtype=float), xp=xp)),
+            np.array([2]),
         )
 
-        np.testing.assert_allclose(
-            interval([1, 2, 3, 4, 6, 6.5]),
+        xp_assert_equal(
+            interval(xp_asarray(np.arange(0, 10, 2, dtype=float), xp=xp), False),
+            np.array([2, 2, 2, 2]),
+        )
+
+        xp_assert_close(
+            interval(xp_asarray([1.0, 2.0, 3.0, 4.0, 6.0, 6.5], xp=xp)),
             np.array([0.5, 1.0, 2.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            interval([1, 2, 3, 4, 6, 6.5], False),
+        xp_assert_close(
+            interval(xp_asarray([1.0, 2.0, 3.0, 4.0, 6.0, 6.5], xp=xp), False),
             np.array([1.0, 1.0, 1.0, 2.0, 0.5]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
 
-class TestIsUniform(unittest.TestCase):
+class TestIsUniform:
     """
     Define :func:`colour.utilities.array.is_uniform` definition unit tests
     methods.
     """
 
-    def test_is_uniform(self) -> None:
+    def test_is_uniform(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.is_uniform` definition."""
 
-        assert is_uniform(range(0, 10, 2))
+        assert is_uniform(xp_asarray(np.arange(0, 10, 2, dtype=float), xp=xp))
 
-        assert not is_uniform([1, 2, 3, 4, 6])
+        assert not is_uniform(xp_asarray([1.0, 2.0, 3.0, 4.0, 6.0], xp=xp))
 
 
-class TestInArray(unittest.TestCase):
+class TestInArray:
     """
     Define :func:`colour.utilities.array.in_array` definition unit tests
     methods.
     """
 
-    def test_in_array(self) -> None:
+    def test_in_array(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.in_array` definition."""
 
+        b = xp_asarray(np.linspace(0, 10, 101), xp=xp)
+
         assert np.array_equal(
-            in_array(np.array([0.50, 0.60]), np.linspace(0, 10, 101)),
+            np.asarray(in_array(xp_asarray([0.50, 0.60], xp=xp), b)),
             np.array([True, True]),
         )
 
         assert not np.array_equal(
-            in_array(np.array([0.50, 0.61]), np.linspace(0, 10, 101)),
+            np.asarray(in_array(xp_asarray([0.50, 0.61], xp=xp), b)),
             np.array([True, True]),
         )
 
         assert np.array_equal(
-            in_array(np.array([[0.50], [0.60]]), np.linspace(0, 10, 101)),
+            np.asarray(in_array(xp_asarray([[0.50], [0.60]], xp=xp), b)),
             np.array([[True], [True]]),
         )
 
-    def test_n_dimensional_in_array(self) -> None:
+    def test_n_dimensional_in_array(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.utilities.array.in_array` definition n-dimensional
         support.
         """
 
-        np.testing.assert_array_equal(
-            in_array(np.array([0.50, 0.60]), np.linspace(0, 10, 101)).shape,
+        b = xp_asarray(np.linspace(0, 10, 101), xp=xp)
+
+        xp_assert_equal(
+            in_array(xp_asarray([0.50, 0.60], xp=xp), b).shape,
             np.array([2]),
         )
 
-        np.testing.assert_array_equal(
-            in_array(np.array([[0.50, 0.60]]), np.linspace(0, 10, 101)).shape,
+        xp_assert_equal(
+            in_array(xp_asarray([[0.50, 0.60]], xp=xp), b).shape,
             np.array([1, 2]),
         )
 
-        np.testing.assert_array_equal(
-            in_array(np.array([[0.50], [0.60]]), np.linspace(0, 10, 101)).shape,
+        xp_assert_equal(
+            in_array(xp_asarray([[0.50], [0.60]], xp=xp), b).shape,
             np.array([2, 1]),
         )
 
 
-class TestTstack(unittest.TestCase):
+class TestTstack:
     """
     Define :func:`colour.utilities.array.tstack` definition unit tests
     methods.
     """
 
-    def test_tstack(self) -> None:
+    def test_tstack(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.tstack` definition."""
 
         a = 0
-        np.testing.assert_array_equal(tstack([a, a, a]), np.array([0, 0, 0]))
+        xp_assert_equal(tstack([a, a, a]), np.array([0, 0, 0]))
 
-        a = np.arange(0, 6)
-        np.testing.assert_array_equal(
+        a = xp_asarray(np.arange(0, 6, dtype=float), xp=xp)
+        xp_assert_equal(
             tstack([a, a, a]),
             np.array(
                 [
@@ -1646,8 +1702,8 @@ class TestTstack(unittest.TestCase):
             ),
         )
 
-        a = np.reshape(a, (1, 6))
-        np.testing.assert_array_equal(
+        a = xp_asarray(np.arange(0, 6, dtype=float).reshape((1, 6)), xp=xp)
+        xp_assert_equal(
             tstack([a, a, a]),
             np.array(
                 [
@@ -1663,8 +1719,8 @@ class TestTstack(unittest.TestCase):
             ),
         )
 
-        a = np.reshape(a, (1, 2, 3))
-        np.testing.assert_array_equal(
+        a = xp_asarray(np.arange(0, 6, dtype=float).reshape((1, 2, 3)), xp=xp)
+        xp_assert_equal(
             tstack([a, a, a]),
             np.array(
                 [
@@ -1683,7 +1739,7 @@ class TestTstack(unittest.TestCase):
 
         # Ensuring that independence is maintained.
         a *= 2
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             b,
             np.array(
                 [
@@ -1698,24 +1754,24 @@ class TestTstack(unittest.TestCase):
         b = tstack([a, a, a])
 
         b[1] *= 2
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             a,
             np.array([0, 1, 2]),
         )
 
 
-class TestTsplit(unittest.TestCase):
+class TestTsplit:
     """
     Define :func:`colour.utilities.array.tsplit` definition unit tests
     methods.
     """
 
-    def test_tsplit(self) -> None:
+    def test_tsplit(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.tsplit` definition."""
 
-        a = np.array([0, 0, 0])
-        np.testing.assert_array_equal(tsplit(a), np.array([0, 0, 0]))
-        a = np.array(
+        a = xp_asarray([0, 0, 0], xp=xp)
+        xp_assert_equal(tsplit(a), np.array([0, 0, 0]))
+        a = xp_asarray(
             [
                 [0, 0, 0],
                 [1, 1, 1],
@@ -1723,9 +1779,10 @@ class TestTsplit(unittest.TestCase):
                 [3, 3, 3],
                 [4, 4, 4],
                 [5, 5, 5],
-            ]
+            ],
+            xp=xp,
         )
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             tsplit(a),
             np.array(
                 [
@@ -1736,7 +1793,7 @@ class TestTsplit(unittest.TestCase):
             ),
         )
 
-        a = np.array(
+        a = xp_asarray(
             [
                 [
                     [0, 0, 0],
@@ -1746,9 +1803,10 @@ class TestTsplit(unittest.TestCase):
                     [4, 4, 4],
                     [5, 5, 5],
                 ],
-            ]
+            ],
+            xp=xp,
         )
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             tsplit(a),
             np.array(
                 [
@@ -1759,15 +1817,16 @@ class TestTsplit(unittest.TestCase):
             ),
         )
 
-        a = np.array(
+        a = xp_asarray(
             [
                 [
                     [[0, 0, 0], [1, 1, 1], [2, 2, 2]],
                     [[3, 3, 3], [4, 4, 4], [5, 5, 5]],
                 ]
-            ]
+            ],
+            xp=xp,
         )
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             tsplit(a),
             np.array(
                 [
@@ -1792,7 +1851,7 @@ class TestTsplit(unittest.TestCase):
 
         # Ensuring that independence is maintained.
         a *= 2
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             b,
             np.array(
                 [
@@ -1814,7 +1873,7 @@ class TestTsplit(unittest.TestCase):
         b = tsplit(a)
 
         b[1] *= 2
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             a,
             np.array(
                 [
@@ -1826,25 +1885,26 @@ class TestTsplit(unittest.TestCase):
         )
 
 
-class TestRowAsDiagonal(unittest.TestCase):
+class TestRowAsDiagonal:
     """
     Define :func:`colour.utilities.array.row_as_diagonal` definition unit
     tests methods.
     """
 
-    def test_row_as_diagonal(self) -> None:
+    def test_row_as_diagonal(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.row_as_diagonal` definition."""
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             row_as_diagonal(
-                np.array(
+                xp_asarray(
                     [
                         [0.25891593, 0.07299478, 0.36586996],
                         [0.30851087, 0.37131459, 0.16274825],
                         [0.71061831, 0.67718718, 0.09562581],
                         [0.71588836, 0.76772047, 0.15476079],
                         [0.92985142, 0.22263399, 0.88027331],
-                    ]
+                    ],
+                    xp=xp,
                 )
             ),
             np.array(
@@ -1880,18 +1940,18 @@ class TestRowAsDiagonal(unittest.TestCase):
         )
 
 
-class TestOrient(unittest.TestCase):
+class TestOrient:
     """
     Define :func:`colour.utilities.array.orient` definition unit tests
     methods.
     """
 
-    def test_orient(self) -> None:
+    def test_orient(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.orient` definition."""
 
-        a = np.tile(np.arange(5), (5, 1))
+        a = xp.tile(xp_asarray(np.arange(5), xp=xp), (5, 1))
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             orient(a, "Flip"),
             np.array(
                 [
@@ -1904,7 +1964,7 @@ class TestOrient(unittest.TestCase):
             ),
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             orient(a, "Flop"),
             np.array(
                 [
@@ -1917,7 +1977,7 @@ class TestOrient(unittest.TestCase):
             ),
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             orient(a, "90 CW"),
             np.array(
                 [
@@ -1930,7 +1990,7 @@ class TestOrient(unittest.TestCase):
             ),
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             orient(a, "90 CCW"),
             np.array(
                 [
@@ -1943,7 +2003,7 @@ class TestOrient(unittest.TestCase):
             ),
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             orient(a, "180"),
             np.array(
                 [
@@ -1956,61 +2016,62 @@ class TestOrient(unittest.TestCase):
             ),
         )
 
-        np.testing.assert_array_equal(orient(a), a)
+        xp_assert_equal(orient(a), np.asarray(a))
 
 
-class TestCentroid(unittest.TestCase):
+class TestCentroid:
     """
     Define :func:`colour.utilities.array.centroid` definition unit tests
     methods.
     """
 
-    def test_centroid(self) -> None:
+    def test_centroid(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.centroid` definition."""
 
-        a = np.arange(5)
-        np.testing.assert_array_equal(centroid(a), np.array([3]))
+        a = xp_asarray(np.arange(5, dtype=float), xp=xp)
+        xp_assert_equal(centroid(a), np.array([3]))
 
-        a = np.tile(a, (5, 1))
-        np.testing.assert_array_equal(centroid(a), np.array([2, 3]))
+        a = xp_asarray(np.tile(np.arange(5), (5, 1)).astype(float), xp=xp)
+        xp_assert_equal(centroid(a), np.array([2, 3]))
 
-        a = np.tile(np.linspace(0, 1, 10), (10, 1))
-        np.testing.assert_array_equal(centroid(a), np.array([4, 6]))
+        a = xp_asarray(np.tile(np.linspace(0, 1, 10), (10, 1)), xp=xp)
+        xp_assert_equal(centroid(a), np.array([4, 6]))
 
-        a = tstack([a, a, a])
-        np.testing.assert_array_equal(centroid(a), np.array([4, 6, 1]))
+        a_np = np.tile(np.linspace(0, 1, 10), (10, 1))
+        a_3d = tstack([a_np, a_np, a_np])
+        xp_assert_equal(centroid(a_3d), np.array([4, 6, 1]))
 
 
-class TestFillNan(unittest.TestCase):
+class TestFillNan:
     """
     Define :func:`colour.utilities.array.fill_nan` definition unit tests
     methods.
     """
 
-    def test_fill_nan(self) -> None:
+    def test_fill_nan(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.fill_nan` definition."""
 
-        a = np.array([0.1, 0.2, np.nan, 0.4, 0.5])
-        np.testing.assert_allclose(
+        a = xp_asarray([0.1, 0.2, float("nan"), 0.4, 0.5], xp=xp)
+        xp_assert_close(
             fill_nan(a),
             np.array([0.1, 0.2, 0.3, 0.4, 0.5]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             fill_nan(a, method="Constant", default=8.0),
             np.array([0.1, 0.2, 8.0, 0.4, 0.5]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
 
-class TestHasNanOnly(unittest.TestCase):
+class TestHasNanOnly:
     """
     Define :func:`colour.utilities.array.has_only_nan` definition unit tests
     methods.
     """
 
-    def test_has_only_nan(self) -> None:
+    def test_has_only_nan(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.has_only_nan` definition."""
 
         assert has_only_nan(None)  # pyright: ignore
@@ -2019,10 +2080,10 @@ class TestHasNanOnly(unittest.TestCase):
 
         assert not has_only_nan([True, None])  # pyright: ignore
 
-        assert not has_only_nan([0.1, np.nan, 0.3])
+        assert not has_only_nan(xp_asarray([0.1, float("nan"), 0.3], xp=xp))
 
 
-class TestNdarrayWrite(unittest.TestCase):
+class TestNdarrayWrite:
     """
     Define :func:`colour.utilities.array.ndarray_write` definition unit tests
     methods.
@@ -2041,7 +2102,7 @@ class TestNdarrayWrite(unittest.TestCase):
             a += 1
 
 
-class TestZeros(unittest.TestCase):
+class TestZeros:
     """
     Define :func:`colour.utilities.array.zeros` definition unit tests
     methods.
@@ -2050,10 +2111,10 @@ class TestZeros(unittest.TestCase):
     def test_zeros(self) -> None:
         """Test :func:`colour.utilities.array.zeros` definition."""
 
-        np.testing.assert_equal(zeros(3), np.zeros(3))
+        np.testing.assert_equal(np.asarray(zeros(3)), np.zeros(3))
 
 
-class TestOnes(unittest.TestCase):
+class TestOnes:
     """
     Define :func:`colour.utilities.array.ones` definition unit tests
     methods.
@@ -2062,10 +2123,10 @@ class TestOnes(unittest.TestCase):
     def test_ones(self) -> None:
         """Test :func:`colour.utilities.array.ones` definition."""
 
-        np.testing.assert_equal(ones(3), np.ones(3))
+        np.testing.assert_equal(np.asarray(ones(3)), np.ones(3))
 
 
-class TestFull(unittest.TestCase):
+class TestFull:
     """
     Define :func:`colour.utilities.array.full` definition unit tests
     methods.
@@ -2074,18 +2135,18 @@ class TestFull(unittest.TestCase):
     def test_full(self) -> None:
         """Test :func:`colour.utilities.array.full` definition."""
 
-        np.testing.assert_equal(full(3, 0.5), np.full(3, 0.5))
+        np.testing.assert_equal(np.asarray(full(3, 0.5)), np.full(3, 0.5))
 
 
-class TestIndexAlongLastAxis(unittest.TestCase):
+class TestIndexAlongLastAxis:
     """
     Define :func:`colour.utilities.array.index_along_last_axis` definition
     unit tests methods.
     """
 
-    def test_index_along_last_axis(self) -> None:
+    def test_index_along_last_axis(self, xp: ModuleType) -> None:
         """Test :func:`colour.utilities.array.index_along_last_axis` definition."""
-        a = np.array(
+        a = xp_asarray(
             [
                 [
                     [
@@ -2117,13 +2178,16 @@ class TestIndexAlongLastAxis(unittest.TestCase):
                         [0.90644279, 0.09689787, 0.93483977],
                     ],
                 ],
-            ]
+            ],
+            xp=xp,
         )
 
-        indexes = np.array([[[0, 1], [0, 1]], [[2, 1], [2, 1]], [[2, 1], [2, 0]]])
+        indexes = xp_asarray(
+            [[[0, 1], [0, 1]], [[2, 1], [2, 1]], [[2, 1], [2, 0]]], xp=xp
+        )
 
         np.testing.assert_equal(
-            index_along_last_axis(a, indexes),
+            np.asarray(index_along_last_axis(a, indexes)),
             np.array(
                 [
                     [[0.51090627, 0.80587656], [0.84085977, 0.79308353]],
@@ -2133,20 +2197,30 @@ class TestIndexAlongLastAxis(unittest.TestCase):
             ),
         )
 
-    def test_compare_with_argmin_argmax(self) -> None:
+    def test_compare_with_argmin_argmax(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.utilities.array.index_along_last_axis` definition
         by comparison with :func:`argmin` and :func:`argmax`.
         """
 
-        a = np.random.random((2, 3, 4, 5, 6, 7))
+        a = xp_asarray(np.random.random((2, 3, 4, 5, 6, 7)), xp=xp)
 
         np.testing.assert_equal(
-            index_along_last_axis(a, np.argmin(a, axis=-1)), np.min(a, axis=-1)
+            np.asarray(
+                index_along_last_axis(
+                    a, xp_asarray(np.argmin(np.asarray(a), axis=-1), xp=xp)
+                )
+            ),
+            np.min(np.asarray(a), axis=-1),
         )
 
         np.testing.assert_equal(
-            index_along_last_axis(a, np.argmax(a, axis=-1)), np.max(a, axis=-1)
+            np.asarray(
+                index_along_last_axis(
+                    a, xp_asarray(np.argmax(np.asarray(a), axis=-1), xp=xp)
+                )
+            ),
+            np.max(np.asarray(a), axis=-1),
         )
 
     def test_exceptions(self) -> None:
@@ -2167,13 +2241,12 @@ class TestIndexAlongLastAxis(unittest.TestCase):
             indexes = np.array([123, 456])
             index_along_last_axis(a, indexes)
 
-        # Non-int indexes
-        with pytest.raises(IndexError):
-            indexes = np.array([0.0, 0.0])
-            index_along_last_axis(a, indexes)
+        # Float indexes are now converted to int by as_int_array.
+        indexes = np.array([0.0, 0.0])
+        index_along_last_axis(a, indexes)
 
 
-class TestFormatArrayAsRow(unittest.TestCase):
+class TestFormatArrayAsRow:
     """
     Define :func:`colour.utilities.array.format_array_as_row` definition unit
     tests methods.
@@ -2187,3 +2260,820 @@ class TestFormatArrayAsRow(unittest.TestCase):
         assert format_array_as_row([1.25, 2.5, 3.75], 3) == "1.250 2.500 3.750"
 
         assert format_array_as_row([1.25, 2.5, 3.75], 3, ", ") == "1.250, 2.500, 3.750"
+
+
+class TestIsArrayApiEnabled:
+    """Define :func:`colour.utilities.is_array_api_enabled` unit tests."""
+
+    def test_is_array_api_enabled(self) -> None:
+        """Test :func:`colour.utilities.is_array_api_enabled` definition."""
+
+        with array_api_enable(False):
+            assert not is_array_api_enabled()
+
+        with array_api_enable(True):
+            assert is_array_api_enabled()
+
+
+class TestSetArrayApiEnabled:
+    """Define :func:`colour.utilities.set_array_api_enabled` unit tests."""
+
+    def test_set_array_api_enabled(self) -> None:
+        """Test :func:`colour.utilities.set_array_api_enabled` definition."""
+
+        with array_api_enable(is_array_api_enabled()):
+            set_array_api_enabled(True)
+            assert is_array_api_enabled()
+            set_array_api_enabled(False)
+            assert not is_array_api_enabled()
+
+
+class TestArrayApiEnable:
+    """Define :class:`colour.utilities.array_api_enable` unit tests."""
+
+    def test_array_api_enable(self) -> None:
+        """Test :class:`colour.utilities.array_api_enable` definition."""
+
+        with array_api_enable(True):
+            assert is_array_api_enabled()
+
+        with array_api_enable(False):
+            assert not is_array_api_enabled()
+
+        # State restoration
+        with array_api_enable(False):
+            original = is_array_api_enabled()
+            with array_api_enable(True):
+                assert is_array_api_enabled()
+            assert is_array_api_enabled() == original
+
+        # Decorator
+        @array_api_enable(True)
+        def fn_enabled() -> bool:
+            return is_array_api_enabled()
+
+        @array_api_enable(False)
+        def fn_disabled() -> bool:
+            return is_array_api_enabled()
+
+        assert fn_enabled()
+        assert not fn_disabled()
+
+
+class TestArrayNamespace:
+    """Define :func:`colour.utilities.array_namespace` unit tests."""
+
+    def test_array_namespace(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.array_namespace` definition."""
+
+        with array_api_enable(False):
+            assert array_namespace(np.array([1, 2, 3])) is np
+
+        with array_api_enable(True):
+            xp = array_namespace(np.array([1, 2, 3]))
+
+            assert is_numpy_namespace(xp)
+
+        with array_api_enable(True):
+            assert array_namespace() is np
+            assert array_namespace(1.0, 2.0) is np
+            assert array_namespace(None) is np
+
+
+class TestIsNumpyNamespace:
+    """Define :func:`colour.utilities.is_numpy_namespace` unit tests."""
+
+    def test_is_numpy_namespace(self) -> None:
+        """Test :func:`colour.utilities.is_numpy_namespace` definition."""
+
+        assert is_numpy_namespace(np)
+
+        mock_ns = types.ModuleType("jax.numpy")
+        assert not is_numpy_namespace(mock_ns)
+
+
+class TestIsNonnumpyArray:
+    """Define :func:`colour.utilities.is_non_ndarray` unit tests."""
+
+    def test_is_non_ndarray(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.is_non_ndarray` definition."""
+
+        assert not is_non_ndarray(np.array([1, 2, 3]))
+        assert not is_non_ndarray(np.float64(1.0))
+        assert not is_non_ndarray([1, 2, 3])
+        assert not is_non_ndarray(1.0)
+        assert not is_non_ndarray(None)
+
+        a = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+        if is_numpy_namespace(xp):
+            assert not is_non_ndarray(a)
+        else:
+            assert is_non_ndarray(a)
+
+
+class TestAsNdarray:
+    """Define :func:`colour.utilities.as_ndarray` unit tests."""
+
+    def test_as_ndarray(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.as_ndarray` definition."""
+
+        a = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+        result = as_ndarray(a)
+        assert isinstance(result, np.ndarray)
+        xp_assert_equal(result, [1.0, 2.0, 3.0])
+
+        result = as_ndarray(np.array([4, 5, 6]))
+        assert isinstance(result, np.ndarray)
+        xp_assert_equal(result, [4, 5, 6])
+
+
+class TestCompatAsarray:
+    """Define :func:`colour.utilities.xp_asarray` unit tests."""
+
+    def test_xp_asarray(self) -> None:
+        """Test :func:`colour.utilities.xp_asarray` definition."""
+
+        result = xp_asarray([1, 2, 3], xp=np)
+        assert isinstance(result, np.ndarray)
+        xp_assert_equal(result, [1, 2, 3])
+
+        a = np.array([1.0, 2.0, 3.0])
+        result = xp_asarray(a, xp=np)
+        assert result is a or np.shares_memory(result, a)
+
+
+class TestCompatAstype:
+    """Define :func:`colour.utilities.xp_astype` unit tests."""
+
+    def test_xp_astype(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_astype` definition."""
+
+        a = xp_asarray([1.0, 2.5, 3.7], xp=xp)
+
+        result = xp_astype(a, np.float32)
+        assert np.asarray(result).dtype == np.float32
+
+        result = xp_astype(a, np.int32)
+        xp_assert_equal(result, np.array([1, 2, 3]))
+
+        a_int = xp_asarray([1, 2, 3], xp=xp)
+        result = xp_astype(a_int, np.float64)
+        assert np.asarray(result).dtype == np.float64
+
+
+class TestCompatSelect:
+    """Define :func:`colour.utilities.xp_select` unit tests."""
+
+    def test_xp_select(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_select` definition."""
+
+        x = xp_asarray(np.arange(10, dtype=float), xp=xp)
+        condlist = [x < 3, x > 6]
+        choicelist = [x * 10, x * 100]
+        result = xp_select(condlist, choicelist, default=-1.0, xp=xp)
+        expected = np.select(
+            [np.asarray(x < 3), np.asarray(x > 6)],
+            [np.asarray(x * 10), np.asarray(x * 100)],
+            default=-1.0,
+        )
+        xp_assert_equal(result, expected)
+
+        x = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+        result = xp_select([x > 2], [x * 10], default=0.0, xp=xp)
+        expected = np.select([np.asarray(x > 2)], [np.asarray(x * 10)], default=0.0)
+        xp_assert_equal(result, expected)
+
+
+class TestCompatInterp:
+    """Define :func:`colour.utilities.xp_interp` unit tests."""
+
+    def test_xp_interp(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_interp` definition."""
+
+        xp_arr = xp_asarray([0.0, 1.0, 2.0, 3.0], xp=xp)
+        fp = xp_asarray([0.0, 1.0, 4.0, 9.0], xp=xp)
+        x = xp_asarray([0.5, 1.5, 2.5], xp=xp)
+        result = xp_interp(x, xp_arr, fp, xp=xp)
+        expected = np.interp(
+            np.array([0.5, 1.5, 2.5]),
+            np.array([0.0, 1.0, 2.0, 3.0]),
+            np.array([0.0, 1.0, 4.0, 9.0]),
+        )
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        xp_arr = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+        fp = xp_asarray([10.0, 20.0, 30.0], xp=xp)
+        x = xp_asarray([0.0, 4.0], xp=xp)
+        result = xp_interp(x, xp_arr, fp, xp=xp)
+        expected = np.interp(
+            np.array([0.0, 4.0]),
+            np.array([1.0, 2.0, 3.0]),
+            np.array([10.0, 20.0, 30.0]),
+        )
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatTrapezoid:
+    """Define :func:`colour.utilities.xp_trapezoid` unit tests."""
+
+    def test_xp_trapezoid(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_trapezoid` definition."""
+
+        y = xp_asarray([1.0, 2.0, 3.0, 4.0], xp=xp)
+        x = xp_asarray([0.0, 1.0, 2.0, 3.0], xp=xp)
+        result = xp_trapezoid(y, x=x, xp=xp)
+        expected = np.trapezoid(
+            np.array([1.0, 2.0, 3.0, 4.0]), x=np.array([0.0, 1.0, 2.0, 3.0])
+        )
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        y = xp_asarray([1.0, 4.0, 9.0], xp=xp)
+        result = xp_trapezoid(y, dx=0.5, xp=xp)
+        expected = np.trapezoid(np.array([1.0, 4.0, 9.0]), dx=0.5)
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatAverage:
+    """Define :func:`colour.utilities.xp_average` unit tests."""
+
+    def test_xp_average(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_average` definition."""
+
+        a = xp_asarray([1.0, 2.0, 3.0, 4.0], xp=xp)
+        result = xp_average(a, xp=xp)
+        expected = np.average(np.array([1.0, 2.0, 3.0, 4.0]))
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        weights = xp_asarray([4.0, 3.0, 2.0, 1.0], xp=xp)
+        result = xp_average(a, weights=weights, xp=xp)
+        expected = np.average(
+            np.array([1.0, 2.0, 3.0, 4.0]), weights=np.array([4.0, 3.0, 2.0, 1.0])
+        )
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        a = xp_asarray([[1.0, 2.0], [3.0, 4.0]], xp=xp)
+        result = xp_average(a, axis=0, xp=xp)
+        expected = np.average(np.array([[1.0, 2.0], [3.0, 4.0]]), axis=0)
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatGradient:
+    """Define :func:`colour.utilities.xp_gradient` unit tests."""
+
+    def test_xp_gradient(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_gradient` definition."""
+
+        f = xp_asarray([1.0, 4.0, 9.0, 16.0, 25.0], xp=xp)
+        result = xp_gradient(f, xp=xp)
+        expected = np.gradient(np.array([1.0, 4.0, 9.0, 16.0, 25.0]))
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        f = xp_asarray([1.0, 4.0, 9.0, 16.0], xp=xp)
+        result = xp_gradient(f, 0.5, xp=xp)
+        expected = np.gradient(np.array([1.0, 4.0, 9.0, 16.0]), 0.5)
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatResize:
+    """Define :func:`colour.utilities.xp_resize` unit tests."""
+
+    def test_xp_resize(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_resize` definition."""
+
+        a = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+        result = xp_resize(a, (6,), xp=xp)
+        expected = np.resize(np.array([1.0, 2.0, 3.0]), (6,))
+        xp_assert_equal(result, expected)
+
+        a = xp_asarray([1.0, 2.0], xp=xp)
+        result = xp_resize(a, (3, 2), xp=xp)
+        expected = np.resize(np.array([1.0, 2.0]), (3, 2))
+        xp_assert_equal(result, expected)
+
+
+class TestCompatNanmean:
+    """Define :func:`colour.utilities.xp_nanmean` unit tests."""
+
+    def test_xp_nanmean(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_nanmean` definition."""
+
+        a = xp_asarray([1.0, np.nan, 3.0, np.nan, 5.0], xp=xp)
+        result = xp_nanmean(a, xp=xp)
+        expected = np.nanmean(np.array([1.0, np.nan, 3.0, np.nan, 5.0]))
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        a = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+        result = xp_nanmean(a, xp=xp)
+        expected = np.nanmean(np.array([1.0, 2.0, 3.0]))
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        a = xp_asarray([[1.0, np.nan], [3.0, 4.0]], xp=xp)
+        result = xp_nanmean(a, axis=0, xp=xp)
+        expected = np.nanmean(np.array([[1.0, np.nan], [3.0, 4.0]]), axis=0)
+        xp_assert_close(
+            result,
+            expected,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatMedian:
+    """Define :func:`colour.utilities.xp_median` unit tests."""
+
+    def test_xp_median(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_median` definition."""
+
+        a = xp_asarray([3.0, 1.0, 2.0], xp=xp)
+        xp_assert_close(
+            xp_median(a, xp=xp),
+            np.median(np.array([3.0, 1.0, 2.0])),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        a = xp_asarray([4.0, 1.0, 3.0, 2.0], xp=xp)
+        xp_assert_close(
+            xp_median(a, xp=xp),
+            np.median(np.array([4.0, 1.0, 3.0, 2.0])),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        a = xp_asarray([[3.0, 1.0], [2.0, 4.0]], xp=xp)
+        xp_assert_close(
+            xp_median(a, axis=1, xp=xp),
+            np.median(np.array([[3.0, 1.0], [2.0, 4.0]]), axis=1),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatRound:
+    """Define :func:`colour.utilities.xp_round` unit tests."""
+
+    def test_xp_round(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_round` definition."""
+
+        a = xp_asarray([3.14159, 2.71828, 1.41421], xp=xp)
+        a_np = np.array([3.14159, 2.71828, 1.41421])
+
+        xp_assert_close(
+            xp_round(a, decimals=0, xp=xp),
+            np.round(a_np, 0),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+        xp_assert_close(
+            xp_round(a, decimals=2, xp=xp),
+            np.round(a_np, 2),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+        xp_assert_close(
+            xp_round(a, decimals=4, xp=xp),
+            np.round(a_np, 4),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        a = xp_asarray([[1.555, 2.444], [3.666, 4.777]], xp=xp)
+        xp_assert_close(
+            xp_round(a, decimals=1, xp=xp),
+            np.round(np.array([[1.555, 2.444], [3.666, 4.777]]), 1),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatRadians:
+    """Define :func:`colour.utilities.xp_radians` unit tests."""
+
+    def test_xp_radians(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_radians` definition."""
+
+        a = xp_asarray([0.0, 90.0, 180.0, 270.0, 360.0], xp=xp)
+        xp_assert_close(
+            xp_radians(a),
+            np.radians(np.array([0.0, 90.0, 180.0, 270.0, 360.0])),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        xp_assert_close(
+            xp_radians(180.0),
+            np.pi,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatDegrees:
+    """Define :func:`colour.utilities.xp_degrees` unit tests."""
+
+    def test_xp_degrees(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_degrees` definition."""
+
+        a = xp_asarray([0.0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi], xp=xp)
+        xp_assert_close(
+            xp_degrees(a),
+            np.degrees(np.array([0.0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi])),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        xp_assert_close(
+            xp_degrees(np.pi),
+            180.0,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatAtleast1d:
+    """Define :func:`colour.utilities.xp_atleast_1d` unit tests."""
+
+    def test_xp_atleast_1d(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_atleast_1d` definition."""
+
+        result = xp_atleast_1d(xp_asarray(1.0, xp=xp))
+        assert np.asarray(result).ndim == 1
+
+        a = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+        result = xp_atleast_1d(a)
+        xp_assert_equal(result, np.array([1.0, 2.0, 3.0]))
+
+
+class TestCompatAtleast2d:
+    """Define :func:`colour.utilities.xp_atleast_2d` unit tests."""
+
+    def test_xp_atleast_2d(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_atleast_2d` definition."""
+
+        result = xp_atleast_2d(xp_asarray([1.0, 2.0, 3.0], xp=xp))
+        assert np.asarray(result).ndim == 2
+        assert np.asarray(result).shape == (1, 3)
+
+        a = xp_asarray([[1.0, 2.0], [3.0, 4.0]], xp=xp)
+        result = xp_atleast_2d(a)
+        xp_assert_equal(result, np.array([[1.0, 2.0], [3.0, 4.0]]))
+
+
+class TestCompatSinc:
+    """Define :func:`colour.utilities.xp_sinc` unit tests."""
+
+    def test_xp_sinc(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_sinc` definition."""
+
+        a = xp_asarray([0.0, 0.5, 1.0, 1.5], xp=xp)
+        xp_assert_close(
+            xp_sinc(a),
+            np.sinc(np.array([0.0, 0.5, 1.0, 1.5])),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatIsclose:
+    """Define :func:`colour.utilities.xp_isclose` unit tests."""
+
+    def test_xp_isclose(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_isclose` definition."""
+
+        a = xp_asarray([1.0, 2.0001, 3.0], xp=xp)
+        b = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+
+        xp_assert_equal(
+            xp_isclose(a, b, atol=TOLERANCE_ABSOLUTE_TESTS * 10000),
+            np.isclose(
+                np.array([1.0, 2.0001, 3.0]),
+                np.array([1.0, 2.0, 3.0]),
+                atol=TOLERANCE_ABSOLUTE_TESTS * 10000,
+            ),
+        )
+        xp_assert_equal(
+            xp_isclose(a, b, atol=TOLERANCE_ABSOLUTE_TESTS * 100),
+            np.isclose(
+                np.array([1.0, 2.0001, 3.0]),
+                np.array([1.0, 2.0, 3.0]),
+                atol=TOLERANCE_ABSOLUTE_TESTS * 100,
+            ),
+        )
+
+
+class TestCompatNanToNum:
+    """Define :func:`colour.utilities.xp_nan_to_num` unit tests."""
+
+    def test_xp_nan_to_num(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_nan_to_num` definition."""
+
+        a = xp_asarray([1.0, np.nan, np.inf, -np.inf], xp=xp)
+
+        xp_assert_equal(
+            xp_nan_to_num(a),
+            np.nan_to_num(np.array([1.0, np.nan, np.inf, -np.inf])),
+        )
+
+        xp_assert_equal(
+            xp_nan_to_num(a, nan=0.0, posinf=999.0, neginf=-999.0),
+            np.nan_to_num(
+                np.array([1.0, np.nan, np.inf, -np.inf]),
+                nan=0.0,
+                posinf=999.0,
+                neginf=-999.0,
+            ),
+        )
+
+
+class TestCompatCreateDiagonal:
+    """Define :func:`colour.utilities.xp_create_diagonal` unit tests."""
+
+    def test_xp_create_diagonal(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_create_diagonal` definition."""
+
+        v = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+        result = xp_create_diagonal(v)
+        xp_assert_equal(result, np.diag(np.array([1.0, 2.0, 3.0])))
+
+
+class TestCompatReshape:
+    """Define :func:`colour.utilities.xp_reshape` unit tests."""
+
+    def test_xp_reshape(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_reshape` definition."""
+
+        a = xp_asarray(np.arange(6.0), xp=xp)
+
+        result = xp_reshape(xp_asarray(a, xp=xp), (2, 3), xp=xp)
+        expected = np.arange(6.0).reshape((2, 3))
+        xp_assert_equal(result, expected)
+
+        result = xp_reshape(xp_asarray(a, xp=xp), (-1, 2), xp=xp)
+        expected = np.arange(6.0).reshape((-1, 2))
+        xp_assert_equal(result, expected)
+
+        a_int = xp_asarray([1, 2, 3, 4], xp=xp)
+        result = xp_reshape(xp_asarray(a_int, xp=xp), (2, 2), xp=xp)
+        expected = np.array([1, 2, 3, 4]).reshape((2, 2))
+        xp_assert_equal(result, expected)
+
+
+class TestCompatLstsq:
+    """Define :func:`colour.utilities.xp_lstsq` unit tests."""
+
+    def test_xp_lstsq(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_lstsq` definition."""
+
+        A = xp_asarray([[1.0, 1.0], [1.0, 2.0], [1.0, 3.0]], xp=xp)
+        b = xp_asarray([[1.0], [2.0], [3.0]], xp=xp)
+
+        result = xp_lstsq(A, b)
+        expected = np.linalg.lstsq(
+            np.array([[1.0, 1.0], [1.0, 2.0], [1.0, 3.0]]),
+            np.array([[1.0], [2.0], [3.0]]),
+            rcond=None,
+        )[0]
+        xp_assert_close(result, expected, atol=TOLERANCE_ABSOLUTE_TESTS * 0.001)
+
+
+class TestCompatIsin:
+    """Define :func:`colour.utilities.xp_isin` unit tests."""
+
+    def test_xp_isin(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_isin` definition."""
+
+        a = xp_asarray([1.0, 2.0, 3.0, 4.0, 5.0], xp=xp)
+        b = xp_asarray([2.0, 4.0], xp=xp)
+
+        xp_assert_equal(
+            xp_isin(a, b, xp=xp),
+            np.isin(np.array([1.0, 2.0, 3.0, 4.0, 5.0]), np.array([2.0, 4.0])),
+        )
+
+        a = xp_asarray([10.0, 20.0, 30.0], xp=xp)
+        b = xp_asarray([5.0, 10.0, 15.0, 20.0], xp=xp)
+
+        xp_assert_equal(
+            xp_isin(a, b, xp=xp),
+            np.isin(np.array([10.0, 20.0, 30.0]), np.array([5.0, 10.0, 15.0, 20.0])),
+        )
+
+        a = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+        b = xp_asarray([4.0, 5.0, 6.0], xp=xp)
+
+        xp_assert_equal(
+            xp_isin(a, b, xp=xp),
+            np.isin(np.array([1.0, 2.0, 3.0]), np.array([4.0, 5.0, 6.0])),
+        )
+
+
+class TestCompatLinspace:
+    """Define :func:`colour.utilities.xp_linspace` unit tests."""
+
+    def test_xp_linspace(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_linspace` definition."""
+
+        result = xp_linspace(0, 10, num=5, xp=xp)
+        expected = np.linspace(0, 10, 5)
+        xp_assert_equal(result, expected)  # pyright: ignore
+
+        result, step = xp_linspace(0, 1, retstep=True, num=11, xp=xp)
+        expected, expected_step = np.linspace(0, 1, 11, retstep=True)
+        xp_assert_equal(result, expected)
+        xp_assert_close(
+            step,
+            expected_step,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+
+class TestCompatPad:
+    """Define :func:`colour.utilities.xp_pad` unit tests."""
+
+    def test_xp_pad(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_pad` definition."""
+
+        a = xp_asarray([1.0, 2.0, 3.0], xp=xp)
+
+        result = xp_pad(a, (2, 3), xp=xp)
+        expected = np.pad(np.array([1.0, 2.0, 3.0]), (2, 3))
+        xp_assert_equal(result, expected)
+
+        result = xp_pad(a, (1, 1), "wrap", xp=xp)
+        expected = np.pad(np.array([1.0, 2.0, 3.0]), (1, 1), "wrap")
+        xp_assert_equal(result, expected)
+
+
+class TestCompatUnique:
+    """Define :func:`colour.utilities.xp_unique` unit tests."""
+
+    def test_xp_unique(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_unique` definition."""
+
+        a = xp_asarray([3.0, 1.0, 2.0, 1.0, 3.0], xp=xp)
+
+        result = xp_unique(a, xp=xp)
+        expected = np.unique(np.array([3.0, 1.0, 2.0, 1.0, 3.0]))
+        xp_assert_equal(result, expected)
+
+        result, indexes = xp_unique(a, return_index=True, xp=xp)
+        expected, expected_indexes = np.unique(
+            np.array([3.0, 1.0, 2.0, 1.0, 3.0]), return_index=True
+        )
+        xp_assert_equal(result, expected)
+        xp_assert_equal(indexes, expected_indexes)
+
+        a = xp_asarray([[1.0, 2.0], [3.0, 4.0], [1.0, 2.0]], xp=xp)
+        result, indexes = xp_unique(a, axis=0, return_index=True, xp=xp)
+        expected, expected_indexes = np.unique(
+            np.array([[1.0, 2.0], [3.0, 4.0], [1.0, 2.0]]),
+            axis=0,
+            return_index=True,
+        )
+        xp_assert_equal(result, expected)
+        xp_assert_equal(indexes, expected_indexes)
+
+
+class TestCompatInsert:
+    """Define :func:`colour.utilities.xp_insert` unit tests."""
+
+    def test_xp_insert(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_insert` definition."""
+
+        a = xp_asarray([1.0, 2.0, 3.0, 4.0, 5.0], xp=xp)
+        indices = xp_asarray([1, 3], xp=xp)
+        values = xp_asarray([10.0, 30.0], xp=xp)
+
+        result = xp_insert(a, indices, values, xp=xp)
+        expected = np.insert(
+            np.array([1.0, 2.0, 3.0, 4.0, 5.0]),
+            np.array([1, 3]),
+            np.array([10.0, 30.0]),
+        )
+        xp_assert_equal(result, expected)
+
+        result = xp_insert(a, xp_asarray([0], xp=xp), xp_asarray([99.0], xp=xp), xp=xp)
+        expected = np.insert(np.array([1.0, 2.0, 3.0, 4.0, 5.0]), [0], [99.0])
+        xp_assert_equal(result, expected)
+
+        result = xp_insert(a, xp_asarray([5], xp=xp), xp_asarray([99.0], xp=xp), xp=xp)
+        expected = np.insert(np.array([1.0, 2.0, 3.0, 4.0, 5.0]), [5], [99.0])
+        xp_assert_equal(result, expected)
+
+
+class TestCompatSetxor1d:
+    """Define :func:`colour.utilities.xp_setxor1d` unit tests."""
+
+    def test_xp_setxor1d(self, xp: ModuleType) -> None:
+        """Test :func:`colour.utilities.xp_setxor1d` definition."""
+
+        a = xp_asarray([1.0, 2.0, 3.0, 4.0], xp=xp)
+        b = xp_asarray([3.0, 4.0, 5.0, 6.0], xp=xp)
+
+        result = xp_setxor1d(a, b, xp=xp)
+        expected = np.setxor1d(
+            np.array([1.0, 2.0, 3.0, 4.0]), np.array([3.0, 4.0, 5.0, 6.0])
+        )
+        xp_assert_equal(result, expected)
+
+        result = xp_setxor1d(a, a, xp=xp)
+        expected = np.setxor1d(
+            np.array([1.0, 2.0, 3.0, 4.0]), np.array([1.0, 2.0, 3.0, 4.0])
+        )
+        xp_assert_equal(result, expected)
+
+        result = xp_setxor1d(a, xp_asarray([10.0, 20.0], xp=xp), xp=xp)
+        expected = np.setxor1d(np.array([1.0, 2.0, 3.0, 4.0]), np.array([10.0, 20.0]))
+        xp_assert_equal(result, expected)
+
+
+class TestAsArrayArrayApi:
+    """Define :func:`colour.utilities.as_array` Array API dispatch tests."""
+
+    def test_as_array(self) -> None:
+        """Test :func:`colour.utilities.as_array` definition."""
+
+        with array_api_enable(False):
+            result = as_array([1, 2, 3])
+            assert isinstance(result, np.ndarray)
+
+        with array_api_enable(True):
+            result = as_array([1, 2, 3])
+            assert isinstance(result, np.ndarray)
+
+            result = as_float_array([1, 2, 3])
+            assert isinstance(result, np.ndarray)
+            assert result.dtype == np.float64
+
+
+class TestTstackArrayApi:
+    """Define :func:`colour.utilities.tstack` Array API dispatch tests."""
+
+    def test_tstack(self) -> None:
+        """Test :func:`colour.utilities.tstack` definition."""
+
+        a = np.arange(6, dtype=float)
+
+        with array_api_enable(False):
+            result = tstack([a, a, a])
+            assert result.shape == (6, 3)
+
+        with array_api_enable(True):
+            result = tstack([a, a, a])
+            assert result.shape == (6, 3)
+
+
+class TestTsplitArrayApi:
+    """Define :func:`colour.utilities.tsplit` Array API dispatch tests."""
+
+    def test_tsplit(self) -> None:
+        """Test :func:`colour.utilities.tsplit` definition."""
+
+        a = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+
+        with array_api_enable(False):
+            result = tsplit(a)
+            assert result.shape == (3, 2)
+
+        with array_api_enable(True):
+            result = tsplit(a)
+            assert result.shape == (3, 2)
+
+        # Round-trip
+        a = np.arange(6, dtype=float)
+        stacked = tstack([a, a, a])
+        split = tsplit(stacked)
+        xp_assert_equal(split[0], a)
+        xp_assert_equal(split[1], a)
+        xp_assert_equal(split[2], a)

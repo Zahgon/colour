@@ -22,8 +22,6 @@ References
 
 from __future__ import annotations
 
-import numpy as np
-
 from colour.algebra import euclidean_distance, sdiv, sdiv_mode
 from colour.colorimetry import MultiSpectralDistributions, handle_spectral_arguments
 from colour.hints import (  # noqa: TC001
@@ -36,6 +34,7 @@ from colour.models import UCS_to_uv, UCS_to_XYZ, XYZ_to_UCS, uv_to_UCS
 from colour.temperature import CCT_to_uv_Planck1900
 from colour.utilities import (
     CACHE_REGISTRY,
+    array_namespace,
     as_float_array,
     attest,
     is_caching_enabled,
@@ -43,6 +42,8 @@ from colour.utilities import (
     runtime_warning,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_reshape,
 )
 
 __author__ = "Colour Developers"
@@ -106,6 +107,7 @@ def planckian_table(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SPECTRAL_SHAPE_DEFAULT
     >>> cmfs = (
     ...     MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
@@ -140,10 +142,14 @@ def planckian_table(
             )
             D = min(max(D, 0), 1)
             next_spacing = spacing * (1 - D) + (1 + (spacing - 1) / 10) * D
-        Ti = np.concatenate([Ti, [end - 1, end]])
+        Ti = as_float_array(Ti)
 
-        table = np.concatenate(
-            [np.reshape(Ti, (-1, 1)), CCT_to_uv_Planck1900(Ti, cmfs)], axis=1
+        xp = array_namespace(Ti)
+
+        Ti = xp.concat([Ti, xp_asarray([end - 1, end], xp=xp)])
+
+        table = xp.concat(
+            [xp_reshape(Ti, (-1, 1), xp=xp), CCT_to_uv_Planck1900(Ti, cmfs)], axis=1
         )
         _CACHE_PLANCKIAN_TABLE[hash_key] = table.copy()
 
@@ -192,6 +198,7 @@ def uv_to_CCT_Ohno2013(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SPECTRAL_SHAPE_DEFAULT
     >>> cmfs = (
     ...     MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
@@ -204,20 +211,23 @@ def uv_to_CCT_Ohno2013(
     """
 
     uv = as_float_array(uv)
+
+    xp = array_namespace(uv)
+
     cmfs, _illuminant = handle_spectral_arguments(cmfs)
     start = optional(start, CCT_MINIMAL_OHNO2013)
     end = optional(end, CCT_MAXIMAL_OHNO2013)
     spacing = optional(spacing, CCT_DEFAULT_SPACING_OHNO2013)
 
     shape = uv.shape
-    uv = np.reshape(uv, (-1, 2))
+    uv = xp_reshape(uv, (-1, 2), xp=xp)
 
     # Planckian tables creation through cascade expansion.
     tables_data = []
     for uv_i in uv:
         table = planckian_table(cmfs, start, end, spacing)
         dists = euclidean_distance(table[:, 1:], uv_i)
-        index = np.argmin(dists)
+        index = xp.argmin(dists)
         if index == 0:
             runtime_warning(
                 "Minimal distance index is on lowest planckian table bound, "
@@ -232,27 +242,40 @@ def uv_to_CCT_Ohno2013(
             index -= 1
 
         tables_data.append(
-            np.vstack(
+            xp.concat(
                 [
-                    [*table[index - 1, ...], dists[index - 1]],
-                    [*table[index, ...], dists[index]],
-                    [*table[index + 1, ...], dists[index + 1]],
-                ]
+                    xp_reshape(
+                        xp_asarray([*table[index - 1, ...], dists[index - 1]], xp=xp),
+                        (1, -1),
+                        xp=xp,
+                    ),
+                    xp_reshape(
+                        xp_asarray([*table[index, ...], dists[index]], xp=xp),
+                        (1, -1),
+                        xp=xp,
+                    ),
+                    xp_reshape(
+                        xp_asarray([*table[index + 1, ...], dists[index + 1]], xp=xp),
+                        (1, -1),
+                        xp=xp,
+                    ),
+                ],
+                axis=0,
             )
         )
-    tables = as_float_array(tables_data)
+    tables = xp.stack(tables_data)
 
     Tip, uip, vip, dip = tsplit(tables[:, 0, :])
     Ti, _ui, _vi, di = tsplit(tables[:, 1, :])
     Tin, uin, vin, din = tsplit(tables[:, 2, :])
 
     # Triangular solution.
-    l = np.hypot(uin - uip, vin - vip)  # noqa: E741
+    l = xp.hypot(uin - uip, vin - vip)  # noqa: E741
     x = (dip**2 - din**2 + l**2) / (2 * l)
     T_t = Tip + (Tin - Tip) * (x / l)
 
     vtx = vip + (vin - vip) * (x / l)
-    sign = np.sign(uv[..., 1] - vtx)
+    sign = xp.sign(uv[..., 1] - vtx)
     D_uv_t = (dip**2 - x**2) ** (1 / 2) * sign
 
     # Parabolic solution.
@@ -271,13 +294,13 @@ def uv_to_CCT_Ohno2013(
     T_p = -b / (2 * a)
     D_uv_p = (a * T_p**2 + b * T_p + c) * sign
 
-    CCT_D_uv = np.where(
-        (np.abs(D_uv_t) >= 0.002)[..., None],
+    CCT_D_uv = xp.where(
+        (xp.abs(D_uv_t) >= 0.002)[..., None],
         tstack([T_p, D_uv_p]),
         tstack([T_t, D_uv_t]),
     )
 
-    return np.reshape(CCT_D_uv, shape)
+    return xp_reshape(CCT_D_uv, shape, xp=xp)
 
 
 def CCT_to_uv_Ohno2013(
@@ -308,6 +331,7 @@ def CCT_to_uv_Ohno2013(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SPECTRAL_SHAPE_DEFAULT
     >>> cmfs = (
     ...     MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
@@ -328,7 +352,9 @@ def CCT_to_uv_Ohno2013(
 
     du, dv = tsplit(uv_0 - uv_1)
 
-    h = np.hypot(du, dv)
+    xp = array_namespace(du)
+
+    h = xp.hypot(du, dv)
 
     with sdiv_mode():
         uv = tstack(
@@ -338,7 +364,7 @@ def CCT_to_uv_Ohno2013(
             ]
         )
 
-    return np.where((D_uv == 0)[..., None], uv_0, uv)
+    return xp.where((D_uv == 0)[..., None], uv_0, uv)
 
 
 def XYZ_to_CCT_Ohno2013(
@@ -396,6 +422,7 @@ def XYZ_to_CCT_Ohno2013(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SPECTRAL_SHAPE_DEFAULT
     >>> cmfs = (
     ...     MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
@@ -441,6 +468,7 @@ def CCT_to_XYZ_Ohno2013(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour import MSDS_CMFS, SPECTRAL_SHAPE_DEFAULT
     >>> cmfs = (
     ...     MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]

@@ -11,10 +11,8 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.constants import EPSILON
-from colour.utilities import as_float_array, required
+from colour.utilities import array_namespace, as_float_array, required
 
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, NDArrayFloat
@@ -56,6 +54,7 @@ def is_within_mesh_volume(
 
     Examples
     --------
+    >>> import numpy as np
     >>> mesh = np.array(
     ...     [
     ...         [-1.0, -1.0, 1.0],
@@ -76,6 +75,10 @@ def is_within_mesh_volume(
 
     triangulation = Delaunay(as_float_array(mesh))
 
-    simplex = triangulation.find_simplex(as_float_array(points), tol=tolerance)
+    simplex = as_float_array(
+        triangulation.find_simplex(as_float_array(points), tol=tolerance)
+    )
 
-    return np.where(simplex >= 0, True, False)
+    xp = array_namespace(simplex)
+
+    return xp.where(simplex >= 0, True, False)

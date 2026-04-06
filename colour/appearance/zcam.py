@@ -51,6 +51,7 @@ from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArithmetic,
     MixinDataclassIterable,
+    array_namespace,
     as_float,
     as_float_array,
     as_int_array,
@@ -63,6 +64,8 @@ from colour.utilities import (
     to_domain_degrees,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_radians,
 )
 
 __author__ = "Colour Developers"
@@ -455,9 +458,15 @@ W=np.float64(91.6821728...))
 
     XYZ = to_domain_1(XYZ)
     XYZ_w = to_domain_1(XYZ_w)
-    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
     L_A = as_float_array(L_A)
     Y_b = as_float_array(Y_b)
+
+    xp = array_namespace(XYZ, XYZ_w)
+
+    XYZ_w = xp_asarray(XYZ_w, xp=xp, like=XYZ)
+    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ)
+    Y_b = xp_asarray(Y_b, xp=xp, like=XYZ)
 
     F_s, F, _c, _N_c = surround.values
 
@@ -473,9 +482,9 @@ W=np.float64(91.6821728...))
     # Step 1 (Forward) - Computing factors related with viewing conditions and
     # independent of the test stimulus.
     # Background factor :math:`F_b`
-    F_b = np.sqrt(Y_b / Y_w)
+    F_b = xp.sqrt(Y_b / Y_w)
     # Luminance level adaptation factor :math:`F_L`
-    F_L = 0.171 * spow(L_A, 1 / 3) * (1 - np.exp(-48 / 9 * L_A))
+    F_L = 0.171 * spow(L_A, 1 / 3) * (1 - xp.exp(-48 / 9 * L_A))
 
     # Step 2 (Forward) - Computing achromatic response (:math:`I_z` and
     # :math:`I_{z,w}`), redness-greenness (:math:`a_z` and :math:`a_{z,w}`),
@@ -488,10 +497,10 @@ W=np.float64(91.6821728...))
     h_z = hue_angle(a_z, b_z)
 
     # Step 4 (Forward) - Computing hue quadrature :math:`H`.
-    H = hue_quadrature(h_z) if compute_H else np.full(h_z.shape, np.nan)
+    H = hue_quadrature(h_z) if compute_H else xp.full(h_z.shape, np.nan)
 
     # Computing eccentricity factor :math:`e_z`.
-    e_z = 1.015 + np.cos(np.radians(89.038 + h_z % 360))
+    e_z = 1.015 + xp.cos(xp_radians(89.038 + h_z % 360))
 
     # Step 5 (Forward) - Computing brightness :math:`Q_z`,
     # lightness :math:`J_z`, colourfulness :math`M_z`, and chroma :math:`C_z`
@@ -513,13 +522,13 @@ W=np.float64(91.6821728...))
     # Step 6 (Forward) - Computing saturation :math:`S_z`,
     # vividness :math:`V_z`, blackness :math:`K_z`, and whiteness :math:`W_z`.
     with sdiv_mode():
-        S_z = 100 * spow(F_L, 0.6) * np.sqrt(sdiv(M_z, Q_z))
+        S_z = 100 * spow(F_L, 0.6) * xp.sqrt(sdiv(M_z, Q_z))
 
-    V_z = np.sqrt((J_z - 58) ** 2 + 3.4 * C_z**2)
+    V_z = xp.sqrt((J_z - 58) ** 2 + 3.4 * C_z**2)
 
-    K_z = 100 - 0.8 * np.sqrt(J_z**2 + 8 * C_z**2)
+    K_z = 100 - 0.8 * xp.sqrt(J_z**2 + 8 * C_z**2)
 
-    W_z = 100 - np.sqrt((100 - J_z) ** 2 + C_z**2)
+    W_z = 100 - xp.sqrt((100 - J_z) ** 2 + C_z**2)
 
     return CAM_Specification_ZCAM(
         J=as_float(from_range_1(J_z)),
@@ -680,19 +689,32 @@ def ZCAM_to_XYZ(
     L_A = as_float_array(L_A)
     Y_b = as_float_array(Y_b)
 
+    xp = array_namespace(XYZ_w, L_A)
+
+    J_z = xp_asarray(J_z, xp=xp, like=XYZ_w)
+    C_z = xp_asarray(C_z, xp=xp, like=XYZ_w)
+    h_z = xp_asarray(h_z, xp=xp, like=XYZ_w)
+    M_z = xp_asarray(M_z, xp=xp, like=XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ_w)
+    Y_b = xp_asarray(Y_b, xp=xp, like=XYZ_w)
+
     F_s, F, c, N_c = surround.values
 
     # Step 0 (Forward) - Chromatic adaptation from reference illuminant to
     # "CIE Standard Illuminant D65" illuminant using "CAT02".
     # Computing degree of adaptation :math:`D`.
-    D = degree_of_adaptation(F, L_A) if not discount_illuminant else ones(L_A.shape)
+    D = (
+        xp_asarray(degree_of_adaptation(F, L_A), xp=xp, like=XYZ_w)
+        if not discount_illuminant
+        else xp_asarray(ones(L_A.shape), xp=xp, like=XYZ_w)
+    )
 
     # Step 1 (Forward) - Computing factors related with viewing conditions and
     # independent of the test stimulus.
     # Background factor :math:`F_b`
-    F_b = np.sqrt(Y_b / Y_w)
+    F_b = xp.sqrt(Y_b / Y_w)
     # Luminance level adaptation factor :math:`F_L`
-    F_L = 0.171 * spow(L_A, 1 / 3) * (1 - np.exp(-48 / 9 * L_A))
+    F_L = 0.171 * spow(L_A, 1 / 3) * (1 - xp.exp(-48 / 9 * L_A))
 
     # Step 2 (Forward) - Computing achromatic response (:math:`I_{z,w}`),
     # redness-greenness (:math:`a_{z,w}`), and yellowness-blueness
@@ -725,8 +747,8 @@ def ZCAM_to_XYZ(
     # :math:`h_z` is currently required as an input.
 
     # Computing eccentricity factor :math:`e_z`.
-    e_z = 1.015 + np.cos(np.radians(89.038 + h_z % 360))
-    h_z_r = np.radians(h_z)
+    e_z = 1.015 + xp.cos(xp_radians(89.038 + h_z % 360))
+    h_z_r = xp_radians(h_z)
 
     # Step 4 (Inverse) - Computing redness-greenness (:math:`a_z`), and
     # yellowness-blueness (:math:`b_z`).
@@ -737,8 +759,8 @@ def ZCAM_to_XYZ(
         / (100 * spow(e_z, 0.068) * spow(F_L, 0.2)),
         C_z_p_e,
     )
-    a_z = C_z_p * np.cos(h_z_r)
-    b_z = C_z_p * np.sin(h_z_r)
+    a_z = C_z_p * xp.cos(h_z_r)
+    b_z = C_z_p * xp.sin(h_z_r)
 
     # Step 5 (Inverse) - Computing tristimulus values :math:`XYZ_{D65}`.
     with domain_range_scale("ignore"):
@@ -774,15 +796,17 @@ def hue_quadrature(h: ArrayLike) -> NDArrayFloat:
 
     h = as_float_array(h)
 
-    h_i = HUE_DATA_FOR_HUE_QUADRATURE["h_i"]
-    e_i = HUE_DATA_FOR_HUE_QUADRATURE["e_i"]
-    H_i = HUE_DATA_FOR_HUE_QUADRATURE["H_i"]
+    xp = array_namespace(h)
+
+    h_i = xp_asarray(HUE_DATA_FOR_HUE_QUADRATURE["h_i"], xp=xp, like=h)
+    e_i = xp_asarray(HUE_DATA_FOR_HUE_QUADRATURE["e_i"], xp=xp, like=h)
+    H_i = xp_asarray(HUE_DATA_FOR_HUE_QUADRATURE["H_i"], xp=xp, like=h)
 
     # :math:`h_p` = :math:`h_z` + 360 if :math:`h_z` < :math:`h_1, i.e., h_i[0]
-    h = np.where(h <= h_i[0], h + 360, h)
+    h = xp.where(h <= h_i[0], h + 360, h)
     # *np.searchsorted* returns an erroneous index if a *nan* is used as input.
-    h = np.where(np.isnan(h), 0, h)
-    i = as_int_array(np.searchsorted(h_i, h, side="left") - 1)
+    h = xp.where(xp.isnan(h), 0, h)
+    i = as_int_array(xp.searchsorted(h_i, h, side="left") - 1)
 
     h_ii = h_i[i]
     e_ii = e_i[i]
@@ -790,8 +814,8 @@ def hue_quadrature(h: ArrayLike) -> NDArrayFloat:
     h_ii1 = h_i[i + 1]
     e_ii1 = e_i[i + 1]
 
-    h_h_ii = h - h_ii
+    h_h_ii = h - h_ii  # pyright: ignore
 
-    H = H_ii + (100 * h_h_ii / e_ii) / (h_h_ii / e_ii + (h_ii1 - h) / e_ii1)
+    H = H_ii + (100 * h_h_ii / e_ii) / (h_h_ii / e_ii + (h_ii1 - h) / e_ii1)  # pyright: ignore
 
     return as_float(H)

@@ -32,7 +32,14 @@ from colour.algebra import euclidean_distance, sdiv, sdiv_mode
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, NDArrayFloat
 
-from colour.utilities import as_float_array, tsplit, tstack
+from colour.utilities import (
+    array_namespace,
+    as_float_array,
+    is_numpy_namespace,
+    tsplit,
+    tstack,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -197,19 +204,22 @@ def intersect_line_segments(
     """
 
     l_1 = as_float_array(l_1)
+
+    xp = array_namespace(l_1)
+
     l_2 = as_float_array(l_2)
 
-    l_1 = np.reshape(l_1, (-1, 4))
-    l_2 = np.reshape(l_2, (-1, 4))
+    l_1 = xp_reshape(l_1, (-1, 4), xp=xp)
+    l_2 = xp_reshape(l_2, (-1, 4), xp=xp)
 
     r_1, c_1 = l_1.shape[0], l_1.shape[1]
     r_2, c_2 = l_2.shape[0], l_2.shape[1]
 
-    x_1, y_1, x_2, y_2 = (np.tile(l_1[:, i, None], (1, r_2)) for i in range(c_1))
+    x_1, y_1, x_2, y_2 = (xp.tile(l_1[:, i, None], (1, r_2)) for i in range(c_1))
 
-    l_2 = np.transpose(l_2)
+    l_2 = xp.matrix_transpose(l_2)
 
-    x_3, y_3, x_4, y_4 = (np.tile(l_2[i, :], (r_1, 1)) for i in range(c_2))
+    x_3, y_3, x_4, y_4 = (xp.tile(l_2[i, :], (r_1, 1)) for i in range(c_2))  # pyright: ignore
 
     x_4_x_3 = x_4 - x_3
     y_1_y_3 = y_1 - y_3
@@ -226,13 +236,13 @@ def intersect_line_segments(
         u_a = sdiv(numerator_a, denominator)
         u_b = sdiv(numerator_b, denominator)
 
-    intersect = np.logical_and.reduce((u_a >= 0, u_a <= 1, u_b >= 0, u_b <= 1))
+    intersect = (u_a >= 0) & (u_a <= 1) & (u_b >= 0) & (u_b <= 1)
     xy = tstack([x_1 + x_2_x_1 * u_a, y_1 + y_2_y_1 * u_a])
-    xy = np.where(intersect[..., None], xy, np.nan)
+    xy = xp.where(intersect[..., None], xy, np.nan)
     parallel = denominator == 0
-    coincident = np.logical_and.reduce((numerator_a == 0, numerator_b == 0, parallel))
+    coincident = (numerator_a == 0) & (numerator_b == 0) & parallel
 
-    return LineSegmentsIntersections_Specification(xy, intersect, parallel, coincident)
+    return LineSegmentsIntersections_Specification(xy, intersect, parallel, coincident)  # pyright: ignore
 
 
 def intersect_ray_circle_2d(
@@ -272,6 +282,9 @@ def intersect_ray_circle_2d(
     """
 
     origin = as_float_array(ray_origin)
+
+    xp = array_namespace(origin)
+
     direction = as_float_array(ray_direction)
 
     dx = direction[..., 0]
@@ -285,13 +298,16 @@ def intersect_ray_circle_2d(
     discrim = q_b * q_b - 4.0 * q_a * q_c
 
     has_intersection = discrim > 0.0
-    safe_discrim = np.sqrt(np.maximum(discrim, 0.0))
+    safe_discrim = xp.sqrt(xp.clip(discrim, min=0.0))
 
     d1 = (-q_b + safe_discrim) / (2.0 * q_a)
     d2 = (-q_b - safe_discrim) / (2.0 * q_a)
 
     both_positive = (d1 > 0) & (d2 > 0)
-    result = np.where(both_positive, np.minimum(d1, d2), np.maximum(d1, d2))
-    result = np.where(has_intersection, result, -1.0)
+    result = xp.where(both_positive, xp.minimum(d1, d2), xp.maximum(d1, d2))
+    result = xp.where(has_intersection, result, -1.0)
 
-    return float(result) if np.ndim(result) == 0 else result  # pyright: ignore
+    if result.ndim == 0 and is_numpy_namespace(xp):
+        return float(result)  # pyright: ignore
+
+    return result

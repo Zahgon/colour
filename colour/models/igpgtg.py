@@ -26,6 +26,7 @@ from colour.hints import (  # noqa: TC001
     Range1,
 )
 from colour.models import Iab_to_XYZ, XYZ_to_Iab
+from colour.utilities import array_namespace, xp_asarray
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -119,7 +120,11 @@ def XYZ_to_IgPgTg(XYZ: Domain1) -> Range1:
         colourspace array.
         """
 
-        return spow(LMS / np.array([18.36, 21.46, 19435]), 0.427)
+        xp = array_namespace(LMS)
+
+        constants = xp_asarray([18.36, 21.46, 19435], xp=xp, like=LMS)
+
+        return spow(LMS / constants, 0.427)  # pyright: ignore
 
     return XYZ_to_Iab(
         XYZ,
@@ -178,7 +183,11 @@ def IgPgTg_to_XYZ(IgPgTg: Domain1) -> Range1:
         colourspace array.
         """
 
-        return spow(LMS_p, 1 / 0.427) * np.array([18.36, 21.46, 19435])
+        xp = array_namespace(LMS_p)
+
+        constants = xp_asarray([18.36, 21.46, 19435], xp=xp, like=LMS_p)
+
+        return spow(LMS_p, 1 / 0.427) * constants
 
     return Iab_to_XYZ(
         IgPgTg,

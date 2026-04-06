@@ -10,6 +10,11 @@ References
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import os
 from itertools import product
 
@@ -39,7 +44,13 @@ from colour.algebra import (
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.hints import NDArrayFloat, cast
 from colour.io import LUT3D, read_LUT
-from colour.utilities import ignore_numpy_errors, is_scipy_installed
+from colour.utilities import (
+    ignore_numpy_errors,
+    is_scipy_installed,
+    xp_asarray,
+    xp_assert_close,
+    xp_assert_equal,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -506,14 +517,14 @@ class TestKernelNearestNeighbour:
     definition unit tests methods.
     """
 
-    def test_kernel_nearest(self) -> None:
+    def test_kernel_nearest(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.algebra.interpolation.kernel_nearest_neighbour`
         definition.
         """
 
-        np.testing.assert_allclose(
-            kernel_nearest_neighbour(np.linspace(-5, 5, 25)),
+        xp_assert_close(
+            kernel_nearest_neighbour(xp_asarray(np.linspace(-5, 5, 25), xp=xp)),
             np.array(
                 [
                     0,
@@ -553,11 +564,11 @@ class TestKernelLinear:
     unit tests methods.
     """
 
-    def test_kernel_linear(self) -> None:
+    def test_kernel_linear(self, xp: ModuleType) -> None:
         """Test :func:`colour.algebra.interpolation.kernel_linear` definition."""
 
-        np.testing.assert_allclose(
-            kernel_linear(np.linspace(-5, 5, 25)),
+        xp_assert_close(
+            kernel_linear(xp_asarray(np.linspace(-5, 5, 25), xp=xp)),
             np.array(
                 [
                     0.00000000,
@@ -597,11 +608,11 @@ class TestKernelSinc:
     unit tests methods.
     """
 
-    def test_kernel_sinc(self) -> None:
+    def test_kernel_sinc(self, xp: ModuleType) -> None:
         """Test :func:`colour.algebra.interpolation.kernel_sinc` definition."""
 
-        np.testing.assert_allclose(
-            kernel_sinc(np.linspace(-5, 5, 25)),
+        xp_assert_close(
+            kernel_sinc(xp_asarray(np.linspace(-5, 5, 25), xp=xp)),
             np.array(
                 [
                     0.00000000,
@@ -634,8 +645,8 @@ class TestKernelSinc:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            kernel_sinc(np.linspace(-5, 5, 25), 1),
+        xp_assert_close(
+            kernel_sinc(xp_asarray(np.linspace(-5, 5, 25), xp=xp), 1),
             np.array(
                 [
                     0.00000000,
@@ -675,11 +686,11 @@ class TestKernelLanczos:
     unit tests methods.
     """
 
-    def test_kernel_lanczos(self) -> None:
+    def test_kernel_lanczos(self, xp: ModuleType) -> None:
         """Test :func:`colour.algebra.interpolation.kernel_lanczos` definition."""
 
-        np.testing.assert_allclose(
-            kernel_lanczos(np.linspace(-5, 5, 25)),
+        xp_assert_close(
+            kernel_lanczos(xp_asarray(np.linspace(-5, 5, 25), xp=xp)),
             np.array(
                 [
                     0.00000000e00,
@@ -712,8 +723,8 @@ class TestKernelLanczos:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            kernel_lanczos(np.linspace(-5, 5, 25), 1),
+        xp_assert_close(
+            kernel_lanczos(xp_asarray(np.linspace(-5, 5, 25), xp=xp), 1),
             np.array(
                 [
                     0.00000000,
@@ -753,14 +764,14 @@ class TestKernelCardinalSpline:
     definition unit tests methods.
     """
 
-    def test_kernel_cardinal_spline(self) -> None:
+    def test_kernel_cardinal_spline(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.algebra.interpolation.kernel_cardinal_spline`
         definition.
         """
 
-        np.testing.assert_allclose(
-            kernel_cardinal_spline(np.linspace(-5, 5, 25)),
+        xp_assert_close(
+            kernel_cardinal_spline(xp_asarray(np.linspace(-5, 5, 25), xp=xp)),
             np.array(
                 [
                     0.00000000,
@@ -793,8 +804,8 @@ class TestKernelCardinalSpline:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            kernel_cardinal_spline(np.linspace(-5, 5, 25), 0, 1),
+        xp_assert_close(
+            kernel_cardinal_spline(xp_asarray(np.linspace(-5, 5, 25), xp=xp), 0, 1),
             np.array(
                 [
                     0.00000000,
@@ -944,7 +955,7 @@ padding_kwargs` property.
             np.linspace(0, 1, 15),
         )
 
-    def test__call__(self) -> None:
+    def test__call__(self, xp: ModuleType) -> None:
         """
         Test :meth:`colour.algebra.interpolation.KernelInterpolator.__call__`
         method.
@@ -958,8 +969,8 @@ padding_kwargs` property.
         x_i = np.linspace(11, 25, 25)
 
         kernel_interpolator = KernelInterpolator(x, y)
-        np.testing.assert_allclose(
-            kernel_interpolator(x_i),
+        xp_assert_close(
+            kernel_interpolator(xp_asarray(x_i, xp=xp)),
             np.array(
                 [
                     4.43848790,
@@ -993,8 +1004,8 @@ padding_kwargs` property.
         )
 
         kernel_interpolator = KernelInterpolator(x, y, kernel=kernel_sinc)
-        np.testing.assert_allclose(
-            kernel_interpolator(x_i),
+        xp_assert_close(
+            kernel_interpolator(xp_asarray(x_i, xp=xp)),
             np.array(
                 [
                     4.43848790,
@@ -1028,8 +1039,8 @@ padding_kwargs` property.
         )
 
         kernel_interpolator = KernelInterpolator(x, y, window=1)
-        np.testing.assert_allclose(
-            kernel_interpolator(x_i),
+        xp_assert_close(
+            kernel_interpolator(xp_asarray(x_i, xp=xp)),
             np.array(
                 [
                     4.43848790,
@@ -1063,8 +1074,8 @@ padding_kwargs` property.
         )
 
         kernel_interpolator = KernelInterpolator(x, y, window=1, kernel_kwargs={"a": 1})
-        np.testing.assert_allclose(
-            kernel_interpolator(x_i),
+        xp_assert_close(
+            kernel_interpolator(xp_asarray(x_i, xp=xp)),
             np.array(
                 [
                     4.43848790,
@@ -1100,8 +1111,8 @@ padding_kwargs` property.
         kernel_interpolator = KernelInterpolator(
             x, y, padding_kwargs={"pad_width": (3, 3), "mode": "mean"}
         )
-        np.testing.assert_allclose(
-            kernel_interpolator(x_i),
+        xp_assert_close(
+            kernel_interpolator(xp_asarray(x_i, xp=xp)),
             np.array(
                 [
                     4.4384879,
@@ -1140,15 +1151,15 @@ padding_kwargs` property.
         y = np.sin(x_1 / len(x_1) * np.pi * 6) / (x_1 / len(x_1))
         x_i = np.linspace(1, 9, 25)
 
-        np.testing.assert_allclose(
-            KernelInterpolator(x_1, y)(x_i),
-            KernelInterpolator(x_2, y)(x_i * 10),
+        xp_assert_close(
+            KernelInterpolator(x_1, y)(xp_asarray(x_i, xp=xp)),
+            np.asarray(KernelInterpolator(x_2, y)(xp_asarray(x_i * 10, xp=xp))),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            KernelInterpolator(x_1, y)(x_i),
-            KernelInterpolator(x_3, y)(x_i / 10),
+        xp_assert_close(
+            KernelInterpolator(x_1, y)(xp_asarray(x_i, xp=xp)),
+            np.asarray(KernelInterpolator(x_3, y)(xp_asarray(x_i / 10, xp=xp))),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
@@ -1251,7 +1262,7 @@ class TestLinearInterpolator:
         x, y = np.linspace(0, 1, 10), np.linspace(0, 1, 15)
         pytest.raises(ValueError, LinearInterpolator, x, y)
 
-    def test__call__(self) -> None:
+    def test__call__(self, xp: ModuleType) -> None:
         """
         Test :meth:`colour.algebra.interpolation.LinearInterpolator.__call__`
         method.
@@ -1267,15 +1278,17 @@ class TestLinearInterpolator:
         for i, value in enumerate(
             np.arange(0, len(DATA_POINTS_A) - 1 + interval, interval)
         ):
-            np.testing.assert_allclose(
+            xp_assert_close(
                 DATA_POINTS_A_LINEAR_INTERPOLATED_10_SAMPLES[i],
-                linear_interpolator(value),
+                np.asarray(linear_interpolator(xp_asarray([value], xp=xp))),
                 atol=TOLERANCE_ABSOLUTE_TESTS,
             )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             linear_interpolator(
-                np.arange(0, len(DATA_POINTS_A) - 1 + interval, interval)
+                xp_asarray(
+                    np.arange(0, len(DATA_POINTS_A) - 1 + interval, interval), xp=xp
+                )
             ),
             DATA_POINTS_A_LINEAR_INTERPOLATED_10_SAMPLES,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1345,7 +1358,7 @@ class TestSpragueInterpolator:
         x, y = np.linspace(0, 1, 10), np.linspace(0, 1, 15)
         pytest.raises(ValueError, SpragueInterpolator, x, y)
 
-    def test__call__(self) -> None:
+    def test__call__(self, xp: ModuleType) -> None:
         """
         Test :meth:`colour.algebra.interpolation.SpragueInterpolator.__call__`
         method.
@@ -1361,15 +1374,17 @@ class TestSpragueInterpolator:
         for i, value in enumerate(
             np.arange(0, len(DATA_POINTS_A) - 1 + interval, interval)
         ):
-            np.testing.assert_allclose(
+            xp_assert_close(
                 DATA_POINTS_A_SPRAGUE_INTERPOLATED_10_SAMPLES[i],
-                sprague_interpolator(value),
+                np.asarray(sprague_interpolator(xp_asarray([value], xp=xp))),
                 atol=TOLERANCE_ABSOLUTE_TESTS,
             )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sprague_interpolator(
-                np.arange(0, len(DATA_POINTS_A) - 1 + interval, interval)
+                xp_asarray(
+                    np.arange(0, len(DATA_POINTS_A) - 1 + interval, interval), xp=xp
+                )
             ),
             DATA_POINTS_A_SPRAGUE_INTERPOLATED_10_SAMPLES,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1411,7 +1426,7 @@ class TestCubicSplineInterpolator:
     unit tests methods.
     """
 
-    def test__call__(self) -> None:
+    def test__call__(self, xp: ModuleType) -> None:
         """
         Test :meth:`colour.algebra.interpolation.CubicSplineInterpolator.\
 __call__` method.
@@ -1425,10 +1440,10 @@ __call__` method.
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             CubicSplineInterpolator(
                 np.linspace(0, 1, len(DATA_POINTS_A)), DATA_POINTS_A
-            )(np.linspace(0, 1, len(DATA_POINTS_A) * 2)),
+            )(xp_asarray(np.linspace(0, 1, len(DATA_POINTS_A) * 2), xp=xp)),
             DATA_POINTS_A_CUBIC_SPLINE_INTERPOLATED_X2_SAMPLES,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
@@ -1566,7 +1581,7 @@ default` property.
         x, y = np.linspace(0, 1, 10), np.linspace(0, 1, 15)
         pytest.raises(ValueError, NullInterpolator, x, y)
 
-    def test__call__(self) -> None:
+    def test__call__(self, xp: ModuleType) -> None:
         """
         Test :meth:`colour.algebra.interpolation.NullInterpolator.__call__`
         method.
@@ -1577,15 +1592,15 @@ default` property.
 
         x = np.arange(len(DATA_POINTS_A))
         null_interpolator = NullInterpolator(x, DATA_POINTS_A)
-        np.testing.assert_allclose(
-            null_interpolator(np.array([0.75, 2.0, 3.0, 4.75])),
+        xp_assert_close(
+            null_interpolator(xp_asarray([0.75, 2.0, 3.0, 4.75], xp=xp)),
             np.array([np.nan, 12.46, 9.51, np.nan]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         null_interpolator = NullInterpolator(x, DATA_POINTS_A, 0.25, 0.25)
-        np.testing.assert_allclose(
-            null_interpolator(np.array([0.75, 2.0, 3.0, 4.75])),
+        xp_assert_close(
+            null_interpolator(xp_asarray([0.75, 2.0, 3.0, 4.75], xp=xp)),
             np.array([12.32, 12.46, 9.51, 4.33]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
@@ -1642,14 +1657,10 @@ class TestLagrangeCoefficients:
         """
 
         lc = [lagrange_coefficients(i, 3) for i in np.linspace(0.05, 0.95, 19)]
-        np.testing.assert_allclose(
-            lc, LAGRANGE_COEFFICIENTS_A, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xp_assert_close(lc, LAGRANGE_COEFFICIENTS_A, atol=TOLERANCE_ABSOLUTE_TESTS)
 
         lc = [lagrange_coefficients(i, 4) for i in np.linspace(1.05, 1.95, 19)]
-        np.testing.assert_allclose(
-            lc, LAGRANGE_COEFFICIENTS_B, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xp_assert_close(lc, LAGRANGE_COEFFICIENTS_B, atol=TOLERANCE_ABSOLUTE_TESTS)
 
 
 class TestTableInterpolationTrilinear:
@@ -1658,7 +1669,7 @@ class TestTableInterpolationTrilinear:
 table_interpolation_trilinear` definition unit tests methods.
     """
 
-    def test_interpolation_trilinear(self) -> None:
+    def test_interpolation_trilinear(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.algebra.interpolation.\
 table_interpolation_trilinear` definition.
@@ -1666,10 +1677,10 @@ table_interpolation_trilinear` definition.
 
         prng = np.random.RandomState(4)
 
-        V_xyz = random_triplet_generator(16, random_state=prng)
+        V_xyz = xp_asarray(random_triplet_generator(16, random_state=prng), xp=xp)
 
-        np.testing.assert_allclose(
-            table_interpolation_trilinear(V_xyz, LUT_TABLE),
+        xp_assert_close(
+            table_interpolation_trilinear(V_xyz, xp_asarray(LUT_TABLE, xp=xp)),
             np.array(
                 [
                     [1.07937594, -0.02773926, 0.55498254],
@@ -1700,7 +1711,7 @@ class TestTableInterpolationTetrahedral:
 table_interpolation_tetrahedral` definition unit tests methods.
     """
 
-    def test_interpolation_tetrahedral(self) -> None:
+    def test_interpolation_tetrahedral(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.algebra.interpolation.\
 table_interpolation_tetrahedral` definition.
@@ -1708,10 +1719,10 @@ table_interpolation_tetrahedral` definition.
 
         prng = np.random.RandomState(4)
 
-        V_xyz = random_triplet_generator(16, random_state=prng)
+        V_xyz = xp_asarray(random_triplet_generator(16, random_state=prng), xp=xp)
 
-        np.testing.assert_allclose(
-            table_interpolation_tetrahedral(V_xyz, LUT_TABLE),
+        xp_assert_close(
+            table_interpolation_tetrahedral(V_xyz, xp_asarray(LUT_TABLE, xp=xp)),
             np.array(
                 [
                     [1.08039215, -0.02840092, 0.55855303],
@@ -1742,26 +1753,27 @@ class TestTableInterpolation:
     wrapper definition unit tests methods.
     """
 
-    def test_table_interpolation(self) -> None:
+    def test_table_interpolation(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.algebra.interpolation.table_interpolation`
         wrapper definition.
         """
 
         prng = np.random.RandomState(4)
-        V_xyz = prng.random_sample((10, 3))
+        V_xyz = xp_asarray(prng.random_sample((10, 3)), xp=xp)
+        LUT = xp_asarray(LUT_TABLE, xp=xp)
 
         # Test with "Trilinear" method
-        np.testing.assert_allclose(
-            table_interpolation(V_xyz, LUT_TABLE, method="Trilinear"),
-            table_interpolation_trilinear(V_xyz, LUT_TABLE),
+        xp_assert_close(
+            table_interpolation(V_xyz, LUT, method="Trilinear"),
+            np.asarray(table_interpolation_trilinear(V_xyz, LUT)),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         # Test with "Tetrahedral" method
-        np.testing.assert_allclose(
-            table_interpolation(V_xyz, LUT_TABLE, method="Tetrahedral"),
-            table_interpolation_tetrahedral(V_xyz, LUT_TABLE),
+        xp_assert_close(
+            table_interpolation(V_xyz, LUT, method="Tetrahedral"),
+            np.asarray(table_interpolation_tetrahedral(V_xyz, LUT)),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
@@ -1772,59 +1784,73 @@ class TestLinearInterpolationIndexAndFactor:
 linear_interpolation_index_and_factor` definition unit tests methods.
     """
 
-    def test_linear_interpolation_index_and_factor(self) -> None:
+    def test_linear_interpolation_index_and_factor(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.algebra.interpolation.\
 linear_interpolation_index_and_factor` definition.
         """
 
-        break_points = np.array([0.0, 1.0, 2.0, 3.0])
+        break_points = xp_asarray([0.0, 1.0, 2.0, 3.0], xp=xp)
 
         # Exact match at start.
-        index, factor = linear_interpolation_index_and_factor(0.0, break_points)
-        assert index == 0
-        np.testing.assert_allclose(factor, 0.0, atol=TOLERANCE_ABSOLUTE_TESTS)
+        index, factor = linear_interpolation_index_and_factor(
+            xp_asarray([0.0], xp=xp), break_points
+        )
+        xp_assert_equal(index, [0])
+        xp_assert_close(factor, [0.0], atol=TOLERANCE_ABSOLUTE_TESTS)
 
         # Exact match at end (index = last, factor = 0).
-        index, factor = linear_interpolation_index_and_factor(3.0, break_points)
-        assert index == 3
-        np.testing.assert_allclose(factor, 0.0, atol=TOLERANCE_ABSOLUTE_TESTS)
+        index, factor = linear_interpolation_index_and_factor(
+            xp_asarray([3.0], xp=xp), break_points
+        )
+        xp_assert_equal(index, [3])
+        xp_assert_close(factor, [0.0], atol=TOLERANCE_ABSOLUTE_TESTS)
 
         # Midpoint.
-        index, factor = linear_interpolation_index_and_factor(1.5, break_points)
-        assert index == 1
-        np.testing.assert_allclose(factor, 0.5, atol=TOLERANCE_ABSOLUTE_TESTS)
+        index, factor = linear_interpolation_index_and_factor(
+            xp_asarray([1.5], xp=xp), break_points
+        )
+        xp_assert_equal(index, [1])
+        xp_assert_close(factor, [0.5], atol=TOLERANCE_ABSOLUTE_TESTS)
 
         # Clamped below.
-        index, factor = linear_interpolation_index_and_factor(-1.0, break_points)
-        assert index == 0
-        np.testing.assert_allclose(factor, 0.0, atol=TOLERANCE_ABSOLUTE_TESTS)
+        index, factor = linear_interpolation_index_and_factor(
+            xp_asarray([-1.0], xp=xp), break_points
+        )
+        xp_assert_equal(index, [0])
+        xp_assert_close(factor, [0.0], atol=TOLERANCE_ABSOLUTE_TESTS)
 
         # Clamped above (same as end: index = last, factor = 0).
-        index, factor = linear_interpolation_index_and_factor(5.0, break_points)
-        assert index == 3
-        np.testing.assert_allclose(factor, 0.0, atol=TOLERANCE_ABSOLUTE_TESTS)
+        index, factor = linear_interpolation_index_and_factor(
+            xp_asarray([5.0], xp=xp), break_points
+        )
+        xp_assert_equal(index, [3])
+        xp_assert_close(factor, [0.0], atol=TOLERANCE_ABSOLUTE_TESTS)
 
         # Degenerate (identical break points).
-        index, factor = linear_interpolation_index_and_factor(1.0, np.array([1.0, 1.0]))
-        np.testing.assert_allclose(factor, 0.0, atol=TOLERANCE_ABSOLUTE_TESTS)
+        index, factor = linear_interpolation_index_and_factor(
+            xp_asarray([1.0], xp=xp), xp_asarray([1.0, 1.0], xp=xp)
+        )
+        xp_assert_close(factor, [0.0], atol=TOLERANCE_ABSOLUTE_TESTS)
 
     def test_linear_interpolation_index_and_factor_n_dimensional(
-        self,
+        self, xp: ModuleType
     ) -> None:
         """
         Test :func:`colour.algebra.interpolation.\
 linear_interpolation_index_and_factor` definition n-dimensional support.
         """
 
-        break_points = np.array([0.0, 1.0, 2.0, 3.0])
-        values = np.array([0.0, 0.5, 1.5, 2.5, 3.0])
+        break_points = xp_asarray([0.0, 1.0, 2.0, 3.0], xp=xp)
+        values = xp_asarray([0.0, 0.5, 1.5, 2.5, 3.0], xp=xp)
 
         index, factor = linear_interpolation_index_and_factor(values, break_points)
-        assert index.shape == (5,)
-        assert factor.shape == (5,)
+        assert np.asarray(index).shape == (5,)
+        assert np.asarray(factor).shape == (5,)
 
-        np.testing.assert_array_equal(index, [0, 0, 1, 2, 3])
-        np.testing.assert_allclose(
-            factor, [0.0, 0.5, 0.5, 0.5, 0.0], atol=TOLERANCE_ABSOLUTE_TESTS
+        xp_assert_equal(index, [0, 0, 1, 2, 3])
+        xp_assert_close(
+            factor,
+            [0.0, 0.5, 0.5, 0.5, 0.0],
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )

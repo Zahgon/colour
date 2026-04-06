@@ -24,15 +24,23 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import sdiv, sdiv_mode
 from colour.colorimetry import CCS_ILLUMINANTS
 
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, DTypeFloat, NDArrayFloat
 
-from colour.utilities import as_float, as_float_array, required, tsplit, usage_warning
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    required,
+    tsplit,
+    usage_warning,
+    xp_asarray,
+    xp_atleast_1d,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -70,6 +78,7 @@ def xy_to_CCT_Hernandez1999(xy: ArrayLike) -> NDArrayFloat:
 
     Examples
     --------
+    >>> import numpy as np
     >>> xy = np.array([0.31270, 0.32900])
     >>> xy_to_CCT_Hernandez1999(xy)  # doctest: +ELLIPSIS
     np.float64(6500.7420431...)
@@ -77,23 +86,25 @@ def xy_to_CCT_Hernandez1999(xy: ArrayLike) -> NDArrayFloat:
 
     x, y = tsplit(xy)
 
+    xp = array_namespace(x)
+
     with sdiv_mode():
         n = sdiv(x - 0.3366, y - 0.1735)
 
     CCT = (
         -949.86315
-        + 6253.80338 * np.exp(-n / 0.92159)
-        + 28.70599 * np.exp(-n / 0.20039)
-        + 0.00004 * np.exp(-n / 0.07125)
+        + 6253.80338 * xp.exp(-n / 0.92159)
+        + 28.70599 * xp.exp(-n / 0.20039)
+        + 0.00004 * xp.exp(-n / 0.07125)
     )
 
-    n = np.where(CCT > 50000, (x - 0.3356) / (y - 0.1691), n)
+    n = xp.where(CCT > 50000, (x - 0.3356) / (y - 0.1691), n)
 
-    CCT = np.where(
+    CCT = xp.where(
         CCT > 50000,
         36284.48953
-        + 0.00228 * np.exp(-n / 0.07861)
-        + 5.4535e-36 * np.exp(-n / 0.01543),
+        + 0.00228 * xp.exp(-n / 0.07861)
+        + 5.4535e-36 * xp.exp(-n / 0.01543),
         CCT,
     )
 
@@ -152,13 +163,16 @@ def CCT_to_xy_Hernandez1999(
     )
 
     CCT = as_float_array(CCT)
+
+    xp = array_namespace(CCT)
+
     shape = list(CCT.shape)
-    CCT = np.atleast_1d(np.reshape(CCT, (-1, 1)))
+    CCT = xp_atleast_1d(xp_reshape(CCT, (-1, 1), xp=xp), xp=xp)
 
     def objective_function(xy: NDArrayFloat, CCT: NDArrayFloat) -> DTypeFloat:
         """Objective function."""
 
-        objective = np.linalg.norm(xy_to_CCT_Hernandez1999(xy) - CCT)
+        objective = xp.linalg.vector_norm(xy_to_CCT_Hernandez1999(xy) - CCT)
 
         return as_float(objective)
 
@@ -183,4 +197,5 @@ def CCT_to_xy_Hernandez1999(
         ]
     )
 
-    return np.reshape(xy, ([*shape, 2]))
+    xy = xp_asarray(xy, xp=xp, like=CCT)
+    return xp_reshape(xy, ([*shape, 2]), xp=xp)

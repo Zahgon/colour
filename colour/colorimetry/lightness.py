@@ -64,8 +64,6 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import spow
 from colour.biochemistry import (
     reaction_rate_MichaelisMenten_Abebe2017,
@@ -84,6 +82,7 @@ from colour.hints import (  # noqa: TC001
 )
 from colour.utilities import (
     CanonicalMapping,
+    array_namespace,
     as_float,
     as_float_array,
     filter_kwargs,
@@ -94,6 +93,7 @@ from colour.utilities import (
     to_domain_100,
     usage_warning,
     validate_method,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -205,7 +205,9 @@ def lightness_Wyszecki1963(
 
     Y = to_domain_100(Y)
 
-    if np.any(Y < 1) or np.any(Y > 98):
+    xp = array_namespace(Y)
+
+    if xp.any(Y < 1) or xp.any(Y > 98):
         usage_warning(
             '"W*" Lightness computation is only applicable for '
             '1% < "Y" < 98%, unpredictable results may occur!'
@@ -265,11 +267,15 @@ def intermediate_lightness_function_CIE1976(
     """
 
     Y = as_float_array(Y)
+
+    xp = array_namespace(Y)
+
     Y_n = as_float_array(Y_n)
+    Y_n = xp_asarray(Y_n, xp=xp, like=Y)
 
     Y_Y_n = Y / Y_n
 
-    f_Y_Y_n = np.where(
+    f_Y_Y_n = xp.where(
         Y_Y_n > (24 / 116) ** 3,
         spow(Y_Y_n, 1 / 3),
         (841 / 108) * Y_Y_n + 16 / 116,
@@ -512,18 +518,22 @@ def lightness_Abebe2017(
     """
 
     Y = as_float_array(Y)
+
+    xp = array_namespace(Y)
+
     Y_n = as_float_array(optional(Y_n, 100))
+    Y_n = xp_asarray(Y_n, xp=xp, like=Y)
     method = validate_method(method, ("Michaelis-Menten", "Stevens"))
 
     Y_Y_n = Y / Y_n
     if method == "stevens":
-        L = np.where(
+        L = xp.where(
             Y_n <= 100,
             1.226 * spow(Y_Y_n, 0.266) - 0.226,
             1.127 * spow(Y_Y_n, 0.230) - 0.127,
         )
     else:
-        L = np.where(
+        L = xp.where(
             Y_n <= 100,
             reaction_rate_MichaelisMenten_Abebe2017(
                 spow(Y_Y_n, 0.582), 1.448, 0.635, 0.813

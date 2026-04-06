@@ -27,7 +27,7 @@ from colour.recovery import (
     RGB_to_msds_camera_sensitivities_Jiang2013,
     RGB_to_sd_camera_sensitivity_Jiang2013,
 )
-from colour.utilities import tsplit
+from colour.utilities import tsplit, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -68,7 +68,7 @@ class TestPCA_Jiang2013:
             additional_data=True,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.abs(np.array(w)),
             np.array(
                 [
@@ -175,7 +175,7 @@ class TestPCA_Jiang2013:
             ),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.array(v),
             np.array(
                 [
@@ -190,17 +190,17 @@ class TestPCA_Jiang2013:
         # Test with additional_data=False (default)
         R_w, G_w, B_w = PCA_Jiang2013(camera_sensitivities, 3)  # type: ignore[misc]
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.abs(R_w),
             np.abs(w[0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.abs(G_w),
             np.abs(w[1]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.abs(B_w),
             np.abs(w[2]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -255,7 +255,7 @@ RGB_to_sd_camera_sensitivity_Jiang2013` definition.
 
         R_w, _G_w, _B_w = tsplit(np.moveaxis(BASIS_FUNCTIONS_DYER2017, 0, 1))
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_sd_camera_sensitivity_Jiang2013(
                 self._RGB[..., 0],
                 self._sd_D65,
@@ -317,7 +317,7 @@ RGB_to_sd_camera_sensitivity_Jiang2013` definition.
             assert "Aligning" in str(w[0].message)
 
         # Result should still be valid
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd.values,
             np.array(
                 [
@@ -375,7 +375,7 @@ RGB_to_msds_camera_sensitivities_Jiang2013` definition unit tests methods.
 RGB_to_msds_camera_sensitivities_Jiang2013` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_msds_camera_sensitivities_Jiang2013(
                 self._RGB,
                 self._sd_D65,
@@ -437,7 +437,7 @@ RGB_to_msds_camera_sensitivities_Jiang2013` definition.
             assert "Aligning" in str(w[0].message)
 
         # Result should still be valid
-        np.testing.assert_allclose(
+        xp_assert_close(
             msds.values,
             np.array(
                 [

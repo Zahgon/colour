@@ -133,10 +133,12 @@ from colour.notation.munsell.value import munsell_value_ASTMD1535
 from colour.utilities import (
     CACHE_REGISTRY,
     Lookup,
+    array_namespace,
     as_float,
     as_float_array,
     as_float_scalar,
     as_int_scalar,
+    as_ndarray,
     attest,
     domain_range_scale,
     from_range_1,
@@ -150,6 +152,11 @@ from colour.utilities import (
     tsplit,
     tstack,
     usage_warning,
+    xp_asarray,
+    xp_degrees,
+    xp_radians,
+    xp_reshape,
+    xp_round,
 )
 from colour.volume import is_within_macadam_limits
 
@@ -271,13 +278,16 @@ def _munsell_specifications() -> NDArrayFloat:
     if is_caching_enabled() and "All" in _CACHE_MUNSELL_SPECIFICATIONS:
         return _CACHE_MUNSELL_SPECIFICATIONS["All"]
 
-    munsell_specifications = np.array(
+    xp = array_namespace(np.empty(0))
+
+    munsell_specifications = xp_asarray(
         [
             munsell_colour_to_munsell_specification(
                 MUNSELL_COLOUR_FORMAT.format(*colour[0])
             )
             for colour in MUNSELL_COLOURS_ALL
-        ]
+        ],
+        xp=xp,
     )
 
     _CACHE_MUNSELL_SPECIFICATIONS["All"] = munsell_specifications
@@ -339,7 +349,9 @@ def _munsell_scale_factor() -> NDArrayFloat:
         Domain-range scale factor for the *Munsell Renotation System*.
     """
 
-    return np.array([10, 10, 50 if get_domain_range_scale() == "1" else 2, 10])
+    xp = array_namespace(np.empty(0))
+
+    return xp_asarray([10, 10, 50 if get_domain_range_scale() == "1" else 2, 10], xp=xp)
 
 
 def _munsell_specification_to_xyY(specification: ArrayLike) -> NDArrayFloat:
@@ -357,7 +369,7 @@ def _munsell_specification_to_xyY(specification: ArrayLike) -> NDArrayFloat:
         *CIE xyY* colourspace array.
     """
 
-    specification = normalise_munsell_specification(specification)
+    specification = as_ndarray(normalise_munsell_specification(specification))
 
     if is_grey_munsell_colour(specification):
         specification = to_domain_10(specification)
@@ -379,13 +391,15 @@ def _munsell_specification_to_xyY(specification: ArrayLike) -> NDArrayFloat:
             f"domain [0, 10]!",
         )
 
+    xp = array_namespace(specification)
+
     with domain_range_scale("ignore"):
         Y = luminance_ASTMD1535(value)
 
     if is_integer(value):
-        value_minus = value_plus = round(value)
+        value_minus = value_plus = round(float(value))
     else:
-        value_minus = np.floor(value)
+        value_minus = xp.floor(value)
         value_plus = value_minus + 1
 
     specification_minus = as_float_array(
@@ -410,9 +424,9 @@ def _munsell_specification_to_xyY(specification: ArrayLike) -> NDArrayFloat:
             Y_minus = luminance_ASTMD1535(value_minus)
             Y_plus = luminance_ASTMD1535(value_plus)
 
-        Y_minus_plus = np.squeeze([Y_minus, Y_plus])
-        x_minus_plus = np.squeeze([x_minus, x_plus])
-        y_minus_plus = np.squeeze([y_minus, y_plus])
+        Y_minus_plus = xp_asarray([Y_minus, Y_plus], xp=xp)
+        x_minus_plus = xp_asarray([x_minus, x_plus], xp=xp)
+        y_minus_plus = xp_asarray([y_minus, y_plus], xp=xp)
 
         x = as_float(LinearInterpolator(Y_minus_plus, x_minus_plus)(Y))
         y = as_float(LinearInterpolator(Y_minus_plus, y_minus_plus)(Y))
@@ -476,9 +490,15 @@ def munsell_specification_to_xyY_Centore2014(specification: ArrayLike) -> NDArra
     specification = as_float_array(specification)
     shape = specification.shape
 
-    xyY = [_munsell_specification_to_xyY(a) for a in np.reshape(specification, (-1, 4))]
+    xp = array_namespace(specification)
 
-    return np.reshape(as_float_array(xyY), (*shape[:-1], 3))
+    xyY = [
+        _munsell_specification_to_xyY(a)
+        for a in xp_reshape(specification, (-1, 4), xp=xp)
+    ]
+
+    result = xp_asarray(as_float_array(xyY), xp=xp, like=specification)
+    return xp_reshape(result, (*shape[:-1], 3), xp=xp)
 
 
 def munsell_colour_to_xyY_Centore2014(munsell_colour: ArrayLike) -> Range1:
@@ -516,15 +536,23 @@ def munsell_colour_to_xyY_Centore2014(munsell_colour: ArrayLike) -> Range1:
     array([0.31006  , 0.31616  , 0.7461345...])
     """
 
-    munsell_colour = np.array(munsell_colour)
+    munsell_colour = np.asarray(munsell_colour)
     shape = munsell_colour.shape
 
-    specification = np.array(
-        [munsell_colour_to_munsell_specification(a) for a in np.ravel(munsell_colour)]
+    xp = array_namespace(np.empty(0))
+
+    specification = xp_asarray(
+        [
+            munsell_colour_to_munsell_specification(a)
+            for a in np.reshape(munsell_colour, (-1,))
+        ],
+        xp=xp,
     )
 
     return munsell_specification_to_xyY_Centore2014(
-        from_range_10(np.reshape(specification, (*shape, 4)), _munsell_scale_factor())
+        from_range_10(
+            xp_reshape(specification, (*shape, 4), xp=xp), _munsell_scale_factor()
+        )
     )
 
 
@@ -553,7 +581,9 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
         converging to a result.
     """
 
-    xyY = as_float_array(xyY)
+    xyY = as_float_array(as_ndarray(xyY))
+
+    xp = array_namespace(xyY)
 
     x, y, Y = tsplit(xyY)
     Y = to_domain_1(Y)
@@ -568,7 +598,7 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
         value = munsell_value_ASTMD1535(Y * 100)
 
     if is_integer(value):
-        value = np.around(value)
+        value = xp_round(value, xp=np)
 
     with domain_range_scale("ignore"):
         x_center, y_center, Y_center = tsplit(_munsell_specification_to_xyY(value))
@@ -576,7 +606,7 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
     rho_input, phi_input, _z_input = tsplit(
         cartesian_to_cylindrical([x - x_center, y - y_center, Y_center])
     )
-    phi_input = np.degrees(phi_input)
+    phi_input = xp_degrees(phi_input)
 
     grey_threshold = THRESHOLD_INTEGER
 
@@ -590,7 +620,7 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
     X_r, Y_r, Z_r = xyY_to_XYZ([x_i, y_i, Y])
 
     with sdiv_mode():
-        XYZ_r = np.array([(1 / Y_r) * X_r, 1, (1 / Y_r) * Z_r])
+        XYZ_r = xp_asarray([(1 / Y_r) * X_r, 1, (1 / Y_r) * Z_r], xp=xp)
 
     Lab = XYZ_to_Lab(XYZ, XYZ_to_xy(XYZ_r))
     LCHab = Lab_to_LCHab(Lab)
@@ -635,7 +665,7 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
                 [x_current - x_center, y_current - y_center, Y_center]
             )
         )
-        phi_current = np.degrees(phi_current)
+        phi_current = xp_degrees(phi_current)
         phi_current_difference = (360 - phi_input + phi_current) % 360
         if phi_current_difference > 180:
             phi_current_difference -= 360
@@ -649,8 +679,8 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
         extrapolate = False
 
         while (
-            np.sign(np.min(phi_differences_data))
-            == np.sign(np.max(phi_differences_data))
+            xp.sign(xp.min(xp_asarray(phi_differences_data, xp=xp)))
+            == xp.sign(xp.max(xp_asarray(phi_differences_data, xp=xp)))
             and extrapolate is False
         ):
             iterations_inner += 1
@@ -678,11 +708,11 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
             if hue_angle_difference_inner > 180:
                 hue_angle_difference_inner -= 360
 
-            hue_inner, code_inner = hue_angle_to_hue(hue_angle_inner)
+            hue_inner, code_inner = hue_angle_to_hue(hue_angle_inner)  # pyright: ignore
 
             with domain_range_scale("ignore"):
                 x_inner, y_inner, _Y_inner = _munsell_specification_to_xyY(
-                    [
+                    [  # pyright: ignore
                         hue_inner,
                         value,
                         chroma_current,
@@ -697,17 +727,17 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
                 rho_inner, phi_inner, _z_inner = cartesian_to_cylindrical(
                     [x_inner - x_center, y_inner - y_center, Y_center]
                 )
-                phi_inner = np.degrees(phi_inner)
+                phi_inner = xp_degrees(phi_inner)
                 phi_inner_difference = (360 - phi_input + phi_inner) % 360
                 if phi_inner_difference > 180:
                     phi_inner_difference -= 360
 
                 phi_differences_data.append(phi_inner_difference)
-                hue_angles.append(hue_angle_inner)
-                hue_angles_differences_data.append(hue_angle_difference_inner)
+                hue_angles.append(hue_angle_inner)  # pyright: ignore
+                hue_angles_differences_data.append(hue_angle_difference_inner)  # pyright: ignore
 
-        phi_differences = np.array(phi_differences_data)
-        hue_angles_differences = np.array(hue_angles_differences_data)
+        phi_differences = xp_asarray(phi_differences_data, xp=xp)
+        hue_angles_differences = xp_asarray(hue_angles_differences_data, xp=xp)
 
         phi_differences_indexes = phi_differences.argsort()
 
@@ -735,8 +765,8 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
         difference = euclidean_distance([x, y], [x_current, y_current])
         if difference < convergence_threshold:
             return from_range_10(
-                np.array(specification_current),
-                np.array([10, 10, chroma_scale, 10]),
+                xp_asarray(specification_current, xp=xp),
+                xp_asarray([10, 10, chroma_scale, 10], xp=xp),
             )
 
         # TODO: Consider refactoring implementation.
@@ -771,7 +801,11 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
 
         iterations_maximum_inner = 16
         iterations_inner = 0
-        while not (np.min(rho_bounds_data) < rho_input < np.max(rho_bounds_data)):
+        while not (
+            xp.min(xp_asarray(rho_bounds_data, xp=xp))
+            < rho_input
+            < xp.max(xp_asarray(rho_bounds_data, xp=xp))
+        ):
             iterations_inner += 1
 
             if iterations_inner > iterations_maximum_inner:
@@ -806,8 +840,8 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
             rho_bounds_data.append(rho_inner)
             chroma_bounds_data.append(chroma_inner)
 
-        rho_bounds = np.array(rho_bounds_data)
-        chroma_bounds = np.array(chroma_bounds_data)
+        rho_bounds = xp_asarray(rho_bounds_data, xp=xp)
+        chroma_bounds = xp_asarray(chroma_bounds_data, xp=xp)
 
         rhos_bounds_indexes = rho_bounds.argsort()
 
@@ -825,8 +859,8 @@ def _xyY_to_munsell_specification(xyY: ArrayLike) -> NDArrayFloat:
         difference = euclidean_distance([x, y], [x_current, y_current])
         if difference < convergence_threshold:
             return from_range_10(
-                np.array(specification_current),
-                np.array([10, 10, chroma_scale, 10]),
+                xp_asarray(specification_current, xp=xp),
+                xp_asarray([10, 10, chroma_scale, 10], xp=xp),
             )
 
     # NOTE: This exception is likely never reached in practice: 300K iterations
@@ -900,9 +934,14 @@ def xyY_to_munsell_specification_Centore2014(xyY: ArrayLike) -> NDArrayFloat:
     xyY = as_float_array(xyY)
     shape = xyY.shape
 
-    specification = [_xyY_to_munsell_specification(a) for a in np.reshape(xyY, (-1, 3))]
+    xp = array_namespace(xyY)
 
-    return np.reshape(as_float_array(specification), (*shape[:-1], 4))
+    specification = [
+        _xyY_to_munsell_specification(a) for a in xp_reshape(xyY, (-1, 3), xp=xp)
+    ]
+
+    result = xp_asarray(as_float_array(specification), xp=xp, like=xyY)
+    return xp_reshape(result, (*shape[:-1], 4), xp=xp)
 
 
 def xyY_to_munsell_colour_Centore2014(
@@ -957,14 +996,18 @@ def xyY_to_munsell_colour_Centore2014(
     shape = specification.shape
     decimals = (hue_decimals, value_decimals, chroma_decimals)
 
-    munsell_colour = np.reshape(
-        np.array(
+    xp = array_namespace(specification)
+
+    munsell_colour = xp_reshape(
+        xp_asarray(
             [
                 munsell_specification_to_munsell_colour(a, *decimals)
-                for a in np.reshape(specification, (-1, 4))
-            ]
+                for a in xp_reshape(specification, (-1, 4), xp=xp)
+            ],
+            xp=xp,
         ),
         shape[:-1],
+        xp=xp,
     )
 
     return str(munsell_colour) if shape == (4,) else munsell_colour
@@ -1054,9 +1097,13 @@ def is_grey_munsell_colour(specification: ArrayLike) -> bool:
 
     specification = as_float_array(specification)
 
-    specification = np.squeeze(specification[~np.isnan(specification)])
+    xp = array_namespace(specification)
 
-    return is_numeric(as_float(specification))
+    filtered = specification[~xp.isnan(specification)]
+    axes = tuple(i for i in range(filtered.ndim) if filtered.shape[i] == 1)
+    specification = xp.squeeze(filtered, axis=axes) if axes else filtered
+
+    return specification.ndim == 0 and is_numeric(float(specification))  # pyright: ignore
 
 
 def normalise_munsell_specification(specification: ArrayLike) -> NDArrayFloat:
@@ -1083,8 +1130,10 @@ def normalise_munsell_specification(specification: ArrayLike) -> NDArrayFloat:
 
     specification = as_float_array(specification)
 
+    xp = array_namespace(specification)
+
     if is_grey_munsell_colour(specification):
-        return specification * np.array([np.nan, 1, np.nan, np.nan])
+        return specification * xp_asarray([np.nan, 1, np.nan, np.nan], xp=xp)
 
     hue, value, chroma, code = specification
 
@@ -1167,20 +1216,20 @@ def munsell_specification_to_munsell_colour(
     if is_grey_munsell_colour(specification):
         return MUNSELL_GRAY_EXTENDED_FORMAT.format(value, value_decimals)
 
-    hue = round(hue, hue_decimals)
+    hue = round(float(hue), hue_decimals)
     attest(
         0 <= hue <= 10,
         f'"{specification!r}" specification hue must be normalised to domain [0, 10]!',
     )
 
-    value = round(value, value_decimals)
+    value = round(float(value), value_decimals)
     attest(
         0 <= value <= 10,
         f'"{specification!r}" specification value must be normalised to '
         f"domain [0, 10]!",
     )
 
-    chroma = round(chroma, chroma_decimals)
+    chroma = round(float(chroma), chroma_decimals)
     attest(
         0 <= chroma <= 50,
         f'"{specification!r}" specification chroma must be normalised to '
@@ -1188,7 +1237,7 @@ def munsell_specification_to_munsell_colour(
     )
 
     code_values = MUNSELL_HUE_LETTER_CODES.values()
-    code = round(code, 1)
+    code = round(float(code), 1)
     attest(
         code in code_values,
         f'"{specification!r}" specification code must one of "{code_values}"!',
@@ -1247,7 +1296,9 @@ def xyY_from_renotation(
     array([0.71..., 1.41..., 0.23...])
     """
 
-    specification = normalise_munsell_specification(specification)
+    specification = as_ndarray(normalise_munsell_specification(specification)).astype(
+        float
+    )
 
     try:
         index = np.argwhere(
@@ -1262,7 +1313,7 @@ def xyY_from_renotation(
             )
         )
 
-        return MUNSELL_COLOURS_ALL[as_int_scalar(index[0])][1]
+        return MUNSELL_COLOURS_ALL[int(index.flat[0])][1]
 
     except Exception as exception:
         error = (
@@ -1339,6 +1390,8 @@ def bounding_hues_from_renotation(hue_and_code: ArrayLike) -> NDArrayFloat:
 
     hue, code = as_float_array(hue_and_code)
 
+    xp = array_namespace(hue)
+
     hue_cw: float
     code_cw: float
     hue_ccw: float
@@ -1354,7 +1407,7 @@ def bounding_hues_from_renotation(hue_and_code: ArrayLike) -> NDArrayFloat:
         hue_ccw = hue_cw
         code_ccw = code_cw
     else:
-        hue_cw = 2.5 * np.floor(hue / 2.5)
+        hue_cw = 2.5 * xp.floor(hue / 2.5)
         hue_ccw = (hue_cw + 2.5) % 10
         if hue_ccw == 0:
             hue_ccw = 10
@@ -1557,7 +1610,7 @@ def interpolation_method_from_renotation_ovoid(
             f'"{specification}" specification value must be an int!',
         )
 
-        value = round(value)
+        value = round(float(value))
 
         attest(
             2 <= chroma <= 50,
@@ -1566,11 +1619,12 @@ def interpolation_method_from_renotation_ovoid(
         )
 
         attest(
-            abs(2 * (chroma / 2 - round(chroma / 2))) <= THRESHOLD_INTEGER,
+            abs(float(2 * (chroma / 2 - round(float(chroma) / 2))))
+            <= THRESHOLD_INTEGER,
             f'"{specification}" specification chroma must be an int and multiple of 2!',
         )
 
-        chroma = 2 * round(chroma / 2)
+        chroma = 2 * round(float(chroma) / 2)
 
         interpolation_method = 0
 
@@ -1821,7 +1875,7 @@ def xy_from_renotation_ovoid(specification: ArrayLike) -> NDArrayFloat:
     array([0.31006..., 0.31616...])
     """
 
-    specification = normalise_munsell_specification(specification)
+    specification = as_ndarray(normalise_munsell_specification(specification))
 
     if is_grey_munsell_colour(specification):
         return CCS_ILLUMINANT_MUNSELL
@@ -1838,7 +1892,7 @@ def xy_from_renotation_ovoid(specification: ArrayLike) -> NDArrayFloat:
         f'"{specification}" specification value must be an int!',
     )
 
-    value = round(value)
+    value = round(float(value))
 
     attest(
         2 <= chroma <= 50,
@@ -1861,7 +1915,7 @@ def xy_from_renotation_ovoid(specification: ArrayLike) -> NDArrayFloat:
         or abs(hue - 7.5) < THRESHOLD_INTEGER
         or abs(hue - 10) < THRESHOLD_INTEGER
     ):
-        hue = 2.5 * round(hue / 2.5)
+        hue = 2.5 * round(float(hue) / 2.5)
 
         x, y, _Y = xyY_from_renotation([hue, value, chroma, code])
 
@@ -1878,14 +1932,14 @@ def xy_from_renotation_ovoid(specification: ArrayLike) -> NDArrayFloat:
     rho_minus, phi_minus, _z_minus = cartesian_to_cylindrical(
         [x_minus - x_grey, y_minus - y_grey, Y_minus]
     )
-    phi_minus = np.degrees(phi_minus)
+    phi_minus = xp_degrees(phi_minus)
 
     specification_plus = (hue_plus, value, chroma, code_plus)
     x_plus, y_plus, Y_plus = xyY_from_renotation(specification_plus)
     rho_plus, phi_plus, _z_plus = cartesian_to_cylindrical(
         [x_plus - x_grey, y_plus - y_grey, Y_plus]
     )
-    phi_plus = np.degrees(phi_plus)
+    phi_plus = xp_degrees(phi_plus)
 
     hue_angle_lower = hue_to_hue_angle([hue_minus, code_minus])
     hue_angle = hue_to_hue_angle([hue, code])
@@ -1911,17 +1965,19 @@ def xy_from_renotation_ovoid(specification: ArrayLike) -> NDArrayFloat:
         f'Interpolation method must be one of: "{"Linear, Radial"}"',
     )
 
-    hue_angle_lower_upper = np.squeeze([hue_angle_lower, hue_angle_upper])
+    xp = array_namespace(as_float_array(specification))
+
+    hue_angle_lower_upper = xp_asarray([hue_angle_lower, hue_angle_upper], xp=xp)
 
     if interpolation_method == "Linear":
-        x_minus_plus = np.squeeze([x_minus, x_plus])
-        y_minus_plus = np.squeeze([y_minus, y_plus])
+        x_minus_plus = xp_asarray([x_minus, x_plus], xp=xp)
+        y_minus_plus = xp_asarray([y_minus, y_plus], xp=xp)
 
         x = LinearInterpolator(hue_angle_lower_upper, x_minus_plus)(hue_angle)
         y = LinearInterpolator(hue_angle_lower_upper, y_minus_plus)(hue_angle)
     elif interpolation_method == "Radial":
-        rho_minus_plus = np.squeeze([rho_minus, rho_plus])
-        phi_minus_plus = np.squeeze([phi_minus, phi_plus])
+        rho_minus_plus = xp_asarray([rho_minus, rho_plus], xp=xp)
+        phi_minus_plus = xp_asarray([phi_minus, phi_plus], xp=xp)
 
         rho = as_float_array(
             LinearInterpolator(hue_angle_lower_upper, rho_minus_plus)(hue_angle)
@@ -1930,7 +1986,7 @@ def xy_from_renotation_ovoid(specification: ArrayLike) -> NDArrayFloat:
             LinearInterpolator(hue_angle_lower_upper, phi_minus_plus)(hue_angle)
         )
 
-        rho_phi = np.squeeze([rho, np.radians(phi)])
+        rho_phi = xp_asarray([rho, xp_radians(phi)], xp=xp)
         x, y = tsplit(polar_to_cartesian(rho_phi) + tstack([x_grey, y_grey]))
 
     return tstack([x, y])
@@ -2025,6 +2081,8 @@ def maximum_chroma_from_renotation(hue_and_value_and_code: ArrayLike) -> float:
 
     hue, value, code = as_float_array(hue_and_value_and_code)
 
+    xp = array_namespace(hue)
+
     # Ideal white, no chroma.
     if value >= 9.99:
         return 0
@@ -2038,7 +2096,7 @@ def maximum_chroma_from_renotation(hue_and_value_and_code: ArrayLike) -> float:
         value_minus = value
         value_plus = value
     else:
-        value_minus = np.floor(value)
+        value_minus = xp.floor(value)
         value_plus = value_minus + 1
 
     hue_code_cw, hue_code_ccw = bounding_hues_from_renotation([hue, code])
@@ -2070,17 +2128,24 @@ def maximum_chroma_from_renotation(hue_and_value_and_code: ArrayLike) -> float:
                 (hue_ccw, value_plus, code_ccw)  # pyright: ignore
             )
         ][1]
-        max_chroma = np.min([ma_limit_mcw, ma_limit_mccw, ma_limit_pcw, ma_limit_pccw])
+        max_chroma = xp.min(
+            xp_asarray(
+                [ma_limit_mcw, ma_limit_mccw, ma_limit_pcw, ma_limit_pccw], xp=xp
+            )
+        )
     else:
         L = as_float_scalar(luminance_ASTMD1535(value))
         L9 = as_float_scalar(luminance_ASTMD1535(9))
         L10 = as_float_scalar(luminance_ASTMD1535(10))
 
-        max_chroma = np.min(
-            [
-                LinearInterpolator([L9, L10], [ma_limit_mcw, 0])(L),
-                LinearInterpolator([L9, L10], [ma_limit_mccw, 0])(L),
-            ]
+        max_chroma = xp.min(
+            xp_asarray(
+                [
+                    LinearInterpolator([L9, L10], [ma_limit_mcw, 0])(L),
+                    LinearInterpolator([L9, L10], [ma_limit_mccw, 0])(L),
+                ],
+                xp=xp,
+            )
         )
 
     return as_float_scalar(max_chroma)
@@ -2116,12 +2181,14 @@ def munsell_specification_to_xy(specification: ArrayLike) -> NDArrayFloat:
     array([0.31006..., 0.31616...])
     """
 
-    specification = normalise_munsell_specification(specification)
+    specification = as_ndarray(normalise_munsell_specification(specification))
 
     if is_grey_munsell_colour(specification):
         return CCS_ILLUMINANT_MUNSELL
 
     hue, value, chroma, code = specification
+
+    xp = array_namespace(as_float_array(specification))
 
     attest(
         0 <= value <= 10,
@@ -2133,12 +2200,12 @@ def munsell_specification_to_xy(specification: ArrayLike) -> NDArrayFloat:
         f'"{specification}" specification value must be an int!',
     )
 
-    value = round(value)
+    value = round(float(value))
 
     if chroma % 2 == 0:
         chroma_minus = chroma_plus = chroma
     else:
-        chroma_minus = 2 * np.floor(chroma / 2)
+        chroma_minus = 2 * xp.floor(chroma / 2)
         chroma_plus = chroma_minus + 2
 
     if chroma_minus == 0:
@@ -2154,9 +2221,9 @@ def munsell_specification_to_xy(specification: ArrayLike) -> NDArrayFloat:
         x = x_minus
         y = y_minus
     else:
-        chroma_minus_plus = np.squeeze([chroma_minus, chroma_plus])
-        x_minus_plus = np.squeeze([x_minus, x_plus])
-        y_minus_plus = np.squeeze([y_minus, y_plus])
+        chroma_minus_plus = xp_asarray([chroma_minus, chroma_plus], xp=xp)
+        x_minus_plus = xp_asarray([x_minus, x_plus], xp=xp)
+        y_minus_plus = xp_asarray([y_minus, y_plus], xp=xp)
 
         x = LinearInterpolator(chroma_minus_plus, x_minus_plus)(chroma)
         y = LinearInterpolator(chroma_minus_plus, y_minus_plus)(chroma)

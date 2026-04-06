@@ -36,7 +36,15 @@ from colour.constants import CONSTANT_AVOGADRO
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, Callable, NDArrayFloat
 
-from colour.utilities import as_float, as_float_array, filter_kwargs
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    filter_kwargs,
+    xp_asarray,
+    xp_radians,
+    xp_resize,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -304,7 +312,9 @@ def F_air_Penndorf1957(wavelength: ArrayLike) -> NDArrayFloat:
 
     wl = as_float_array(wavelength)
 
-    return as_float(np.resize(np.array([1.0608]), wl.shape))
+    xp = array_namespace(wl)
+
+    return as_float(xp_resize(xp_asarray([1.0608], xp=xp), wl.shape, xp=xp))
 
 
 def F_air_Young1981(wavelength: ArrayLike) -> NDArrayFloat:
@@ -336,7 +346,9 @@ def F_air_Young1981(wavelength: ArrayLike) -> NDArrayFloat:
 
     wl = as_float_array(wavelength)
 
-    return as_float(np.resize(np.array([1.0480]), wl.shape))
+    xp = array_namespace(wl)
+
+    return as_float(xp_resize(xp_asarray([1.0480], xp=xp), wl.shape, xp=xp))
 
 
 def F_air_Bates1984(wavelength: ArrayLike) -> NDArrayFloat:
@@ -519,7 +531,9 @@ def gravity_List1968(
     latitude = as_float_array(latitude)
     altitude = as_float_array(altitude)
 
-    cos2phi = np.cos(2 * np.radians(latitude))
+    xp = array_namespace(latitude)
+
+    cos2phi = xp.cos(xp_radians(2 * latitude))
 
     # Sea level acceleration of gravity.
     g0 = 980.6160 * (1 - 0.0026373 * cos2phi + 0.0000059 * cos2phi**2)

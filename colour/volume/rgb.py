@@ -37,7 +37,13 @@ from colour.models import (
     XYZ_to_Lab,
     XYZ_to_RGB,
 )
-from colour.utilities import as_float_array, multiprocessing_pool
+from colour.utilities import (
+    array_namespace,
+    as_float_array,
+    multiprocessing_pool,
+    xp_asarray,
+    xp_round,
+)
 from colour.volume import is_within_pointer_gamut, is_within_visible_spectrum
 
 __author__ = "Colour Developers"
@@ -147,7 +153,10 @@ reproducibility-of-python-pseudo-random-numbers-across-systems-and-versions
         illuminant_Lab,
         chromatic_adaptation_transform,
     )
-    RGB_w = RGB[np.logical_and(np.min(RGB, axis=-1) >= 0, np.max(RGB, axis=-1) <= 1)]
+
+    xp = array_namespace(RGB)
+
+    RGB_w = RGB[xp.logical_and(xp.min(RGB, axis=-1) >= 0, xp.max(RGB, axis=-1) <= 1)]
     return len(RGB_w)
 
 
@@ -184,7 +193,7 @@ def RGB_colourspace_limits(colourspace: RGB_Colourspace) -> NDArrayFloat:
            [-107.8503557...,   94.4894974...]])
     """
 
-    Lab = np.array(
+    Lab = as_float_array(
         [
             XYZ_to_Lab(
                 RGB_to_XYZ(combination, colourspace),
@@ -194,9 +203,11 @@ def RGB_colourspace_limits(colourspace: RGB_Colourspace) -> NDArrayFloat:
         ]
     )
 
-    limits = [(np.min(Lab[..., i]), np.max(Lab[..., i])) for i in np.arange(3)]
+    xp = array_namespace(Lab)
 
-    return np.array(limits)
+    limits = [(xp.min(Lab[..., i]), xp.max(Lab[..., i])) for i in range(3)]
+
+    return xp_asarray(limits, xp=xp)
 
 
 def RGB_colourspace_volume_MonteCarlo(
@@ -267,7 +278,7 @@ reproducibility-of-python-pseudo-random-numbers-across-systems-and-versions
     import multiprocessing  # noqa: PLC0415
 
     processes = multiprocessing.cpu_count()
-    process_samples = DTYPE_INT_DEFAULT(np.round(samples / processes))
+    process_samples = DTYPE_INT_DEFAULT(xp_round(samples / processes, xp=np))
 
     arguments = (
         colourspace,
@@ -285,9 +296,14 @@ reproducibility-of-python-pseudo-random-numbers-across-systems-and-versions
             [arguments for _ in range(processes)],
         )
 
-    Lab_volume = np.prod([np.sum(np.abs(x)) for x in as_float_array(limits)])
+    limits_a = as_float_array(limits)
 
-    return Lab_volume * np.sum(results) / (process_samples * processes)
+    xp = array_namespace(limits_a)
+
+    Lab_volume = xp.prod(xp_asarray([xp.sum(xp.abs(x)) for x in limits_a], xp=xp))
+    results_a = xp_asarray(as_float_array(results), xp=xp)
+
+    return Lab_volume * xp.sum(results_a) / (process_samples * processes)
 
 
 def RGB_colourspace_volume_coverage_MonteCarlo(
@@ -338,7 +354,9 @@ def RGB_colourspace_volume_coverage_MonteCarlo(
 
     RGB = XYZ_to_RGB(XYZ_vs, colourspace)
 
-    RGB_c = RGB[np.logical_and(np.min(RGB, axis=-1) >= 0, np.max(RGB, axis=-1) <= 1)]
+    xp = array_namespace(RGB)
+
+    RGB_c = RGB[xp.logical_and(xp.min(RGB, axis=-1) >= 0, xp.max(RGB, axis=-1) <= 1)]
 
     return 100 * RGB_c.size / XYZ_vs.size
 

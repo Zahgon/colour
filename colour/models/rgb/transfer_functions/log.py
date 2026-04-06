@@ -37,9 +37,8 @@ ACESutil.Log2_to_Lin_param.ctl
 
 from __future__ import annotations
 
+import math
 import typing
-
-import numpy as np
 
 from colour.algebra import sdiv, sdiv_mode
 
@@ -52,6 +51,7 @@ if typing.TYPE_CHECKING:
 
 from colour.hints import cast
 from colour.utilities import (
+    array_namespace,
     as_float,
     as_float_array,
     optional,
@@ -133,6 +133,9 @@ def logarithmic_function_basic(
     """
 
     x = as_float_array(x)
+
+    xp = array_namespace(x)
+
     style = validate_method(
         style,
         ("log10", "antiLog10", "log2", "antiLog2", "logB", "antiLogB"),
@@ -140,19 +143,19 @@ def logarithmic_function_basic(
     )
 
     if style == "log10":
-        return as_float(np.where(x >= FLT_MIN, np.log10(x), np.log10(FLT_MIN)))
+        return as_float(xp.where(x >= FLT_MIN, xp.log10(x), math.log10(FLT_MIN)))
 
     if style == "antilog10":
         return as_float(10**x)
 
     if style == "log2":
-        return as_float(np.where(x >= FLT_MIN, np.log2(x), np.log2(FLT_MIN)))
+        return as_float(xp.where(x >= FLT_MIN, xp.log2(x), math.log2(FLT_MIN)))
 
     if style == "antilog2":
         return as_float(2**x)
 
     if style == "logb":
-        return as_float(np.log(x) / np.log(base))
+        return as_float(xp.log(x) / math.log(base))
 
     # style == 'antilogb'
     return as_float(base**x)
@@ -215,6 +218,9 @@ def logarithmic_function_quasilog(
     """
 
     x = as_float_array(x)
+
+    xp = array_namespace(x)
+
     style = validate_method(
         style,
         ("lintolog", "logtolin"),
@@ -225,8 +231,8 @@ def logarithmic_function_quasilog(
         y = (
             log_side_slope
             * (
-                np.log(np.maximum(lin_side_slope * x + lin_side_offset, FLT_MIN))
-                / np.log(base)
+                xp.log(xp.clip(lin_side_slope * x + lin_side_offset, min=FLT_MIN))
+                / math.log(base)
             )
             + log_side_offset
         )
@@ -310,6 +316,9 @@ def logarithmic_function_camera(
     """
 
     x = as_float_array(x)
+
+    xp = array_namespace(x)
+
     style = validate_method(
         style,
         ("cameraLinToLog", "cameraLogToLin"),
@@ -318,7 +327,7 @@ def logarithmic_function_camera(
 
     log_side_break = (
         log_side_slope
-        * (np.log(lin_side_slope * lin_side_break + lin_side_offset) / np.log(base))
+        * (math.log(lin_side_slope * lin_side_break + lin_side_offset) / math.log(base))
         + log_side_offset
     )
 
@@ -333,7 +342,7 @@ def logarithmic_function_camera(
                         sdiv(
                             lin_side_slope,
                             (lin_side_slope * lin_side_break + lin_side_offset)
-                            * np.log(base),
+                            * math.log(base),
                         )
                     )
                 ),
@@ -344,7 +353,7 @@ def logarithmic_function_camera(
 
     if style == "cameralintolog":
         m_x = x <= lin_side_break
-        y = np.where(
+        y = xp.where(
             m_x,
             linear_slope * x + linear_offset,
             logarithmic_function_quasilog(
@@ -360,7 +369,7 @@ def logarithmic_function_camera(
     else:  # style == 'cameralogtolin'
         with sdiv_mode():
             m_x = x <= log_side_break
-            y = np.where(
+            y = xp.where(
                 m_x,
                 sdiv(x - linear_offset, linear_slope),
                 logarithmic_function_quasilog(
@@ -439,7 +448,9 @@ def log_encoding_Log2(
 
     lin = as_float_array(lin)
 
-    lg2 = np.log2(lin / middle_grey)
+    xp = array_namespace(lin)
+
+    lg2 = xp.log2(lin / middle_grey)
     log_norm = (lg2 - min_exposure) / (max_exposure - min_exposure)
 
     return as_float(log_norm)

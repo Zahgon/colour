@@ -11,6 +11,7 @@ import numpy as np
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.hints import cast
 from colour.io import LUT1D, LUTSequence, read_LUT_IridasCube, write_LUT_IridasCube
+from colour.utilities import xp_assert_close, xp_assert_equal
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -44,7 +45,7 @@ class TestReadLUTIridasCube:
             os.path.join(ROOT_LUTS, "ACES_Proxy_10_to_ACES.cube")
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.table,
             np.array(
                 [
@@ -86,13 +87,13 @@ class TestReadLUTIridasCube:
         )
         assert LUT_1.name == "ACES Proxy 10 to ACES"
         assert LUT_1.dimensions == 2
-        np.testing.assert_array_equal(LUT_1.domain, np.array([[0, 0, 0], [1, 1, 1]]))
+        xp_assert_equal(LUT_1.domain, np.array([[0, 0, 0], [1, 1, 1]]))
         assert LUT_1.size == 32
         assert LUT_1.comments == []
 
         LUT_2 = read_LUT_IridasCube(os.path.join(ROOT_LUTS, "Demo.cube"))
         assert LUT_2.comments == ["Comments can go anywhere"]
-        np.testing.assert_array_equal(LUT_2.domain, np.array([[0, 0, 0], [1, 2, 3]]))
+        xp_assert_equal(LUT_2.domain, np.array([[0, 0, 0], [1, 2, 3]]))
 
         LUT_3 = read_LUT_IridasCube(
             os.path.join(ROOT_LUTS, "Three_Dimensional_Table.cube")

@@ -18,8 +18,6 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import LinearInterpolator, sdiv, sdiv_mode
 from colour.colorimetry import (
     MultiSpectralDistributions,
@@ -32,8 +30,13 @@ from colour.colorimetry import (
 if typing.TYPE_CHECKING:
     from colour.hints import NDArrayFloat
 
-
-from colour.utilities import required
+from colour.utilities import (
+    array_namespace,
+    as_ndarray,
+    required,
+    xp_asarray,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -113,21 +116,28 @@ def spectral_similarity_index(
     global _MATRIX_INTEGRATION  # noqa: PLW0603
 
     if _MATRIX_INTEGRATION is None:
+        xp = array_namespace()
+
         n_rows = len(_SPECTRAL_SHAPE_SSI_LARGE.wavelengths)
         n_cols = len(SPECTRAL_SHAPE_SSI.wavelengths)
-        weights = np.array([0.5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.5])
+        weights = xp_asarray([0.5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.5], xp=xp)
 
-        _MATRIX_INTEGRATION = np.vstack(
+        _MATRIX_INTEGRATION = xp.concat(
             [
-                np.concatenate(
-                    [
-                        np.zeros(10 * i),
-                        weights,
-                        np.zeros(max(0, n_cols - 10 * i - 11)),
-                    ]
-                )[:n_cols]
+                xp_reshape(
+                    xp.concat(
+                        [
+                            xp.zeros(10 * i),
+                            weights,
+                            xp.zeros(max(0, n_cols - 10 * i - 11)),
+                        ]
+                    )[:n_cols],
+                    (1, -1),
+                    xp=xp,
+                )
                 for i in range(n_rows)
-            ]
+            ],
+            axis=0,
         )
 
     settings = {
@@ -148,20 +158,28 @@ def spectral_similarity_index(
         )
     )
 
-    test_i = np.dot(_MATRIX_INTEGRATION, sd_test.values)
-    reference_i = np.dot(_MATRIX_INTEGRATION, sd_reference.values)
+    xp = array_namespace(_MATRIX_INTEGRATION, sd_test.values, sd_reference.values)
+
+    test_i = xp.matmul(
+        xp_asarray(_MATRIX_INTEGRATION, xp=xp),  # pyright: ignore
+        xp_asarray(sd_test.values, xp=xp),
+    )
+    reference_i = xp.matmul(
+        xp_asarray(_MATRIX_INTEGRATION, xp=xp),  # pyright: ignore
+        xp_asarray(sd_reference.values, xp=xp),
+    )
 
     if test_i.ndim == 1 and reference_i.ndim == 2:
-        test_i = np.tile(test_i[:, np.newaxis], (1, reference_i.shape[1]))
+        test_i = xp.tile(test_i[:, None], (1, reference_i.shape[1]))
     elif test_i.ndim == 2 and reference_i.ndim == 1:
-        reference_i = np.tile(reference_i[:, np.newaxis], (1, test_i.shape[1]))
+        reference_i = xp.tile(reference_i[:, None], (1, test_i.shape[1]))
 
     with sdiv_mode():
-        test_i = sdiv(test_i, np.sum(test_i, axis=0, keepdims=True))
-        reference_i = sdiv(reference_i, np.sum(reference_i, axis=0, keepdims=True))
+        test_i = sdiv(test_i, xp.sum(test_i, axis=0, keepdims=True))
+        reference_i = sdiv(reference_i, xp.sum(reference_i, axis=0, keepdims=True))
         dr_i = sdiv(test_i - reference_i, reference_i + 1 / 30)
 
-    weights = np.array(
+    weights = xp_asarray(
         [
             4 / 15,
             22 / 45,
@@ -193,16 +211,20 @@ def spectral_similarity_index(
             1,
             11 / 15,
             3 / 15,
-        ]
+        ],
+        xp=xp,
     )
 
     if dr_i.ndim == 2:
-        weights = weights[:, np.newaxis]
+        weights = weights[:, None]
 
     wdr_i = dr_i * weights
-    c_wdr_i = convolve1d(wdr_i, [0.22, 0.56, 0.22], axis=0, mode="constant", cval=0)
-    m_v = np.sum(np.square(c_wdr_i), axis=0)
+    c_wdr_i = convolve1d(
+        as_ndarray(wdr_i), [0.22, 0.56, 0.22], axis=0, mode="constant", cval=0
+    )
+    c_wdr_i = xp_asarray(c_wdr_i, xp=xp)
+    m_v = xp.sum(xp.square(c_wdr_i), axis=0)
 
-    SSI = 100 - 32 * np.sqrt(m_v)
+    SSI = 100 - 32 * xp.sqrt(m_v)
 
-    return np.around(SSI) if round_result else SSI
+    return xp.round(SSI) if round_result else SSI

@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import numpy as np
 
 from colour.colorimetry import SpectralShape, sd_to_XYZ_integration
@@ -16,7 +21,7 @@ from colour.recovery.gaussian import (
     optimise_gaussian_basis_parameters,
 )
 from colour.recovery.smits1999 import RGB_to_msds_Smits1999, RGB_to_sd_Smits1999
-from colour.utilities import domain_range_scale
+from colour.utilities import domain_range_scale, xp_asarray, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -92,25 +97,26 @@ class TestRGB_to_msds_Gaussian:
     definition unit tests methods.
     """
 
-    def test_RGB_to_msds_Gaussian(self) -> None:
+    def test_RGB_to_msds_Gaussian(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.recovery.gaussian.RGB_to_msds_Gaussian`
         definition.
         """
 
-        RGB = np.array(
+        RGB = xp_asarray(
             [
                 [0.45623196, 0.03080455, 0.04093343],
                 [0.05438271, 0.29877169, 0.07188444],
                 [0.01863137, 0.05139773, 0.28887675],
-            ]
+            ],
+            xp=xp,
         )
 
         msds = RGB_to_msds_Gaussian(RGB)
 
         assert msds.shape == (3, 421)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             msds[0, 0],
             0.04093343,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -122,7 +128,7 @@ class TestRGB_to_msds_Gaussian:
 
         assert msds_10nm.shape == (3, 43)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             msds_10nm,
             np.array(
                 [
@@ -273,14 +279,14 @@ class TestRGB_to_sd_Gaussian:
     definition unit tests methods.
     """
 
-    def test_RGB_to_sd_Gaussian(self) -> None:
+    def test_RGB_to_sd_Gaussian(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.recovery.gaussian.RGB_to_sd_Gaussian`
         definition.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        RGB = XYZ_to_RGB_Gaussian(XYZ)
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        RGB = np.asarray(XYZ_to_RGB_Gaussian(XYZ))
 
         sd = RGB_to_sd_Gaussian(RGB)
 
@@ -292,7 +298,7 @@ class TestRGB_to_sd_Gaussian:
 
         assert sd_10nm.values.shape == (43,)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_10nm.values,
             np.array(
                 [
@@ -344,20 +350,20 @@ class TestRGB_to_sd_Gaussian:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_range_scale_RGB_to_sd_Gaussian(self) -> None:
+    def test_domain_range_scale_RGB_to_sd_Gaussian(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.recovery.gaussian.RGB_to_sd_Gaussian`
         definition domain and range scale support.
         """
 
-        XYZ_i = np.array([0.20654008, 0.12197225, 0.05136952])
-        RGB_i = XYZ_to_RGB_Gaussian(XYZ_i)
+        XYZ_i = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        RGB_i = np.asarray(XYZ_to_RGB_Gaussian(XYZ_i))
         XYZ_o = sd_to_XYZ_integration(RGB_to_sd_Gaussian(RGB_i))
 
         d_r = (("reference", 1, 1), ("1", 1, 0.01), ("100", 100, 1))
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     sd_to_XYZ_integration(RGB_to_sd_Gaussian(RGB_i * factor_a)),
                     XYZ_o * factor_b,
                     atol=TOLERANCE_ABSOLUTE_TESTS,

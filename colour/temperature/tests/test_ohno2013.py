@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
@@ -15,7 +20,12 @@ from colour.temperature import (
     uv_to_CCT_Ohno2013,
 )
 from colour.temperature.ohno2013 import planckian_table
-from colour.utilities import ignore_numpy_errors
+from colour.utilities import (
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -42,7 +52,7 @@ class TestPlanckianTable:
     def test_planckian_table(self) -> None:
         """Test :func:`colour.temperature.ohno2013.planckian_table` definition."""
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             planckian_table(
                 MSDS_CMFS["CIE 1931 2 Degree Standard Observer"],
                 5000,
@@ -76,7 +86,7 @@ class TestPlanckianTable:
                     [6.00000000e03, 2.03307932e-01, 3.14117832e-01],
                 ]
             ),
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
 
@@ -86,7 +96,7 @@ class TestUv_to_CCT_Ohno2013:
     unit tests methods.
     """
 
-    def test_uv_to_CCT_Ohno2013(self) -> None:
+    def test_uv_to_CCT_Ohno2013(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.ohno2013.uv_to_CCT_Ohno2013`
         definition.
@@ -97,48 +107,46 @@ class TestUv_to_CCT_Ohno2013:
 
         CCT, D_uv = np.meshgrid(CCT, D_uv)
         table_r = np.transpose((np.ravel(CCT), np.ravel(D_uv)))
-        table_t = uv_to_CCT_Ohno2013(CCT_to_uv_Ohno2013(table_r))
+        table_t = np.asarray(uv_to_CCT_Ohno2013(CCT_to_uv_Ohno2013(table_r)))
 
-        np.testing.assert_allclose(table_t[1, :], table_r[1, :], atol=1)
+        xp_assert_close(
+            table_t[1, :], table_r[1, :], atol=TOLERANCE_ABSOLUTE_TESTS * 10000000
+        )
 
-        np.testing.assert_allclose(
-            uv_to_CCT_Ohno2013(np.array([0.1978, 0.3122])),
+        xp_assert_close(
+            uv_to_CCT_Ohno2013(xp_asarray([0.1978, 0.3122], xp=xp)),
             np.array([6507.474788799616363, 0.003223346337596]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            uv_to_CCT_Ohno2013(np.array([0.4328, 0.2883])),
+        xp_assert_close(
+            uv_to_CCT_Ohno2013(xp_asarray([0.4328, 0.2883], xp=xp)),
             np.array([1041.678320000468375, -0.067378053475797]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            uv_to_CCT_Ohno2013(np.array([0.2927, 0.2722])),
+        xp_assert_close(
+            uv_to_CCT_Ohno2013(xp_asarray([0.2927, 0.2722], xp=xp)),
             np.array([2444.971818951082696, -0.084370641205118]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_uv_to_CCT_Ohno2013(self) -> None:
+    def test_n_dimensional_uv_to_CCT_Ohno2013(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.ohno2013.uv_to_CCT_Ohno2013` definition
         n-dimensional arrays support.
         """
 
-        uv = np.array([0.1978, 0.3122])
-        CCT_D_uv = uv_to_CCT_Ohno2013(uv)
+        uv = xp_asarray([0.1978, 0.3122], xp=xp)
+        CCT_D_uv = np.asarray(uv_to_CCT_Ohno2013(uv))
 
-        uv = np.tile(uv, (6, 1))
-        CCT_D_uv = np.tile(CCT_D_uv, (6, 1))
-        np.testing.assert_allclose(
-            uv_to_CCT_Ohno2013(uv), CCT_D_uv, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        uv = xp.tile(xp_asarray(uv, xp=xp), (6, 1))
+        CCT_D_uv = xp.tile(xp_asarray(CCT_D_uv, xp=xp), (6, 1))
+        xp_assert_close(uv_to_CCT_Ohno2013(uv), CCT_D_uv, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        uv = np.reshape(uv, (2, 3, 2))
-        CCT_D_uv = np.reshape(CCT_D_uv, (2, 3, 2))
-        np.testing.assert_allclose(
-            uv_to_CCT_Ohno2013(uv), CCT_D_uv, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        uv = xp_reshape(xp_asarray(uv, xp=xp), (2, 3, 2), xp=xp)
+        CCT_D_uv = xp_reshape(xp_asarray(CCT_D_uv, xp=xp), (2, 3, 2), xp=xp)
+        xp_assert_close(uv_to_CCT_Ohno2013(uv), CCT_D_uv, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_uv_to_CCT_Ohno2013(self) -> None:
@@ -158,50 +166,46 @@ class TestCCT_to_uv_Ohno2013:
     unit tests methods.
     """
 
-    def test_CCT_to_uv_Ohno2013(self) -> None:
+    def test_CCT_to_uv_Ohno2013(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.ohno2013.CCT_to_uv_Ohno2013`
         definition.
         """
 
-        np.testing.assert_allclose(
-            CCT_to_uv_Ohno2013(np.array([6507.47380460, 0.00322335])),
+        xp_assert_close(
+            CCT_to_uv_Ohno2013(xp_asarray([6507.47380460, 0.00322335], xp=xp)),
             np.array([0.19779997, 0.31219997]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            CCT_to_uv_Ohno2013(np.array([1041.68315360, -0.06737802])),
+        xp_assert_close(
+            CCT_to_uv_Ohno2013(xp_asarray([1041.68315360, -0.06737802], xp=xp)),
             np.array([0.43279885, 0.28830013]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            CCT_to_uv_Ohno2013(np.array([2452.15316417, -0.08437064])),
+        xp_assert_close(
+            CCT_to_uv_Ohno2013(xp_asarray([2452.15316417, -0.08437064], xp=xp)),
             np.array([0.29247364, 0.27215157]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_CCT_to_uv_Ohno2013(self) -> None:
+    def test_n_dimensional_CCT_to_uv_Ohno2013(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.ohno2013.CCT_to_uv_Ohno2013` definition
         n-dimensional arrays support.
         """
 
-        CCT_D_uv = np.array([6507.47380460, 0.00322335])
-        uv = CCT_to_uv_Ohno2013(CCT_D_uv)
+        CCT_D_uv = xp_asarray([6507.47380460, 0.00322335], xp=xp)
+        uv = np.asarray(CCT_to_uv_Ohno2013(CCT_D_uv))
 
-        CCT_D_uv = np.tile(CCT_D_uv, (6, 1))
-        uv = np.tile(uv, (6, 1))
-        np.testing.assert_allclose(
-            CCT_to_uv_Ohno2013(CCT_D_uv), uv, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        CCT_D_uv = xp.tile(xp_asarray(CCT_D_uv, xp=xp), (6, 1))
+        uv = xp.tile(xp_asarray(uv, xp=xp), (6, 1))
+        xp_assert_close(CCT_to_uv_Ohno2013(CCT_D_uv), uv, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        CCT_D_uv = np.reshape(CCT_D_uv, (2, 3, 2))
-        uv = np.reshape(uv, (2, 3, 2))
-        np.testing.assert_allclose(
-            CCT_to_uv_Ohno2013(CCT_D_uv), uv, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        CCT_D_uv = xp_reshape(xp_asarray(CCT_D_uv, xp=xp), (2, 3, 2), xp=xp)
+        uv = xp_reshape(xp_asarray(uv, xp=xp), (2, 3, 2), xp=xp)
+        xp_assert_close(CCT_to_uv_Ohno2013(CCT_D_uv), uv, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_CCT_to_uv_Ohno2013(self) -> None:
@@ -221,36 +225,40 @@ class Test_XYZ_to_CCT_Ohno2013:
     unit tests methods.
     """
 
-    def test_XYZ_to_CCT_Ohno2013(self) -> None:
+    def test_XYZ_to_CCT_Ohno2013(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.ohno2013.XYZ_to_CCT_Ohno2013` definition.
         """
 
-        np.testing.assert_allclose(
-            XYZ_to_CCT_Ohno2013(np.array([95.04, 100.00, 108.88])),
+        xp_assert_close(
+            XYZ_to_CCT_Ohno2013(xp_asarray([95.04, 100.00, 108.88], xp=xp)),
             np.array([6503.30711709, 0.00321729]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_XYZ_to_CCT_Ohno2013(self) -> None:
+    def test_n_dimensional_XYZ_to_CCT_Ohno2013(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.ohno2013.XYZ_to_CCT_Ohno2013` definition
         n-dimensional arrays support.
         """
 
-        XYZ = np.array([95.04, 100.00, 108.88])
-        CCT_D_uv = XYZ_to_CCT_Ohno2013(XYZ)
+        XYZ = xp_asarray([95.04, 100.00, 108.88], xp=xp)
+        CCT_D_uv = np.asarray(XYZ_to_CCT_Ohno2013(XYZ))
 
-        XYZ = np.tile(XYZ, (6, 1))
-        CCT_D_uv = np.tile(CCT_D_uv, (6, 1))
-        np.testing.assert_allclose(
-            XYZ_to_CCT_Ohno2013(XYZ), CCT_D_uv, atol=TOLERANCE_ABSOLUTE_TESTS
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        CCT_D_uv = xp.tile(xp_asarray(CCT_D_uv, xp=xp), (6, 1))
+        xp_assert_close(
+            XYZ_to_CCT_Ohno2013(XYZ),
+            CCT_D_uv,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        CCT_D_uv = np.reshape(CCT_D_uv, (2, 3, 2))
-        np.testing.assert_allclose(
-            XYZ_to_CCT_Ohno2013(XYZ), CCT_D_uv, atol=TOLERANCE_ABSOLUTE_TESTS
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        CCT_D_uv = xp_reshape(xp_asarray(CCT_D_uv, xp=xp), (2, 3, 2), xp=xp)
+        xp_assert_close(
+            XYZ_to_CCT_Ohno2013(XYZ),
+            CCT_D_uv,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
     @ignore_numpy_errors
@@ -271,36 +279,40 @@ class Test_CCT_to_XYZ_Ohno2013:
     unit tests methods.
     """
 
-    def test_CCT_to_XYZ_Ohno2013(self) -> None:
+    def test_CCT_to_XYZ_Ohno2013(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.ohno2013.CCT_to_XYZ_Ohno2013` definition.
         """
 
-        np.testing.assert_allclose(
-            CCT_to_XYZ_Ohno2013(np.array([6503.30711709, 0.00321729])),
+        xp_assert_close(
+            CCT_to_XYZ_Ohno2013(xp_asarray([6503.30711709, 0.00321729], xp=xp)),
             np.array([95.04, 100.00, 108.88]) / 100,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
-    def test_n_dimensional_CCT_to_XYZ_Ohno2013(self) -> None:
+    def test_n_dimensional_CCT_to_XYZ_Ohno2013(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.ohno2013.CCT_to_XYZ_Ohno2013` definition
         n-dimensional arrays support.
         """
 
-        CCT_D_uv = np.array([6503.30711709, 0.00321729])
-        XYZ = CCT_to_XYZ_Ohno2013(CCT_D_uv)
+        CCT_D_uv = xp_asarray([6503.30711709, 0.00321729], xp=xp)
+        XYZ = np.asarray(CCT_to_XYZ_Ohno2013(CCT_D_uv))
 
-        CCT_D_uv = np.tile(CCT_D_uv, (6, 1))
-        XYZ = np.tile(XYZ, (6, 1))
-        np.testing.assert_allclose(
-            CCT_to_XYZ_Ohno2013(CCT_D_uv), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS
+        CCT_D_uv = xp.tile(xp_asarray(CCT_D_uv, xp=xp), (6, 1))
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        xp_assert_close(
+            CCT_to_XYZ_Ohno2013(CCT_D_uv),
+            XYZ,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        CCT_D_uv = np.reshape(CCT_D_uv, (2, 3, 2))
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        np.testing.assert_allclose(
-            CCT_to_XYZ_Ohno2013(CCT_D_uv), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS
+        CCT_D_uv = xp_reshape(xp_asarray(CCT_D_uv, xp=xp), (2, 3, 2), xp=xp)
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(
+            CCT_to_XYZ_Ohno2013(CCT_D_uv),
+            XYZ,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
     @ignore_numpy_errors

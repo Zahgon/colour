@@ -147,7 +147,7 @@ from colour.models.rgb.transfer_functions import (
     oetf_H273_LogSqrt,
     oetf_SMPTE240M,
 )
-from colour.utilities import message_box, multiline_str
+from colour.utilities import array_namespace, message_box, multiline_str
 from colour.utilities.documentation import DocstringDict, is_documentation_building
 
 __all__ = [
@@ -213,7 +213,9 @@ def _clipped_domain_function(
     def wrapped(x: ArrayLike, *args: Any, **kwargs: Any) -> Any:
         """Wrap specified function."""
 
-        return function(np.clip(x, *domain), *args, **kwargs)
+        xp = array_namespace(x)
+
+        return function(xp.clip(x, *domain), *args, **kwargs)
 
     return wrapped
 
@@ -724,7 +726,7 @@ CCS_WHITEPOINTS_ITUTH273: Dict[int, NDArrayFloat] = {
     1: CCS_WHITEPOINT_BT709,
     2: np.array("Unspecified"),
     3: np.array("Reserved"),
-    4: np.around(CCS_WHITEPOINT_BT470_525, 3),
+    4: np.round(CCS_WHITEPOINT_BT470_525, 3),
     5: CCS_WHITEPOINT_BT470_625,
     6: CCS_WHITEPOINT_SMPTE_240M,
     7: CCS_WHITEPOINT_SMPTE_240M,

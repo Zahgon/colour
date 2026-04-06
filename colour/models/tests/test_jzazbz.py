@@ -2,13 +2,25 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.models import Izazbz_to_XYZ, Jzazbz_to_XYZ, XYZ_to_Izazbz, XYZ_to_Jzazbz
-from colour.utilities import domain_range_scale, ignore_numpy_errors
+from colour.utilities import (
+    domain_range_scale,
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_assert_equal,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -31,39 +43,39 @@ class TestXYZ_to_Izazbz:
     tests methods.
     """
 
-    def test_XYZ_to_Izazbz(self) -> None:
+    def test_XYZ_to_Izazbz(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.jzazbz.XYZ_to_Izazbz` definition."""
 
-        np.testing.assert_allclose(
-            XYZ_to_Izazbz(np.array([0.20654008, 0.12197225, 0.05136952])),
+        xp_assert_close(
+            XYZ_to_Izazbz(xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)),
             np.array([0.01207793, 0.00924302, 0.00526007]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            XYZ_to_Izazbz(np.array([0.14222010, 0.23042768, 0.10495772])),
+        xp_assert_close(
+            XYZ_to_Izazbz(xp_asarray([0.14222010, 0.23042768, 0.10495772], xp=xp)),
             np.array([0.01397346, -0.00608426, 0.00534077]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            XYZ_to_Izazbz(np.array([0.96907232, 1.00000000, 1.12179215])),
+        xp_assert_close(
+            XYZ_to_Izazbz(xp_asarray([0.96907232, 1.00000000, 1.12179215], xp=xp)),
             np.array([0.03927203, 0.00064174, -0.00052906]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_Izazbz(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
                 method="Safdar 2021",
             ),
             np.array([0.01049146, 0.00924302, 0.00526007]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             XYZ_to_Izazbz(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
                 method="Safdar 2021",
             ),
             XYZ_to_Izazbz(
@@ -71,40 +83,36 @@ class TestXYZ_to_Izazbz:
             ),
         )
 
-    def test_n_dimensional_XYZ_to_Izazbz(self) -> None:
+    def test_n_dimensional_XYZ_to_Izazbz(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.jzazbz.XYZ_to_Izazbz` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        Izazbz = XYZ_to_Izazbz(XYZ)
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        Izazbz = np.asarray(XYZ_to_Izazbz(XYZ))
 
-        XYZ = np.tile(XYZ, (6, 1))
-        Izazbz = np.tile(Izazbz, (6, 1))
-        np.testing.assert_allclose(
-            XYZ_to_Izazbz(XYZ), Izazbz, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        Izazbz = xp.tile(xp_asarray(Izazbz, xp=xp), (6, 1))
+        xp_assert_close(XYZ_to_Izazbz(XYZ), Izazbz, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        Izazbz = np.reshape(Izazbz, (2, 3, 3))
-        np.testing.assert_allclose(
-            XYZ_to_Izazbz(XYZ), Izazbz, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        Izazbz = xp_reshape(xp_asarray(Izazbz, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(XYZ_to_Izazbz(XYZ), Izazbz, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-    def test_domain_range_scale_XYZ_to_Izazbz(self) -> None:
+    def test_domain_range_scale_XYZ_to_Izazbz(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.jzazbz.XYZ_to_Izazbz` definition domain and
         range scale support.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        Izazbz = XYZ_to_Izazbz(XYZ)
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        Izazbz = np.asarray(XYZ_to_Izazbz(XYZ))
 
         d_r = (("reference", 1), ("1", 1), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     XYZ_to_Izazbz(XYZ * factor),
                     Izazbz * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -128,45 +136,45 @@ class TestIzazbz_to_XYZ:
     methods.
     """
 
-    def test_Izazbz_to_XYZ(self) -> None:
+    def test_Izazbz_to_XYZ(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.jzazbz.Izazbz_to_XYZ` definition."""
 
-        np.testing.assert_allclose(
-            Izazbz_to_XYZ(np.array([0.01207793, 0.00924302, 0.00526007])),
+        xp_assert_close(
+            Izazbz_to_XYZ(xp_asarray([0.01207793, 0.00924302, 0.00526007], xp=xp)),
             np.array([0.20654008, 0.12197225, 0.05136952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            Izazbz_to_XYZ(np.array([0.01397346, -0.00608426, 0.00534077])),
+        xp_assert_close(
+            Izazbz_to_XYZ(xp_asarray([0.01397346, -0.00608426, 0.00534077], xp=xp)),
             np.array([0.14222010, 0.23042768, 0.10495772]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            Izazbz_to_XYZ(np.array([0.03927203, 0.00064174, -0.00052906])),
+        xp_assert_close(
+            Izazbz_to_XYZ(xp_asarray([0.03927203, 0.00064174, -0.00052906], xp=xp)),
             np.array([0.96907232, 1.00000000, 1.12179215]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            Izazbz_to_XYZ(np.array([0.03927203, 0.00064174, -0.00052906])),
+        xp_assert_close(
+            Izazbz_to_XYZ(xp_asarray([0.03927203, 0.00064174, -0.00052906], xp=xp)),
             np.array([0.96907232, 1.00000000, 1.12179215]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             Izazbz_to_XYZ(
-                np.array([0.01049146, 0.00924302, 0.00526007]),
+                xp_asarray([0.01049146, 0.00924302, 0.00526007], xp=xp),
                 method="Safdar 2021",
             ),
             np.array([0.20654008, 0.12197225, 0.05136952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             Izazbz_to_XYZ(
-                np.array([0.01049146, 0.00924302, 0.00526007]),
+                xp_asarray([0.01049146, 0.00924302, 0.00526007], xp=xp),
                 method="Safdar 2021",
             ),
             Izazbz_to_XYZ(
@@ -174,40 +182,36 @@ class TestIzazbz_to_XYZ:
             ),
         )
 
-    def test_n_dimensional_Izazbz_to_XYZ(self) -> None:
+    def test_n_dimensional_Izazbz_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.jzazbz.Izazbz_to_XYZ` definition
         n-dimensional support.
         """
 
-        Izazbz = np.array([0.01207793, 0.00924302, 0.00526007])
-        XYZ = Izazbz_to_XYZ(Izazbz)
+        Izazbz = xp_asarray([0.01207793, 0.00924302, 0.00526007], xp=xp)
+        XYZ = np.asarray(Izazbz_to_XYZ(Izazbz))
 
-        Izazbz = np.tile(Izazbz, (6, 1))
-        XYZ = np.tile(XYZ, (6, 1))
-        np.testing.assert_allclose(
-            Izazbz_to_XYZ(Izazbz), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        Izazbz = xp.tile(xp_asarray(Izazbz, xp=xp), (6, 1))
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        xp_assert_close(Izazbz_to_XYZ(Izazbz), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        Izazbz = np.reshape(Izazbz, (2, 3, 3))
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        np.testing.assert_allclose(
-            Izazbz_to_XYZ(Izazbz), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        Izazbz = xp_reshape(xp_asarray(Izazbz, xp=xp), (2, 3, 3), xp=xp)
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(Izazbz_to_XYZ(Izazbz), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-    def test_domain_range_scale_Izazbz_to_XYZ(self) -> None:
+    def test_domain_range_scale_Izazbz_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.jzazbz.Izazbz_to_XYZ` definition domain and
         range scale support.
         """
 
-        Izazbz = np.array([0.01207793, 0.00924302, 0.00526007])
-        XYZ = Izazbz_to_XYZ(Izazbz)
+        Izazbz = xp_asarray([0.01207793, 0.00924302, 0.00526007], xp=xp)
+        XYZ = np.asarray(Izazbz_to_XYZ(Izazbz))
 
         d_r = (("reference", 1), ("1", 1), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     Izazbz_to_XYZ(Izazbz * factor),
                     XYZ * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -231,63 +235,57 @@ class TestXYZ_to_Jzazbz:
     tests methods.
     """
 
-    def test_XYZ_to_Jzazbz(self) -> None:
+    def test_XYZ_to_Jzazbz(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.jzazbz.XYZ_to_Jzazbz` definition."""
 
-        np.testing.assert_allclose(
-            XYZ_to_Jzazbz(np.array([0.20654008, 0.12197225, 0.05136952])),
+        xp_assert_close(
+            XYZ_to_Jzazbz(xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)),
             np.array([0.00535048, 0.00924302, 0.00526007]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            XYZ_to_Jzazbz(np.array([0.14222010, 0.23042768, 0.10495772])),
+        xp_assert_close(
+            XYZ_to_Jzazbz(xp_asarray([0.14222010, 0.23042768, 0.10495772], xp=xp)),
             np.array([0.00619681, -0.00608426, 0.00534077]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            XYZ_to_Jzazbz(np.array([0.96907232, 1.00000000, 1.12179215])),
+        xp_assert_close(
+            XYZ_to_Jzazbz(xp_asarray([0.96907232, 1.00000000, 1.12179215], xp=xp)),
             np.array([0.01766826, 0.00064174, -0.00052906]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_XYZ_to_Jzazbz(self) -> None:
+    def test_n_dimensional_XYZ_to_Jzazbz(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.jzazbz.XYZ_to_Jzazbz` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        Jzazbz = XYZ_to_Jzazbz(XYZ)
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        Jzazbz = np.asarray(XYZ_to_Jzazbz(XYZ))
 
-        XYZ = np.tile(XYZ, (6, 1))
-        Jzazbz = np.tile(Jzazbz, (6, 1))
-        np.testing.assert_allclose(
-            XYZ_to_Jzazbz(XYZ), Jzazbz, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        Jzazbz = xp.tile(xp_asarray(Jzazbz, xp=xp), (6, 1))
+        xp_assert_close(XYZ_to_Jzazbz(XYZ), Jzazbz, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        Jzazbz = np.reshape(Jzazbz, (2, 3, 3))
-        np.testing.assert_allclose(
-            XYZ_to_Jzazbz(XYZ), Jzazbz, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        Jzazbz = xp_reshape(xp_asarray(Jzazbz, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(XYZ_to_Jzazbz(XYZ), Jzazbz, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-    def test_domain_range_scale_XYZ_to_Jzazbz(self) -> None:
+    def test_domain_range_scale_XYZ_to_Jzazbz(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.jzazbz.XYZ_to_Jzazbz` definition domain and
         range scale support.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        Jzazbz = XYZ_to_Jzazbz(XYZ)
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        Jzazbz = np.asarray(XYZ_to_Jzazbz(XYZ))
 
         d_r = (("reference", 1), ("1", 1), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_array_equal(
-                    XYZ_to_Jzazbz(XYZ * factor), Jzazbz * factor
-                )
+                xp_assert_equal(XYZ_to_Jzazbz(XYZ * factor), Jzazbz * factor)
 
     @ignore_numpy_errors
     def test_nan_XYZ_to_Jzazbz(self) -> None:
@@ -307,61 +305,57 @@ class TestJzazbz_to_XYZ:
     methods.
     """
 
-    def test_Jzazbz_to_XYZ(self) -> None:
+    def test_Jzazbz_to_XYZ(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.jzazbz.Jzazbz_to_XYZ` definition."""
 
-        np.testing.assert_allclose(
-            Jzazbz_to_XYZ(np.array([0.00535048, 0.00924302, 0.00526007])),
+        xp_assert_close(
+            Jzazbz_to_XYZ(xp_asarray([0.00535048, 0.00924302, 0.00526007], xp=xp)),
             np.array([0.20654008, 0.12197225, 0.05136952]),
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
-        np.testing.assert_allclose(
-            Jzazbz_to_XYZ(np.array([0.00619681, -0.00608426, 0.00534077])),
+        xp_assert_close(
+            Jzazbz_to_XYZ(xp_asarray([0.00619681, -0.00608426, 0.00534077], xp=xp)),
             np.array([0.14222010, 0.23042768, 0.10495772]),
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
-        np.testing.assert_allclose(
-            Jzazbz_to_XYZ(np.array([0.01766826, 0.00064174, -0.00052906])),
+        xp_assert_close(
+            Jzazbz_to_XYZ(xp_asarray([0.01766826, 0.00064174, -0.00052906], xp=xp)),
             np.array([0.96907232, 1.00000000, 1.12179215]),
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
-    def test_n_dimensional_Jzazbz_to_XYZ(self) -> None:
+    def test_n_dimensional_Jzazbz_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.jzazbz.Jzazbz_to_XYZ` definition
         n-dimensional support.
         """
 
-        Jzazbz = np.array([0.00535048, 0.00924302, 0.00526007])
-        XYZ = Jzazbz_to_XYZ(Jzazbz)
+        Jzazbz = xp_asarray([0.00535048, 0.00924302, 0.00526007], xp=xp)
+        XYZ = np.asarray(Jzazbz_to_XYZ(Jzazbz))
 
-        Jzazbz = np.tile(Jzazbz, (6, 1))
-        XYZ = np.tile(XYZ, (6, 1))
-        np.testing.assert_allclose(
-            Jzazbz_to_XYZ(Jzazbz), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        Jzazbz = xp.tile(xp_asarray(Jzazbz, xp=xp), (6, 1))
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        xp_assert_close(Jzazbz_to_XYZ(Jzazbz), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        Jzazbz = np.reshape(Jzazbz, (2, 3, 3))
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        np.testing.assert_allclose(
-            Jzazbz_to_XYZ(Jzazbz), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        Jzazbz = xp_reshape(xp_asarray(Jzazbz, xp=xp), (2, 3, 3), xp=xp)
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(Jzazbz_to_XYZ(Jzazbz), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-    def test_domain_range_scale_Jzazbz_to_XYZ(self) -> None:
+    def test_domain_range_scale_Jzazbz_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.jzazbz.Jzazbz_to_XYZ` definition domain and
         range scale support.
         """
 
-        Jzazbz = np.array([0.00535048, 0.00924302, 0.00526007])
-        XYZ = Jzazbz_to_XYZ(Jzazbz)
+        Jzazbz = xp_asarray([0.00535048, 0.00924302, 0.00526007], xp=xp)
+        XYZ = np.asarray(Jzazbz_to_XYZ(Jzazbz))
 
         d_r = (("reference", 1), ("1", 1), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     Jzazbz_to_XYZ(Jzazbz * factor),
                     XYZ * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,

@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.models.rgb import ICtCp_to_RGB, ICtCp_to_XYZ, RGB_to_ICtCp, XYZ_to_ICtCp
-from colour.utilities import domain_range_scale, ignore_numpy_errors
+from colour.utilities import (
+    domain_range_scale,
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -31,97 +42,97 @@ class TestRGB_to_ICtCp:
     tests methods.
     """
 
-    def test_RGB_to_ICtCp(self) -> None:
+    def test_RGB_to_ICtCp(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.rgb.ictcp.RGB_to_ICtCp` definition."""
 
-        np.testing.assert_allclose(
-            RGB_to_ICtCp(np.array([0.45620519, 0.03081071, 0.04091952])),
+        xp_assert_close(
+            RGB_to_ICtCp(xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp)),
             np.array([0.07351364, 0.00475253, 0.09351596]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            RGB_to_ICtCp(np.array([0.45620519, 0.03081071, 0.04091952]), L_p=4000),
+        xp_assert_close(
+            RGB_to_ICtCp(
+                xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp), L_p=4000
+            ),
             np.array([0.10516931, 0.00514031, 0.12318730]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            RGB_to_ICtCp(np.array([0.45620519, 0.03081071, 0.04091952]), L_p=1000),
+        xp_assert_close(
+            RGB_to_ICtCp(
+                xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp), L_p=1000
+            ),
             np.array([0.17079612, 0.00485580, 0.17431356]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_ICtCp(
-                np.array([0.45620519, 0.03081071, 0.04091952]),
+                xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp),
                 method="ITU-R BT.2100-1 PQ",
             ),
             np.array([0.07351364, 0.00475253, 0.09351596]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_ICtCp(
-                np.array([0.45620519, 0.03081071, 0.04091952]),
+                xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp),
                 method="ITU-R BT.2100-2 PQ",
             ),
             np.array([0.07351364, 0.00475253, 0.09351596]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_ICtCp(
-                np.array([0.45620519, 0.03081071, 0.04091952]),
+                xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp),
                 method="ITU-R BT.2100-1 HLG",
             ),
             np.array([0.62567899, -0.03622422, 0.67786522]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_ICtCp(
-                np.array([0.45620519, 0.03081071, 0.04091952]),
+                xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp),
                 method="ITU-R BT.2100-2 HLG",
             ),
             np.array([0.62567899, -0.01984490, 0.35911259]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_RGB_to_ICtCp(self) -> None:
+    def test_n_dimensional_RGB_to_ICtCp(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ictcp.RGB_to_ICtCp` definition
         n-dimensional support.
         """
 
-        RGB = np.array([0.45620519, 0.03081071, 0.04091952])
-        ICtCp = RGB_to_ICtCp(RGB)
+        RGB = xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp)
+        ICtCp = np.asarray(RGB_to_ICtCp(RGB))
 
-        RGB = np.tile(RGB, (6, 1))
-        ICtCp = np.tile(ICtCp, (6, 1))
-        np.testing.assert_allclose(
-            RGB_to_ICtCp(RGB), ICtCp, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (6, 1))
+        ICtCp = xp.tile(xp_asarray(ICtCp, xp=xp), (6, 1))
+        xp_assert_close(RGB_to_ICtCp(RGB), ICtCp, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        RGB = np.reshape(RGB, (2, 3, 3))
-        ICtCp = np.reshape(ICtCp, (2, 3, 3))
-        np.testing.assert_allclose(
-            RGB_to_ICtCp(RGB), ICtCp, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (2, 3, 3), xp=xp)
+        ICtCp = xp_reshape(xp_asarray(ICtCp, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(RGB_to_ICtCp(RGB), ICtCp, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-    def test_domain_range_scale_RGB_to_ICtCp(self) -> None:
+    def test_domain_range_scale_RGB_to_ICtCp(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ictcp.RGB_to_ICtCp` definition domain
         and range scale support.
         """
 
-        RGB = np.array([0.45620519, 0.03081071, 0.04091952])
-        ICtCp = RGB_to_ICtCp(RGB)
+        RGB = xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp)
+        ICtCp = np.asarray(RGB_to_ICtCp(RGB))
 
         d_r = (("reference", 1), ("1", 1), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     RGB_to_ICtCp(RGB * factor),
                     ICtCp * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -145,97 +156,97 @@ class TestICtCp_to_RGB:
     methods.
     """
 
-    def test_ICtCp_to_RGB(self) -> None:
+    def test_ICtCp_to_RGB(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.rgb.ictcp.ICtCp_to_RGB` definition."""
 
-        np.testing.assert_allclose(
-            ICtCp_to_RGB(np.array([0.07351364, 0.00475253, 0.09351596])),
+        xp_assert_close(
+            ICtCp_to_RGB(xp_asarray([0.07351364, 0.00475253, 0.09351596], xp=xp)),
             np.array([0.45620519, 0.03081071, 0.04091952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            ICtCp_to_RGB(np.array([0.10516931, 0.00514031, 0.12318730]), L_p=4000),
-            np.array([0.45620519, 0.03081071, 0.04091952]),
-            atol=TOLERANCE_ABSOLUTE_TESTS,
-        )
-
-        np.testing.assert_allclose(
-            ICtCp_to_RGB(np.array([0.17079612, 0.00485580, 0.17431356]), L_p=1000),
-            np.array([0.45620519, 0.03081071, 0.04091952]),
-            atol=TOLERANCE_ABSOLUTE_TESTS,
-        )
-
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_RGB(
-                np.array([0.07351364, 0.00475253, 0.09351596]),
+                xp_asarray([0.10516931, 0.00514031, 0.12318730], xp=xp), L_p=4000
+            ),
+            np.array([0.45620519, 0.03081071, 0.04091952]),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        xp_assert_close(
+            ICtCp_to_RGB(
+                xp_asarray([0.17079612, 0.00485580, 0.17431356], xp=xp), L_p=1000
+            ),
+            np.array([0.45620519, 0.03081071, 0.04091952]),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        xp_assert_close(
+            ICtCp_to_RGB(
+                xp_asarray([0.07351364, 0.00475253, 0.09351596], xp=xp),
                 method="ITU-R BT.2100-1 PQ",
             ),
             np.array([0.45620519, 0.03081071, 0.04091952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_RGB(
-                np.array([0.07351364, 0.00475253, 0.09351596]),
+                xp_asarray([0.07351364, 0.00475253, 0.09351596], xp=xp),
                 method="ITU-R BT.2100-2 PQ",
             ),
             np.array([0.45620519, 0.03081071, 0.04091952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_RGB(
-                np.array([0.62567899, -0.03622422, 0.67786522]),
+                xp_asarray([0.62567899, -0.03622422, 0.67786522], xp=xp),
                 method="ITU-R BT.2100-1 HLG",
             ),
             np.array([0.45620519, 0.03081071, 0.04091952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_RGB(
-                np.array([0.62567899, -0.01984490, 0.35911259]),
+                xp_asarray([0.62567899, -0.01984490, 0.35911259], xp=xp),
                 method="ITU-R BT.2100-2 HLG",
             ),
             np.array([0.45620519, 0.03081071, 0.04091952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_ICtCp_to_RGB(self) -> None:
+    def test_n_dimensional_ICtCp_to_RGB(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ictcp.ICtCp_to_RGB` definition
         n-dimensional support.
         """
 
-        ICtCp = np.array([0.07351364, 0.00475253, 0.09351596])
-        RGB = ICtCp_to_RGB(ICtCp)
+        ICtCp = xp_asarray([0.07351364, 0.00475253, 0.09351596], xp=xp)
+        RGB = np.asarray(ICtCp_to_RGB(ICtCp))
 
-        ICtCp = np.tile(ICtCp, (6, 1))
-        RGB = np.tile(RGB, (6, 1))
-        np.testing.assert_allclose(
-            ICtCp_to_RGB(ICtCp), RGB, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        ICtCp = xp.tile(xp_asarray(ICtCp, xp=xp), (6, 1))
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (6, 1))
+        xp_assert_close(ICtCp_to_RGB(ICtCp), RGB, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        ICtCp = np.reshape(ICtCp, (2, 3, 3))
-        RGB = np.reshape(RGB, (2, 3, 3))
-        np.testing.assert_allclose(
-            ICtCp_to_RGB(ICtCp), RGB, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        ICtCp = xp_reshape(xp_asarray(ICtCp, xp=xp), (2, 3, 3), xp=xp)
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(ICtCp_to_RGB(ICtCp), RGB, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-    def test_domain_range_scale_ICtCp_to_RGB(self) -> None:
+    def test_domain_range_scale_ICtCp_to_RGB(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ictcp.ICtCp_to_RGB` definition domain
         and range scale support.
         """
 
-        ICtCp = np.array([0.07351364, 0.00475253, 0.09351596])
-        RGB = ICtCp_to_RGB(ICtCp)
+        ICtCp = xp_asarray([0.07351364, 0.00475253, 0.09351596], xp=xp)
+        RGB = np.asarray(ICtCp_to_RGB(ICtCp))
 
         d_r = (("reference", 1), ("1", 1), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     ICtCp_to_RGB(ICtCp * factor),
                     RGB * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -259,27 +270,27 @@ class TestXYZ_to_ICtCp:
     tests methods.
     """
 
-    def test_XYZ_to_ICtCp(self) -> None:
+    def test_XYZ_to_ICtCp(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.rgb.ictcp.XYZ_to_ICtCp` definition."""
 
-        np.testing.assert_allclose(
-            XYZ_to_ICtCp(np.array([0.20654008, 0.12197225, 0.05136952])),
+        xp_assert_close(
+            XYZ_to_ICtCp(xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)),
             np.array([0.06858097, -0.00283842, 0.06020983]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_ICtCp(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
                 np.array([0.34570, 0.35850]),
             ),
             np.array([0.06792437, 0.00452089, 0.05514480]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_ICtCp(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
                 np.array([0.34570, 0.35850]),
                 chromatic_adaptation_transform="Bradford",
             ),
@@ -287,88 +298,88 @@ class TestXYZ_to_ICtCp:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            XYZ_to_ICtCp(np.array([0.20654008, 0.12197225, 0.05136952]), L_p=4000),
+        xp_assert_close(
+            XYZ_to_ICtCp(
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp), L_p=4000
+            ),
             np.array([0.09871102, -0.00447247, 0.07984812]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            XYZ_to_ICtCp(np.array([0.20654008, 0.12197225, 0.05136952]), L_p=1000),
+        xp_assert_close(
+            XYZ_to_ICtCp(
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp), L_p=1000
+            ),
             np.array([0.16173872, -0.00792543, 0.11409458]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_ICtCp(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
                 method="ITU-R BT.2100-1 PQ",
             ),
             np.array([0.06858097, -0.00283842, 0.06020983]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_ICtCp(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
                 method="ITU-R BT.2100-2 PQ",
             ),
             np.array([0.06858097, -0.00283842, 0.06020983]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_ICtCp(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
                 method="ITU-R BT.2100-1 HLG",
             ),
             np.array([0.59242792, -0.06824263, 0.47421473]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_ICtCp(
-                np.array([0.20654008, 0.12197225, 0.05136952]),
+                xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp),
                 method="ITU-R BT.2100-2 HLG",
             ),
             np.array([0.59242792, -0.03740730, 0.25122675]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_XYZ_to_ICtCp(self) -> None:
+    def test_n_dimensional_XYZ_to_ICtCp(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ictcp.XYZ_to_ICtCp` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        ICtCp = XYZ_to_ICtCp(XYZ)
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        ICtCp = np.asarray(XYZ_to_ICtCp(XYZ))
 
-        XYZ = np.tile(XYZ, (6, 1))
-        ICtCp = np.tile(ICtCp, (6, 1))
-        np.testing.assert_allclose(
-            XYZ_to_ICtCp(XYZ), ICtCp, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        ICtCp = xp.tile(xp_asarray(ICtCp, xp=xp), (6, 1))
+        xp_assert_close(XYZ_to_ICtCp(XYZ), ICtCp, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        ICtCp = np.reshape(ICtCp, (2, 3, 3))
-        np.testing.assert_allclose(
-            XYZ_to_ICtCp(XYZ), ICtCp, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        ICtCp = xp_reshape(xp_asarray(ICtCp, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(XYZ_to_ICtCp(XYZ), ICtCp, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-    def test_domain_range_scale_XYZ_to_ICtCp(self) -> None:
+    def test_domain_range_scale_XYZ_to_ICtCp(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ictcp.XYZ_to_ICtCp` definition domain
         and range scale support.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        ICtCp = XYZ_to_ICtCp(XYZ)
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        ICtCp = np.asarray(XYZ_to_ICtCp(XYZ))
 
         d_r = (("reference", 1), ("1", 1), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     XYZ_to_ICtCp(XYZ * factor),
                     ICtCp * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -392,27 +403,27 @@ class TestICtCp_to_XYZ:
     methods.
     """
 
-    def test_ICtCp_to_XYZ(self) -> None:
+    def test_ICtCp_to_XYZ(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.rgb.ictcp.ICtCp_to_XYZ` definition."""
 
-        np.testing.assert_allclose(
-            ICtCp_to_XYZ(np.array([0.06858097, -0.00283842, 0.06020983])),
+        xp_assert_close(
+            ICtCp_to_XYZ(xp_asarray([0.06858097, -0.00283842, 0.06020983], xp=xp)),
             np.array([0.20654008, 0.12197225, 0.05136952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_XYZ(
-                np.array([0.06792437, 0.00452089, 0.05514480]),
+                xp_asarray([0.06792437, 0.00452089, 0.05514480], xp=xp),
                 np.array([0.34570, 0.35850]),
             ),
             np.array([0.20654008, 0.12197225, 0.05136952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_XYZ(
-                np.array([0.06783951, 0.00476111, 0.05523093]),
+                xp_asarray([0.06783951, 0.00476111, 0.05523093], xp=xp),
                 np.array([0.34570, 0.35850]),
                 chromatic_adaptation_transform="Bradford",
             ),
@@ -420,88 +431,88 @@ class TestICtCp_to_XYZ:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            ICtCp_to_XYZ(np.array([0.09871102, -0.00447247, 0.07984812]), L_p=4000),
-            np.array([0.20654008, 0.12197225, 0.05136952]),
-            atol=TOLERANCE_ABSOLUTE_TESTS,
-        )
-
-        np.testing.assert_allclose(
-            ICtCp_to_XYZ(np.array([0.16173872, -0.00792543, 0.11409458]), L_p=1000),
-            np.array([0.20654008, 0.12197225, 0.05136952]),
-            atol=TOLERANCE_ABSOLUTE_TESTS,
-        )
-
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_XYZ(
-                np.array([0.06858097, -0.00283842, 0.06020983]),
+                xp_asarray([0.09871102, -0.00447247, 0.07984812], xp=xp), L_p=4000
+            ),
+            np.array([0.20654008, 0.12197225, 0.05136952]),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        xp_assert_close(
+            ICtCp_to_XYZ(
+                xp_asarray([0.16173872, -0.00792543, 0.11409458], xp=xp), L_p=1000
+            ),
+            np.array([0.20654008, 0.12197225, 0.05136952]),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
+
+        xp_assert_close(
+            ICtCp_to_XYZ(
+                xp_asarray([0.06858097, -0.00283842, 0.06020983], xp=xp),
                 method="ITU-R BT.2100-1 PQ",
             ),
             np.array([0.20654008, 0.12197225, 0.05136952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_XYZ(
-                np.array([0.06858097, -0.00283842, 0.06020983]),
+                xp_asarray([0.06858097, -0.00283842, 0.06020983], xp=xp),
                 method="ITU-R BT.2100-2 PQ",
             ),
             np.array([0.20654008, 0.12197225, 0.05136952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_XYZ(
-                np.array([0.59242792, -0.06824263, 0.47421473]),
+                xp_asarray([0.59242792, -0.06824263, 0.47421473], xp=xp),
                 method="ITU-R BT.2100-1 HLG",
             ),
             np.array([0.20654008, 0.12197225, 0.05136952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             ICtCp_to_XYZ(
-                np.array([0.59242792, -0.03740730, 0.25122675]),
+                xp_asarray([0.59242792, -0.03740730, 0.25122675], xp=xp),
                 method="ITU-R BT.2100-2 HLG",
             ),
             np.array([0.20654008, 0.12197225, 0.05136952]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_ICtCp_to_XYZ(self) -> None:
+    def test_n_dimensional_ICtCp_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ictcp.ICtCp_to_XYZ` definition
         n-dimensional support.
         """
 
-        ICtCp = np.array([0.06858097, -0.00283842, 0.06020983])
-        XYZ = ICtCp_to_XYZ(ICtCp)
+        ICtCp = xp_asarray([0.06858097, -0.00283842, 0.06020983], xp=xp)
+        XYZ = np.asarray(ICtCp_to_XYZ(ICtCp))
 
-        ICtCp = np.tile(ICtCp, (6, 1))
-        XYZ = np.tile(XYZ, (6, 1))
-        np.testing.assert_allclose(
-            ICtCp_to_XYZ(ICtCp), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        ICtCp = xp.tile(xp_asarray(ICtCp, xp=xp), (6, 1))
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        xp_assert_close(ICtCp_to_XYZ(ICtCp), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        ICtCp = np.reshape(ICtCp, (2, 3, 3))
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        np.testing.assert_allclose(
-            ICtCp_to_XYZ(ICtCp), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        ICtCp = xp_reshape(xp_asarray(ICtCp, xp=xp), (2, 3, 3), xp=xp)
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(ICtCp_to_XYZ(ICtCp), XYZ, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-    def test_domain_range_scale_ICtCp_to_XYZ(self) -> None:
+    def test_domain_range_scale_ICtCp_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.ictcp.ICtCp_to_XYZ` definition domain
         and range scale support.
         """
 
-        ICtCp = np.array([0.06858097, -0.00283842, 0.06020983])
-        XYZ = ICtCp_to_XYZ(ICtCp)
+        ICtCp = xp_asarray([0.06858097, -0.00283842, 0.06020983], xp=xp)
+        XYZ = np.asarray(ICtCp_to_XYZ(ICtCp))
 
         d_r = (("reference", 1), ("1", 1), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     ICtCp_to_XYZ(ICtCp * factor),
                     XYZ * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,

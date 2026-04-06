@@ -24,8 +24,6 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.colorimetry import (
     MultiSpectralDistributions,
     SpectralDistribution,
@@ -43,7 +41,14 @@ if typing.TYPE_CHECKING:
         NDArrayFloat,
     )
 
-from colour.utilities import CACHE_REGISTRY, is_caching_enabled, validate_method, zeros
+from colour.utilities import (
+    CACHE_REGISTRY,
+    array_namespace,
+    as_float_array,
+    is_caching_enabled,
+    validate_method,
+    zeros,
+)
 from colour.volume import is_within_mesh_volume
 
 __author__ = "Colour Developers"
@@ -221,28 +226,34 @@ def generate_pulse_waves(
     )
 
     square_waves = []
-    square_waves_basis = np.tril(np.ones((bins, bins), dtype=DTYPE_FLOAT_DEFAULT))[
+
+    xp = array_namespace(as_float_array([0]))
+
+    square_waves_basis = xp.tril(xp.ones((bins, bins), dtype=DTYPE_FLOAT_DEFAULT))[
         0:-1, :
     ]
 
     if pulse_order.lower() == "bins":
         for square_wave_basis in square_waves_basis:
             for i in range(bins):
-                square_waves.append(np.roll(square_wave_basis, i))  # noqa: PERF401
+                square_waves.append(xp.roll(square_wave_basis, i))  # noqa: PERF401
     else:
         for i in range(bins):
             for j, square_wave_basis in enumerate(square_waves_basis):
-                square_waves.append(np.roll(square_wave_basis, i - j // 2))
+                square_waves.append(xp.roll(square_wave_basis, i - j // 2))
 
         if filter_jagged_pulses:
             square_waves = square_waves[::2]
 
-    return np.vstack(
+    square_waves_array = xp.stack(square_waves)
+
+    return xp.concat(
         [
-            zeros(bins),
-            np.vstack(square_waves),
-            np.ones(bins, dtype=DTYPE_FLOAT_DEFAULT),
-        ]
+            zeros((1, bins)),
+            square_waves_array,
+            xp.ones((1, bins), dtype=DTYPE_FLOAT_DEFAULT),
+        ],
+        axis=0,
     )
 
 

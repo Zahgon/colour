@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.difference import power_function_Huang2015
+from colour.utilities import xp_asarray, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -25,15 +31,15 @@ class TestPowerFunctionHuang2015:
     definition unit tests methods.
     """
 
-    def test_power_function_Huang2015(self) -> None:
+    def test_power_function_Huang2015(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.difference.huang2015.power_function_Huang2015`
         definition.
         """
 
-        d_E = np.array([2.0425, 2.8615, 3.4412])
+        d_E = xp_asarray([2.0425, 2.8615, 3.4412], xp=xp)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             power_function_Huang2015(d_E),
             np.array([2.35748796, 2.98505036, 3.39651062]),
             atol=TOLERANCE_ABSOLUTE_TESTS,

@@ -34,8 +34,6 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import vecmul
 from colour.colorimetry import (
     MSDS_CMFS_LMS,
@@ -47,7 +45,7 @@ from colour.colorimetry import (
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, NDArrayFloat
 
-from colour.utilities import tstack
+from colour.utilities import array_namespace, as_float_array, tstack, xp_asarray
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -104,22 +102,28 @@ def RGB_2_degree_cmfs_to_XYZ_2_degree_cmfs(
 
     rgb_bar = cmfs[wavelength]
 
-    rgb = rgb_bar / np.sum(rgb_bar)
+    rgb_bar = as_float_array(rgb_bar)
 
-    M1 = np.array(
+    xp = array_namespace(rgb_bar)
+
+    rgb = rgb_bar / xp.sum(rgb_bar)
+
+    M1 = xp_asarray(
         [
             [0.49000, 0.31000, 0.20000],
             [0.17697, 0.81240, 0.01063],
             [0.00000, 0.01000, 0.99000],
-        ]
+        ],
+        xp=xp,
     )
 
-    M2 = np.array(
+    M2 = xp_asarray(
         [
             [0.66697, 1.13240, 1.20063],
             [0.66697, 1.13240, 1.20063],
             [0.66697, 1.13240, 1.20063],
-        ]
+        ],
+        xp=xp,
     )
 
     xyz = vecmul(M1, rgb) / vecmul(M2, rgb)
@@ -178,14 +182,17 @@ def RGB_10_degree_cmfs_to_XYZ_10_degree_cmfs(
 
     cmfs = MSDS_CMFS_RGB["Stiles & Burch 1959 10 Degree RGB CMFs"]
 
-    rgb_bar = cmfs[wavelength]
+    rgb_bar = as_float_array(cmfs[wavelength])
 
-    M = np.array(
+    xp = array_namespace(rgb_bar)
+
+    M = xp_asarray(
         [
             [0.341080, 0.189145, 0.387529],
             [0.139058, 0.837460, 0.073316],
             [0.000000, 0.039553, 2.026200],
-        ]
+        ],
+        xp=xp,
     )
 
     return vecmul(M, rgb_bar)
@@ -230,14 +237,17 @@ def RGB_10_degree_cmfs_to_LMS_10_degree_cmfs(
 
     cmfs = MSDS_CMFS_RGB["Stiles & Burch 1959 10 Degree RGB CMFs"]
 
-    rgb_bar = cmfs[wavelength]
+    rgb_bar = as_float_array(cmfs[wavelength])
 
-    M = np.array(
+    xp = array_namespace(rgb_bar)
+
+    M = xp_asarray(
         [
             [0.1923252690, 0.749548882, 0.0675726702],
             [0.0192290085, 0.940908496, 0.113830196],
             [0.0000000000, 0.0105107859, 0.991427669],
-        ]
+        ],
+        xp=xp,
     )
 
     lms_bar = vecmul(M, rgb_bar)
@@ -246,7 +256,7 @@ def RGB_10_degree_cmfs_to_LMS_10_degree_cmfs(
         [
             lms_bar[..., 0],
             lms_bar[..., 1],
-            np.where(np.asarray(wavelength) > 505, 0, lms_bar[..., -1]),
+            xp.where(xp_asarray(wavelength, xp=xp) > 505, 0, lms_bar[..., -1]),
         ]
     )
 
@@ -288,14 +298,17 @@ def LMS_2_degree_cmfs_to_XYZ_2_degree_cmfs(
 
     cmfs = MSDS_CMFS_LMS["Stockman & Sharpe 2 Degree Cone Fundamentals"]
 
-    lms_bar = cmfs[wavelength]
+    lms_bar = as_float_array(cmfs[wavelength])
 
-    M = np.array(
+    xp = array_namespace(lms_bar)
+
+    M = xp_asarray(
         [
             [1.94735469, -1.41445123, 0.36476327],
             [0.68990272, 0.34832189, 0.00000000],
             [0.00000000, 0.00000000, 1.93485343],
-        ]
+        ],
+        xp=xp,
     )
 
     return vecmul(M, lms_bar)
@@ -338,14 +351,17 @@ def LMS_10_degree_cmfs_to_XYZ_10_degree_cmfs(
 
     cmfs = MSDS_CMFS_LMS["Stockman & Sharpe 10 Degree Cone Fundamentals"]
 
-    lms_bar = cmfs[wavelength]
+    lms_bar = as_float_array(cmfs[wavelength])
 
-    M = np.array(
+    xp = array_namespace(lms_bar)
+
+    M = xp_asarray(
         [
             [1.93986443, -1.34664359, 0.43044935],
             [0.69283932, 0.34967567, 0.00000000],
             [0.00000000, 0.00000000, 2.14687945],
-        ]
+        ],
+        xp=xp,
     )
 
     return vecmul(M, lms_bar)

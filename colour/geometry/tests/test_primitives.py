@@ -10,6 +10,7 @@ from colour.geometry import (
     primitive_cube,
     primitive_grid,
 )
+from colour.utilities import xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -37,7 +38,7 @@ class TestPrimitiveGrid:
         """
 
         vertices, faces, outline = primitive_grid()
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["position"],
             np.array(
                 [
@@ -50,19 +51,19 @@ class TestPrimitiveGrid:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["uv"],
             np.array([[0, 1], [1, 1], [0, 0], [1, 0]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["normal"],
             np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["colour"],
             np.array(
                 [
@@ -87,7 +88,7 @@ class TestPrimitiveGrid:
             axis="+z",
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["position"],
             np.array(
                 [
@@ -102,7 +103,7 @@ class TestPrimitiveGrid:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["uv"],
             np.array(
                 [
@@ -117,7 +118,7 @@ class TestPrimitiveGrid:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["normal"],
             np.array(
                 [
@@ -132,7 +133,7 @@ class TestPrimitiveGrid:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["colour"],
             np.array(
                 [
@@ -176,7 +177,7 @@ class TestPrimitiveGrid:
         )
 
         for plane in MAPPING_PLANE_TO_AXIS:
-            np.testing.assert_allclose(
+            xp_assert_close(
                 primitive_grid(axis=plane)[0]["position"],
                 primitive_grid(axis=MAPPING_PLANE_TO_AXIS[plane])[0]["position"],
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -196,7 +197,7 @@ class TestPrimitiveCube:
         """
 
         vertices, faces, outline = primitive_cube()
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["position"],
             np.array(
                 [
@@ -229,7 +230,7 @@ class TestPrimitiveCube:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["uv"],
             np.array(
                 [
@@ -262,7 +263,7 @@ class TestPrimitiveCube:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["normal"],
             np.array(
                 [
@@ -295,7 +296,7 @@ class TestPrimitiveCube:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["colour"],
             np.array(
                 [
@@ -389,7 +390,7 @@ class TestPrimitiveCube:
             depth_segments=3,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["position"],
             np.array(
                 [
@@ -450,7 +451,7 @@ class TestPrimitiveCube:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["uv"],
             np.array(
                 [
@@ -511,7 +512,7 @@ class TestPrimitiveCube:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["normal"],
             np.array(
                 [
@@ -572,7 +573,7 @@ class TestPrimitiveCube:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices["colour"],
             np.array(
                 [
@@ -782,7 +783,7 @@ class TestPrimitiveCube:
         )
 
         for plane in MAPPING_PLANE_TO_AXIS:
-            np.testing.assert_allclose(
+            xp_assert_close(
                 primitive_cube(planes=[plane])[0]["position"],  # pyright: ignore
                 primitive_cube(planes=[MAPPING_PLANE_TO_AXIS[plane]])[0]["position"],  # pyright: ignore
                 atol=TOLERANCE_ABSOLUTE_TESTS,

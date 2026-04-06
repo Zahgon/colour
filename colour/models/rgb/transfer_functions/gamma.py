@@ -12,14 +12,12 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import spow
 
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, Literal, NDArrayFloat
 
-from colour.utilities import as_float, as_float_array, validate_method
+from colour.utilities import array_namespace, as_float, as_float_array, validate_method
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -85,6 +83,9 @@ def gamma_function(
     """
 
     a = as_float_array(a)
+
+    xp = array_namespace(a)
+
     exponent = as_float_array(exponent)
     negative_number_handling = validate_method(
         negative_number_handling,
@@ -99,7 +100,7 @@ def gamma_function(
         return spow(a, exponent)
 
     if negative_number_handling == "preserve":
-        return as_float(np.where(a <= 0, a, a**exponent))
+        return as_float(xp.where(a <= 0, a, a**exponent))
 
     # negative_number_handling == 'clamp':
-    return as_float(np.where(a <= 0, 0, a**exponent))
+    return as_float(xp.where(a <= 0, 0, a**exponent))

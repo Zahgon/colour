@@ -31,12 +31,17 @@ if typing.TYPE_CHECKING:
 from colour.constants import EPSILON
 from colour.hints import Literal, cast
 from colour.utilities import (
+    array_namespace,
     as_float,
     as_float_array,
+    is_array_api_enabled,
+    is_numpy_namespace,
     optional,
     runtime_warning,
     tsplit,
     validate_method,
+    xp_asarray,
+    xp_nan_to_num,
 )
 
 __author__ = "Colour Developers"
@@ -337,6 +342,11 @@ def sdiv(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
     a = as_float_array(a)
     b = as_float_array(b)
 
+    xp = array_namespace(a, b)
+
+    a = xp_asarray(a, xp=xp, like=b)
+    b = xp_asarray(b, xp=xp, like=a)
+
     mode = validate_method(
         _SDIV_MODE,
         (
@@ -356,36 +366,59 @@ def sdiv(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
     if mode == "numpy":
         c = a / b
     elif mode == "ignore":
-        with np.errstate(divide="ignore", invalid="ignore"):
+        if is_numpy_namespace(xp):
+            with np.errstate(divide="ignore", invalid="ignore"):
+                c = a / b
+        else:
             c = a / b
     elif mode == "warning":
-        with np.errstate(divide="warn", invalid="warn"):
+        if is_numpy_namespace(xp):
+            with np.errstate(divide="warn", invalid="warn"):
+                c = a / b
+        else:
             c = a / b
     elif mode == "raise":
-        with np.errstate(divide="raise", invalid="raise"):
+        if is_numpy_namespace(xp):
+            with np.errstate(divide="raise", invalid="raise"):
+                c = a / b
+        else:
             c = a / b
     elif mode == "ignore zero conversion":
-        with np.errstate(divide="ignore", invalid="ignore"):
-            c = np.nan_to_num(a / b, nan=0, posinf=0, neginf=0)
+        if is_numpy_namespace(xp):
+            with np.errstate(divide="ignore", invalid="ignore"):
+                c = np.nan_to_num(a / b, nan=0, posinf=0, neginf=0)
+        else:
+            d = a / b
+            c = xp.where(xp.isnan(d) | xp.isinf(d), 0.0, d)
     elif mode == "warning zero conversion":
-        with np.errstate(divide="warn", invalid="warn"):
-            c = np.nan_to_num(a / b, nan=0, posinf=0, neginf=0)
+        if is_numpy_namespace(xp):
+            with np.errstate(divide="warn", invalid="warn"):
+                c = np.nan_to_num(a / b, nan=0, posinf=0, neginf=0)
+        else:
+            d = a / b
+            c = xp.where(xp.isnan(d) | xp.isinf(d), 0.0, d)
     elif mode == "ignore limit conversion":
-        with np.errstate(divide="ignore", invalid="ignore"):
-            c = np.nan_to_num(a / b)
+        if is_numpy_namespace(xp):
+            with np.errstate(divide="ignore", invalid="ignore"):
+                c = np.nan_to_num(a / b)
+        else:
+            c = xp_nan_to_num(a / b, xp=xp)
     elif mode == "warning limit conversion":
-        with np.errstate(divide="warn", invalid="warn"):
-            c = np.nan_to_num(a / b)
+        if is_numpy_namespace(xp):
+            with np.errstate(divide="warn", invalid="warn"):
+                c = np.nan_to_num(a / b)
+        else:
+            c = xp_nan_to_num(a / b, xp=xp)
     elif mode == "replace with epsilon":
-        b = np.where(b == 0, EPSILON, b)
-        c = a / b
+        b = xp.where(b == 0, EPSILON, b)
+        c = a / b  # pyright: ignore
     elif mode == "warning replace with epsilon":
-        if np.any(b == 0):
+        if xp.any(b == 0):
             runtime_warning("Zero(s) detected in denominator, replacing with EPSILON.")
-        b = np.where(b == 0, EPSILON, b)
-        c = a / b
+        b = xp.where(b == 0, EPSILON, b)
+        c = a / b  # pyright: ignore
 
-    return c
+    return c  # pyright: ignore
 
 
 _SPOW_ENABLED: bool = True
@@ -532,15 +565,20 @@ def spow(a: ArrayLike, p: ArrayLike) -> DTypeFloat | NDArrayFloat:
     np.float64(0.0)
     """
 
-    if not _SPOW_ENABLED:
-        return np.power(a, p)
-
     a = as_float_array(a)
     p = as_float_array(p)
 
-    a_p = np.sign(a) * np.abs(a) ** p
+    xp = array_namespace(a, p)
 
-    return as_float(0 if a_p.ndim == 0 and np.isnan(a_p) else a_p)
+    a = xp_asarray(a, xp=xp, like=p)
+    p = xp_asarray(p, xp=xp, like=a)
+
+    if not _SPOW_ENABLED:
+        return a**p
+
+    a_p = xp.sign(a) * xp.abs(a) ** p
+
+    return as_float(0 if a_p.ndim == 0 and xp.isnan(a_p) else a_p)
 
 
 def normalise_vector(a: ArrayLike) -> NDArrayFloat:
@@ -569,8 +607,10 @@ def normalise_vector(a: ArrayLike) -> NDArrayFloat:
 
     a = as_float_array(a)
 
+    xp = array_namespace(a)
+
     with sdiv_mode():
-        return sdiv(a, np.linalg.norm(a))
+        return sdiv(a, xp.linalg.vector_norm(a))
 
 
 def normalise_maximum(
@@ -608,12 +648,14 @@ def normalise_maximum(
 
     a = as_float_array(a)
 
-    maximum = np.max(a, axis=axis)
+    xp = array_namespace(a)
+
+    maximum = xp.max(a, axis=axis)
 
     with sdiv_mode():
         a = a * sdiv(1, maximum[..., None]) * factor
 
-    return np.clip(a, 0, factor) if clip else a
+    return xp.clip(a, 0, factor) if clip else a
 
 
 def vecmul(m: ArrayLike, v: ArrayLike) -> NDArrayFloat:
@@ -660,7 +702,18 @@ def vecmul(m: ArrayLike, v: ArrayLike) -> NDArrayFloat:
            [0.1954094..., 0.0620396..., 0.0527952...]])
     """
 
-    return np.matmul(as_float_array(m), as_float_array(v)[..., None]).squeeze(-1)
+    m = as_float_array(m)
+    v = as_float_array(v)
+
+    xp = array_namespace(m, v)
+
+    m = xp_asarray(m, xp=xp, like=v)
+    v = xp_asarray(v, xp=xp, like=m)
+
+    if is_array_api_enabled():
+        return xp.squeeze(xp.matmul(m, v[..., None]), axis=-1)
+
+    return xp.matmul(m, v[..., None]).squeeze(-1)
 
 
 def euclidean_distance(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
@@ -692,7 +745,15 @@ def euclidean_distance(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
     np.float64(451.7133019...)
     """
 
-    return as_float(np.linalg.norm(as_float_array(a) - as_float_array(b), axis=-1))
+    a = as_float_array(a)
+    b = as_float_array(b)
+
+    xp = array_namespace(a, b)
+
+    a = xp_asarray(a, xp=xp, like=b)
+    b = xp_asarray(b, xp=xp, like=a)
+
+    return as_float(xp.linalg.vector_norm(a - b, axis=-1))
 
 
 def manhattan_distance(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
@@ -724,7 +785,12 @@ def manhattan_distance(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
     np.float64(604.9396351...)
     """
 
-    return as_float(np.sum(np.abs(as_float_array(a) - as_float_array(b)), axis=-1))
+    a = as_float_array(a)
+    b = as_float_array(b)
+
+    xp = array_namespace(a, b)
+
+    return as_float(xp.sum(xp.abs(a - b), axis=-1))
 
 
 def linear_conversion(
@@ -802,9 +868,11 @@ def linstep_function(
     a = as_float_array(a)
     b = as_float_array(b)
 
+    xp = array_namespace(x, a, b)
+
     y = (1.0 - x) * a + x * b
 
-    return np.clip(y, a, b) if clip else y
+    return xp.clip(y, a, b) if clip else y
 
 
 lerp = linstep_function
@@ -853,7 +921,9 @@ def smoothstep_function(
     a = as_float_array(a)
     b = as_float_array(b)
 
-    i = np.clip((x - a) / (b - a), 0, 1) if clip else x
+    xp = array_namespace(x, a, b)
+
+    i = xp.clip((x - a) / (b - a), 0, 1) if clip else x
 
     return (i**2) * (3.0 - 2.0 * i)
 
@@ -887,7 +957,13 @@ def is_identity(a: ArrayLike) -> bool:
     False
     """
 
-    return np.array_equal(np.identity(len(np.diag(a))), a)
+    a = as_float_array(a)
+
+    xp = array_namespace(a)
+
+    n = a.shape[0]
+
+    return bool(xp.all(xp.equal(xp.eye(n), a)))
 
 
 def eigen_decomposition(
@@ -958,17 +1034,19 @@ def eigen_decomposition(
 
     A = as_float_array(a)
 
-    if covariance_matrix:
-        A = np.dot(np.transpose(A), A)
+    xp = array_namespace(A)
 
-    w, v = np.linalg.eigh(A)
+    if covariance_matrix:
+        A = xp.matmul(xp.matrix_transpose(A), A)
+
+    w, v = xp.linalg.eigh(A)
 
     if eigen_w_v_count is not None:
         w = w[-eigen_w_v_count:]
         v = v[..., -eigen_w_v_count:]
 
     if descending_order:
-        w = np.flipud(w)
-        v = np.fliplr(v)
+        w = xp.flip(w, axis=0)
+        v = xp.flip(v, axis=1)
 
     return w, v

@@ -28,7 +28,16 @@ import numpy as np
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, DTypeFloat, NDArrayFloat
 
-from colour.utilities import as_float, as_float_array, required, tstack
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    required,
+    tstack,
+    xp_asarray,
+    xp_atleast_1d,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -93,13 +102,16 @@ def uv_to_CCT_Krystek1985(
     from scipy.optimize import minimize  # noqa: PLC0415
 
     uv = as_float_array(uv)
+
+    xp = array_namespace(uv)
+
     shape = uv.shape
-    uv = np.atleast_1d(np.reshape(uv, (-1, 2)))
+    uv = xp_atleast_1d(xp_reshape(uv, (-1, 2), xp=xp), xp=xp)
 
     def objective_function(CCT: NDArrayFloat, uv: NDArrayFloat) -> DTypeFloat:
         """Objective function."""
 
-        objective = np.linalg.norm(CCT_to_uv_Krystek1985(CCT) - uv)
+        objective = np.linalg.norm(CCT_to_uv_Krystek1985(CCT) - np.asarray(uv))
 
         return as_float(objective)
 
@@ -124,7 +136,8 @@ def uv_to_CCT_Krystek1985(
         ]
     )
 
-    return as_float(np.reshape(CCT, shape[:-1]))
+    CCT = xp_asarray(CCT, xp=xp, like=uv)
+    return as_float(xp_reshape(CCT, shape[:-1], xp=xp))
 
 
 def CCT_to_uv_Krystek1985(CCT: ArrayLike) -> NDArrayFloat:

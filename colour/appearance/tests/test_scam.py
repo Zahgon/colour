@@ -4,6 +4,11 @@ Define the unit tests for the :mod:`colour.appearance.scam` module.
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
@@ -21,6 +26,9 @@ from colour.utilities import (
     domain_range_scale,
     ignore_numpy_errors,
     tsplit,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
 )
 
 __author__ = "Colour Developers, UltraMo114(Molin Li)"
@@ -39,17 +47,17 @@ class TestXYZ_to_sCAM:
     tests methods.
     """
 
-    def test_XYZ_to_sCAM(self) -> None:
+    def test_XYZ_to_sCAM(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.scam.XYZ_to_sCAM` definition.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_sCAM["Average"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_sCAM(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -69,9 +77,9 @@ class TestXYZ_to_sCAM:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.array([57.06, 43.06, 31.96])
+        XYZ = xp_asarray([57.06, 43.06, 31.96], xp=xp)
         L_A = 31.83
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_sCAM(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -91,10 +99,10 @@ class TestXYZ_to_sCAM:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.array([3.53, 6.56, 2.14])
-        XYZ_w = np.array([109.85, 100, 35.58])
+        XYZ = xp_asarray([3.53, 6.56, 2.14], xp=xp)
+        XYZ_w = xp_asarray([109.85, 100, 35.58], xp=xp)
         L_A = 318.31
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_sCAM(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -114,52 +122,52 @@ class TestXYZ_to_sCAM:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_XYZ_to_sCAM(self) -> None:
+    def test_n_dimensional_XYZ_to_sCAM(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.scam.XYZ_to_sCAM` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_sCAM["Average"]
         specification = XYZ_to_sCAM(XYZ, XYZ_w, L_A, Y_b, surround)
 
-        XYZ = np.tile(XYZ, (6, 1))
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
         specification = np.tile(specification, (6, 1))
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_sCAM(XYZ, XYZ_w, L_A, Y_b, surround),
             specification,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_w = np.tile(XYZ_w, (6, 1))
-        np.testing.assert_allclose(
+        XYZ_w = xp.tile(xp_asarray(XYZ_w, xp=xp), (6, 1))
+        xp_assert_close(
             XYZ_to_sCAM(XYZ, XYZ_w, L_A, Y_b, surround),
             specification,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        specification = np.reshape(specification, (2, 3, 11))
-        np.testing.assert_allclose(
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_w = xp_reshape(xp_asarray(XYZ_w, xp=xp), (2, 3, 3), xp=xp)
+        specification = xp_reshape(xp_asarray(specification, xp=xp), (2, 3, 11), xp=xp)
+        xp_assert_close(
             XYZ_to_sCAM(XYZ, XYZ_w, L_A, Y_b, surround),
             specification,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
     @ignore_numpy_errors
-    def test_domain_range_scale_XYZ_to_sCAM(self) -> None:
+    def test_domain_range_scale_XYZ_to_sCAM(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.scam.XYZ_to_sCAM` definition
         domain and range scale support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_sCAM["Average"]
@@ -196,7 +204,7 @@ class TestXYZ_to_sCAM:
 
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     XYZ_to_sCAM(XYZ * factor_a, XYZ_w * factor_a, L_A, Y_b, surround),
                     as_float_array(specification) * factor_b,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -221,17 +229,17 @@ class TestsCAM_to_XYZ:
     tests methods.
     """
 
-    def test_sCAM_to_XYZ(self) -> None:
+    def test_sCAM_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.scam.sCAM_to_XYZ` definition.
         """
 
         specification = CAM_Specification_sCAM(49.97956680, 0.01405311, 328.27249244)
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_sCAM["Average"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([19.01, 20.00, 21.78]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -239,47 +247,47 @@ class TestsCAM_to_XYZ:
 
         specification = CAM_Specification_sCAM(71.63079886, 37.33838127, 18.75135858)
         L_A = 31.83
-        np.testing.assert_allclose(
+        xp_assert_close(
             sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([57.06, 43.06, 31.96]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         specification = CAM_Specification_sCAM(29.61821869, 25.97461207, 178.56952253)
-        XYZ_w = np.array([109.85, 100, 35.58])
+        XYZ_w = xp_asarray([109.85, 100, 35.58], xp=xp)
         L_A = 318.31
-        np.testing.assert_allclose(
+        xp_assert_close(
             sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([3.53256359, 6.56009775, 2.15585716]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_sCAM_to_XYZ(self) -> None:
+    def test_n_dimensional_sCAM_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.scam.sCAM_to_XYZ` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_sCAM["Average"]
         specification = XYZ_to_sCAM(XYZ, XYZ_w, L_A, Y_b, surround)
-        XYZ = sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround)
+        XYZ = np.asarray(sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround))
 
         specification = CAM_Specification_sCAM(
             *np.transpose(np.tile(tsplit(specification), (6, 1))).tolist()
         )
-        XYZ = np.tile(XYZ, (6, 1))
-        np.testing.assert_allclose(
+        XYZ = xp_asarray(np.tile(np.asarray(XYZ), (6, 1)), xp=xp)
+        xp_assert_close(
             sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_w = np.tile(XYZ_w, (6, 1))
-        np.testing.assert_allclose(
+        XYZ_w = xp_asarray(np.tile(np.asarray(XYZ_w), (6, 1)), xp=xp)
+        xp_assert_close(
             sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -288,28 +296,28 @@ class TestsCAM_to_XYZ:
         specification = CAM_Specification_sCAM(
             *tsplit(np.reshape(specification, (2, 3, 11))).tolist()
         )
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        np.testing.assert_allclose(
+        XYZ_w = xp_asarray(np.reshape(np.asarray(XYZ_w), (2, 3, 3)), xp=xp)
+        XYZ = xp_asarray(np.reshape(np.asarray(XYZ), (2, 3, 3)), xp=xp)
+        xp_assert_close(
             sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
     @ignore_numpy_errors
-    def test_domain_range_scale_sCAM_to_XYZ(self) -> None:
+    def test_domain_range_scale_sCAM_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.scam.sCAM_to_XYZ` definition
         domain and range scale support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_sCAM["Average"]
         specification = XYZ_to_sCAM(XYZ, XYZ_w, L_A, Y_b, surround)
-        XYZ = sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround)
+        XYZ = np.asarray(sCAM_to_XYZ(specification, XYZ_w, L_A, Y_b, surround))
 
         d_r = (
             ("reference", 1, 1),
@@ -340,7 +348,7 @@ class TestsCAM_to_XYZ:
         )
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     sCAM_to_XYZ(
                         specification * factor_a,
                         XYZ_w * factor_b,

@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import pickle
 import textwrap
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
 
 import numpy as np
 import pytest
@@ -16,6 +20,9 @@ from colour.utilities import (
     attest,
     is_pandas_installed,
     is_scipy_installed,
+    xp_asarray,
+    xp_assert_close,
+    xp_assert_equal,
 )
 
 __author__ = "Colour Developers"
@@ -92,31 +99,32 @@ class TestSignal:
         data = pickle.loads(data)  # noqa: S301
         assert self._signal == data
 
-    def test_dtype(self) -> None:
+    def test_dtype(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.dtype` property."""
 
-        assert self._signal.dtype == DTYPE_FLOAT_DEFAULT
+        signal = Signal(xp_asarray(self._range, xp=xp))
+        assert signal.dtype == DTYPE_FLOAT_DEFAULT
 
-        signal = self._signal.copy()
+        signal = signal.copy()
         signal.dtype = np.float32
         assert signal.dtype == np.float32
 
-    def test_domain(self) -> None:
+    def test_domain(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.domain` property."""
 
-        signal = self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal[np.array([0, 1, 2])],
             np.array([10.0, 20.0, 30.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        signal.domain = np.arange(0, 10, 1) * 10
+        signal.domain = xp_asarray(np.arange(0, 10, 1) * 10, xp=xp)
 
-        np.testing.assert_array_equal(signal.domain, np.arange(0, 10, 1) * 10)
+        xp_assert_equal(signal.domain, np.arange(0, 10, 1) * 10)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal[np.array([0, 1, 2]) * 10],
             np.array([10.0, 20.0, 30.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -132,22 +140,22 @@ class TestSignal:
 
         pytest.warns(ColourRuntimeWarning, assert_warns)
 
-    def test_range(self) -> None:
+    def test_range(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.range` property."""
 
-        signal = self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal[np.array([0, 1, 2])],
             np.array([10.0, 20.0, 30.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        signal.range = self._range * 10
+        signal.range = xp_asarray(self._range * 10, xp=xp)
 
-        np.testing.assert_array_equal(signal.range, self._range * 10)
+        xp_assert_equal(signal.range, self._range * 10)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal[np.array([0, 1, 2])],
             np.array([10.0, 20.0, 30.0]) * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -160,15 +168,15 @@ class TestSignal:
 
         pytest.warns(ColourRuntimeWarning, assert_warns)
 
-    def test_interpolator(self) -> None:
+    def test_interpolator(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.interpolator` property."""
 
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        signal = self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal[np.linspace(0, 5, 5)],
             np.array(
                 [
@@ -184,21 +192,21 @@ class TestSignal:
 
         signal.interpolator = CubicSplineInterpolator
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal[np.linspace(0, 5, 5)],
             np.array([10.0, 22.5, 35.0, 47.5, 60.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_interpolator_kwargs(self) -> None:
+    def test_interpolator_kwargs(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.continuous.signal.Signal.interpolator_kwargs`
         property.
         """
 
-        signal = self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal[np.linspace(0, 5, 5)],
             np.array(
                 [
@@ -214,7 +222,7 @@ class TestSignal:
 
         signal.interpolator_kwargs = {"window": 1, "kernel_kwargs": {"a": 1}}
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal[np.linspace(0, 5, 5)],
             np.array(
                 [
@@ -228,35 +236,37 @@ class TestSignal:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_extrapolator(self) -> None:
+    def test_extrapolator(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.extrapolator` property."""
 
-        assert isinstance(self._signal.extrapolator(), Extrapolator)
+        signal = Signal(xp_asarray(self._range, xp=xp))
+        assert isinstance(signal.extrapolator(), Extrapolator)
 
-    def test_extrapolator_kwargs(self) -> None:
+    def test_extrapolator_kwargs(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.continuous.signal.Signal.extrapolator_kwargs`
         property.
         """
 
-        signal = self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
-        attest(np.all(np.isnan(signal[np.array([-1000, 1000])])))
+        attest(np.all(np.isnan(np.asarray(signal[np.array([-1000, 1000])]))))
 
         signal.extrapolator_kwargs = {
             "method": "Linear",
         }
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal[np.array([-1000, 1000])],
             np.array([-9990.0, 10010.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_function(self) -> None:
+    def test_function(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.function` property."""
 
-        attest(callable(self._signal.function))
+        signal = Signal(xp_asarray(self._range, xp=xp))
+        attest(callable(signal.function))
 
     def test_raise_exception_function(self) -> None:
         """
@@ -266,36 +276,37 @@ class TestSignal:
 
         pytest.raises(ValueError, Signal().function, 0)
 
-    def test__init__(self) -> None:
+    def test__init__(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.__init__` method."""
 
-        signal = Signal(self._range)
-        np.testing.assert_array_equal(signal.domain, np.arange(0, 10, 1))
-        np.testing.assert_array_equal(signal.range, self._range)
+        signal = Signal(xp_asarray(self._range, xp=xp))
+        xp_assert_equal(signal.domain, np.arange(0, 10, 1))
+        xp_assert_equal(signal.range, self._range)
 
-        signal = Signal(self._range, self._domain)
-        np.testing.assert_array_equal(signal.domain, self._domain)
-        np.testing.assert_array_equal(signal.range, self._range)
+        signal = Signal(xp_asarray(self._range, xp=xp), xp_asarray(self._domain, xp=xp))
+        xp_assert_equal(signal.domain, self._domain)
+        xp_assert_equal(signal.range, self._range)
 
         signal = Signal(dict(zip(self._domain, self._range, strict=True)))
-        np.testing.assert_array_equal(signal.domain, self._domain)
-        np.testing.assert_array_equal(signal.range, self._range)
+        xp_assert_equal(signal.domain, self._domain)
+        xp_assert_equal(signal.range, self._range)
 
         signal = Signal(signal)
-        np.testing.assert_array_equal(signal.domain, self._domain)
-        np.testing.assert_array_equal(signal.range, self._range)
+        xp_assert_equal(signal.domain, self._domain)
+        xp_assert_equal(signal.range, self._range)
 
         if is_pandas_installed():
             from pandas import Series  # noqa: PLC0415
 
             signal = Signal(Series(dict(zip(self._domain, self._range, strict=True))))
-            np.testing.assert_array_equal(signal.domain, self._domain)
-            np.testing.assert_array_equal(signal.range, self._range)
+            xp_assert_equal(signal.domain, self._domain)
+            xp_assert_equal(signal.range, self._range)
 
-    def test__hash__(self) -> None:
+    def test__hash__(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.__hash__` method."""
 
-        assert isinstance(hash(self._signal), int)
+        signal = Signal(xp_asarray(self._range, xp=xp))
+        assert isinstance(hash(signal), int)
 
     def test__str__(self) -> None:
         """Test :func:`colour.continuous.signal.Signal.__str__` method."""
@@ -347,19 +358,21 @@ class TestSignal:
 
         assert isinstance(repr(Signal()), str)
 
-    def test__getitem__(self) -> None:
+    def test__getitem__(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.__getitem__` method."""
 
-        assert self._signal[0] == 10.0
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
-        np.testing.assert_allclose(
-            self._signal[np.array([0, 1, 2])],
+        xp_assert_close(float(signal[0]), 10.0, atol=TOLERANCE_ABSOLUTE_TESTS)
+
+        xp_assert_close(
+            signal[np.array([0, 1, 2])],
             np.array([10.0, 20.0, 30.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            self._signal[np.linspace(0, 5, 5)],
+        xp_assert_close(
+            signal[np.linspace(0, 5, 5)],
             np.array(
                 [
                     10.00000000,
@@ -372,52 +385,49 @@ class TestSignal:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        attest(np.all(np.isnan(self._signal[np.array([-1000, 1000])])))
+        attest(np.all(np.isnan(np.asarray(signal[np.array([-1000, 1000])]))))
 
-        signal = self._signal.copy()
+        signal = signal.copy()
         signal.extrapolator_kwargs = {
             "method": "Linear",
         }
-        np.testing.assert_array_equal(
-            signal[np.array([-1000, 1000])], np.array([-9990.0, 10010.0])
-        )
+        xp_assert_equal(signal[np.array([-1000, 1000])], np.array([-9990.0, 10010.0]))
 
         signal.extrapolator_kwargs = {
             "method": "Constant",
             "left": 0,
             "right": 1,
         }
-        np.testing.assert_array_equal(
-            signal[np.array([-1000, 1000])], np.array([0.0, 1.0])
-        )
+        xp_assert_equal(signal[np.array([-1000, 1000])], np.array([0.0, 1.0]))
 
-    def test__setitem__(self) -> None:
+    def test__setitem__(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.__setitem__` method."""
 
-        signal = self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
         signal[0] = 20
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.range,
             np.array([20.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         signal[np.array([0, 1, 2])] = 30
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.range,
             np.array([30.0, 30.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         signal[0:3] = 40
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.range,
             np.array([40.0, 40.0, 40.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         signal[np.linspace(0, 5, 5)] = 50
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.domain,
             np.array(
                 [
@@ -438,7 +448,7 @@ class TestSignal:
             ),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.range,
             np.array(
                 [
@@ -461,7 +471,7 @@ class TestSignal:
         )
 
         signal[np.array([0, 1, 2])] = np.array([10, 20, 30])
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.range,
             np.array(
                 [
@@ -483,39 +493,42 @@ class TestSignal:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test__contains__(self) -> None:
+    def test__contains__(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.__contains__` method."""
 
-        assert 0 in self._signal
-        assert 0.5 in self._signal
-        assert 1000 not in self._signal
+        signal = Signal(xp_asarray(self._range, xp=xp))
+        assert 0 in signal
+        assert 0.5 in signal
+        assert 1000 not in signal
 
-    def test__iter__(self) -> None:
+    def test__iter__(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.__iter__` method."""
 
+        signal = Signal(xp_asarray(self._range, xp=xp))
         domain = np.arange(0, 10)
-        for i, (domain_value, range_value) in enumerate(self._signal):
-            np.testing.assert_array_equal(domain_value, domain[i])
-            np.testing.assert_array_equal(range_value, self._range[i])
+        for i, (domain_value, range_value) in enumerate(signal):
+            xp_assert_equal(domain_value, domain[i])
+            xp_assert_equal(range_value, self._range[i])
 
-    def test__len__(self) -> None:
+    def test__len__(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.__len__` method."""
 
-        assert len(self._signal) == 10
+        signal = Signal(xp_asarray(self._range, xp=xp))
+        assert len(signal) == 10
 
-    def test__eq__(self) -> None:
+    def test__eq__(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.__eq__` method."""
 
-        signal_1 = self._signal.copy()
-        signal_2 = self._signal.copy()
+        signal_1 = Signal(xp_asarray(self._range, xp=xp))
+        signal_2 = Signal(xp_asarray(self._range, xp=xp))
 
         assert signal_1 == signal_2
 
-    def test__ne__(self) -> None:
+    def test__ne__(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.__ne__` method."""
 
-        signal_1 = self._signal.copy()
-        signal_2 = self._signal.copy()
+        signal_1 = Signal(xp_asarray(self._range, xp=xp))
+        signal_2 = Signal(xp_asarray(self._range, xp=xp))
 
         signal_2[0] = 20
         assert signal_1 != signal_2
@@ -554,161 +567,169 @@ class TestSignal:
         }
         assert signal_1 == signal_2
 
-    def test_arithmetical_operation(self) -> None:
+    def test_arithmetical_operation(self, xp: ModuleType) -> None:
         """
         Test :meth:`colour.continuous.signal.Signal.arithmetical_operation`
         method.
         """
 
-        np.testing.assert_allclose(
-            self._signal.arithmetical_operation(10, "+", False).range,
+        signal = Signal(xp_asarray(self._range, xp=xp))
+
+        xp_assert_close(
+            signal.arithmetical_operation(10, "+", False).range,
             self._range + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            self._signal.arithmetical_operation(10, "-", False).range,
+        xp_assert_close(
+            signal.arithmetical_operation(10, "-", False).range,
             self._range - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            self._signal.arithmetical_operation(10, "*", False).range,
+        xp_assert_close(
+            signal.arithmetical_operation(10, "*", False).range,
             self._range * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            self._signal.arithmetical_operation(10, "/", False).range,
+        xp_assert_close(
+            signal.arithmetical_operation(10, "/", False).range,
             self._range / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            self._signal.arithmetical_operation(10, "**", False).range,
+        xp_assert_close(
+            signal.arithmetical_operation(10, "**", False).range,
             self._range**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            (self._signal + 10).range,
+        xp_assert_close(
+            (signal + 10).range,
             self._range + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            (self._signal - 10).range,
+        xp_assert_close(
+            (signal - 10).range,
             self._range - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            (self._signal * 10).range,
+        xp_assert_close(
+            (signal * 10).range,
             self._range * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            (self._signal / 10).range,
+        xp_assert_close(
+            (signal / 10).range,
             self._range / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            (self._signal**10).range,
+        xp_assert_close(
+            (signal**10).range,
             self._range**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        signal = self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.arithmetical_operation(10, "+", True).range,
             self._range + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.arithmetical_operation(10, "-", True).range,
             self._range,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.arithmetical_operation(10, "*", True).range,
             self._range * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.arithmetical_operation(10, "/", True).range,
             self._range,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.arithmetical_operation(10, "**", True).range,
             self._range**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        signal = self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.arithmetical_operation(self._range, "+", False).range,
-            signal.range + self._range,
+            np.asarray(signal.range) + self._range,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.arithmetical_operation(signal, "+", False).range,
-            signal.range + signal.range,
+            np.asarray(signal.range) + np.asarray(signal.range),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_is_uniform(self) -> None:
+    def test_is_uniform(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.is_uniform` method."""
 
-        assert self._signal.is_uniform()
+        signal = Signal(xp_asarray(self._range, xp=xp))
+        assert signal.is_uniform()
 
-        signal = self._signal.copy()
+        signal = signal.copy()
         signal[0.5] = 1.0
         assert not signal.is_uniform()
 
-    def test_copy(self) -> None:
+    def test_copy(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.copy` method."""
 
-        assert self._signal is not self._signal.copy()
-        assert self._signal == self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
+        assert signal is not signal.copy()
+        assert signal == signal.copy()
 
-    def test_signal_unpack_data(self) -> None:
+    def test_signal_unpack_data(self, xp: ModuleType) -> None:
         """
         Test :meth:`colour.continuous.signal.Signal.signal_unpack_data`
         method.
         """
 
-        domain, range_ = Signal.signal_unpack_data(self._range)
-        np.testing.assert_array_equal(range_, self._range)
-        np.testing.assert_array_equal(domain, np.arange(0, 10, 1))
+        domain, range_ = Signal.signal_unpack_data(xp_asarray(self._range, xp=xp))
+        xp_assert_equal(range_, self._range)
+        xp_assert_equal(domain, np.arange(0, 10, 1))
 
-        domain, range_ = Signal.signal_unpack_data(self._range, self._domain)
-        np.testing.assert_array_equal(range_, self._range)
-        np.testing.assert_array_equal(domain, self._domain)
+        domain, range_ = Signal.signal_unpack_data(
+            xp_asarray(self._range, xp=xp), xp_asarray(self._domain, xp=xp)
+        )
+        xp_assert_equal(range_, self._range)
+        xp_assert_equal(domain, self._domain)
 
         domain, range_ = Signal.signal_unpack_data(
             self._range, dict(zip(self._domain, self._range, strict=True)).keys()
         )
-        np.testing.assert_array_equal(domain, self._domain)
+        xp_assert_equal(domain, self._domain)
 
         domain, range_ = Signal.signal_unpack_data(
             dict(zip(self._domain, self._range, strict=True))
         )
-        np.testing.assert_array_equal(range_, self._range)
-        np.testing.assert_array_equal(domain, self._domain)
+        xp_assert_equal(range_, self._range)
+        xp_assert_equal(domain, self._domain)
 
-        domain, range_ = Signal.signal_unpack_data(Signal(self._range, self._domain))
-        np.testing.assert_array_equal(range_, self._range)
-        np.testing.assert_array_equal(domain, self._domain)
+        domain, range_ = Signal.signal_unpack_data(
+            Signal(xp_asarray(self._range, xp=xp), xp_asarray(self._domain, xp=xp))
+        )
+        xp_assert_equal(range_, self._range)
+        xp_assert_equal(domain, self._domain)
 
         if is_pandas_installed():
             from pandas import Series  # noqa: PLC0415
@@ -716,17 +737,17 @@ class TestSignal:
             domain, range_ = Signal.signal_unpack_data(
                 Series(dict(zip(self._domain, self._range, strict=True)))
             )
-            np.testing.assert_array_equal(range_, self._range)
-            np.testing.assert_array_equal(domain, self._domain)
+            xp_assert_equal(range_, self._range)
+            xp_assert_equal(domain, self._domain)
 
-    def test_fill_nan(self) -> None:
+    def test_fill_nan(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.fill_nan` method."""
 
-        signal = self._signal.copy()
+        signal = Signal(xp_asarray(self._range, xp=xp))
 
         signal[3:7] = np.nan
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.fill_nan().range,
             np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -734,23 +755,25 @@ class TestSignal:
 
         signal[3:7] = np.nan
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             signal.fill_nan(method="Constant").range,
             np.array([10.0, 20.0, 30.0, 0.0, 0.0, 0.0, 0.0, 80.0, 90.0, 100.0]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_distance(self) -> None:
+    def test_domain_distance(self, xp: ModuleType) -> None:
         """Test :func:`colour.continuous.signal.Signal.domain_distance` method."""
 
-        np.testing.assert_allclose(
-            self._signal.domain_distance(0.5),
+        signal = Signal(xp_asarray(self._range, xp=xp))
+
+        xp_assert_close(
+            signal.domain_distance(0.5),
             0.5,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            self._signal.domain_distance(np.linspace(0, 9, 10) + 0.5),
+        xp_assert_close(
+            signal.domain_distance(np.linspace(0, 9, 10) + 0.5),
             np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )

@@ -26,8 +26,6 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 
-import numpy as np
-
 from colour.adaptation import chromatic_adaptation_VonKries
 from colour.algebra import euclidean_distance, sdiv, sdiv_mode
 from colour.colorimetry import (
@@ -57,7 +55,14 @@ from colour.models import Lab_to_LCHab  # pyright: ignore
 from colour.models import UCS_to_uv, XYZ_to_Lab, XYZ_to_UCS, XYZ_to_xy, xy_to_XYZ
 from colour.quality.datasets.vs import INDEXES_TO_NAMES_VS, SDS_VS
 from colour.temperature import CCT_to_xy_CIE_D, uv_to_CCT_Ohno2013
-from colour.utilities import as_float_array, domain_range_scale, tsplit, validate_method
+from colour.utilities import (
+    array_namespace,
+    as_float_array,
+    domain_range_scale,
+    tsplit,
+    validate_method,
+    xp_average,
+)
 from colour.utilities.documentation import DocstringTuple, is_documentation_building
 
 __author__ = "Colour Developers"
@@ -335,9 +340,15 @@ def colour_quality_scale(
     if method == "nist cqs 9.0":
         Q_p = Q_d = None
     else:
+        p_delta_C_arr = as_float_array(
+            [max(0, sample_data.D_C_ab) for sample_data in Q_as.values()]
+        )
+
+        xp = array_namespace(p_delta_C_arr)
+
         p_delta_C = cast(
             "float",
-            np.average([max(0, sample_data.D_C_ab) for sample_data in Q_as.values()]),
+            xp_average(p_delta_C_arr, xp=xp),
         )
         Q_p = 100 - 3.6 * (D_Ep_RMS - p_delta_C)
         Q_d = G_t / G_r * CCT_f * 100
@@ -374,6 +385,7 @@ def gamut_area(Lab: ArrayLike) -> float:
 
     Examples
     --------
+    >>> import numpy as np
     >>> Lab = [
     ...     np.array([39.94996006, 34.59018231, -19.86046321]),
     ...     np.array([38.88395498, 21.44348519, -34.87805301]),
@@ -396,18 +408,23 @@ def gamut_area(Lab: ArrayLike) -> float:
     """
 
     Lab = as_float_array(Lab)
-    Lab_s = np.roll(np.copy(Lab), -3)
+
+    xp = array_namespace(Lab)
+
+    Lab_s = xp.roll(xp.asarray(Lab, copy=True), -3)
 
     _L, a, b = tsplit(Lab)
     _L_s, a_s, b_s = tsplit(Lab_s)
 
-    A = np.linalg.norm(Lab[..., 1:3], axis=-1)
-    B = np.linalg.norm(Lab_s[..., 1:3], axis=-1)
-    C = np.linalg.norm(np.dstack([a_s - a, b_s - b]), axis=-1)
+    A = xp.linalg.vector_norm(Lab[..., 1:3], axis=-1)
+    B = xp.linalg.vector_norm(Lab_s[..., 1:3], axis=-1)
+    C = xp.linalg.vector_norm(
+        xp.concat([(a_s - a)[..., None], (b_s - b)[..., None]], axis=-1), axis=-1
+    )
     t = (A + B + C) / 2
-    S = np.sqrt(t * (t - A) * (t - B) * (t - C))
+    S = xp.sqrt(t * (t - A) * (t - B) * (t - C))
 
-    return np.sum(S)
+    return xp.sum(S)
 
 
 def vs_colorimetry_data(
@@ -530,7 +547,11 @@ def scale_conversion(D_E_ab: float, CCT_f: float, scaling_f: float) -> float:
         *Colour Quality Scale* (CQS).
     """
 
-    return 10 * np.log1p(np.exp((100 - scaling_f * D_E_ab) / 10)) * CCT_f
+    D_E_ab = as_float_array(D_E_ab)  # pyright: ignore
+
+    xp = array_namespace(D_E_ab)
+
+    return 10 * xp.log1p(xp.exp((100 - scaling_f * D_E_ab) / 10)) * CCT_f
 
 
 def delta_E_RMS(
@@ -554,13 +575,13 @@ def delta_E_RMS(
         Root-mean-square average.
     """
 
-    return np.sqrt(
-        1
-        / len(CQS_data)
-        * np.sum(
-            [getattr(sample_data, attribute) ** 2 for sample_data in CQS_data.values()]
-        )
+    values = as_float_array(
+        [getattr(sample_data, attribute) ** 2 for sample_data in CQS_data.values()]
     )
+
+    xp = array_namespace(values)
+
+    return xp.sqrt(1 / len(CQS_data) * xp.sum(values))
 
 
 def colour_quality_scales(
@@ -597,9 +618,9 @@ def colour_quality_scales(
         D_E_ab = cast(
             "float", euclidean_distance(test_data[i].Lab, reference_data[i].Lab)
         )
-        D_Ep_ab = cast(
-            "float", np.sqrt(D_E_ab**2 - D_C_ab**2) if D_C_ab > 0 else D_E_ab
-        )
+        D_Ep_ab_arr = as_float_array(D_E_ab**2 - D_C_ab**2)
+        xp_q = array_namespace(D_Ep_ab_arr)
+        D_Ep_ab = cast("float", xp_q.sqrt(D_Ep_ab_arr) if D_C_ab > 0 else D_E_ab)
 
         Q_a = scale_conversion(D_Ep_ab, CCT_f, scaling_f)
         Q_as[i + 1] = DataColourQualityScale_VS(

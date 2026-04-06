@@ -38,8 +38,6 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra.interpolation import LinearInterpolator
 from colour.colorimetry import (
     SPECTRAL_SHAPE_DEFAULT,
@@ -59,10 +57,12 @@ if typing.TYPE_CHECKING:
 
 from colour.utilities import (
     CanonicalMapping,
+    array_namespace,
     as_float_array,
     full,
     ones,
     validate_method,
+    xp_resize,
 )
 
 __author__ = "Colour Developers"
@@ -429,7 +429,11 @@ def sd_gaussian_normal(
     settings = {"name": f"{mu}nm - {sigma} Sigma - Gaussian"}
     settings.update(kwargs)
 
-    values = np.exp(-((shape.wavelengths - mu) ** 2) / (2 * sigma**2))
+    wavelengths = as_float_array(shape.wavelengths)
+
+    xp = array_namespace(wavelengths)
+
+    values = xp.exp(-((wavelengths - mu) ** 2) / (2 * sigma**2))
 
     return SpectralDistribution(values, shape.wavelengths, **settings)
 
@@ -485,8 +489,12 @@ def sd_gaussian_fwhm(
     settings = {"name": f"{peak_wavelength}nm - {fwhm} FWHM - Gaussian"}
     settings.update(kwargs)
 
-    mu, sigma = peak_wavelength, fwhm / (2 * np.sqrt(2 * np.log(2)))
-    values = np.exp(-((shape.wavelengths - mu) ** 2) / (2 * sigma**2))
+    wavelengths = as_float_array(shape.wavelengths)
+
+    xp = array_namespace(wavelengths)
+
+    mu, sigma = peak_wavelength, fwhm / (2 * xp.sqrt(2 * xp.log(as_float_array(2))))
+    values = xp.exp(-((wavelengths - mu) ** 2) / (2 * sigma**2))
 
     return SpectralDistribution(values, shape.wavelengths, **settings)
 
@@ -556,11 +564,14 @@ def sd_gaussian_super_clamped(
     settings = {"name": f"{peak_wavelength}nm - {fwhm} FWHM - Super-Gaussian Clamped"}
     settings.update(kwargs)
 
-    wavelengths = shape.wavelengths
+    wavelengths = as_float_array(shape.wavelengths)
+
+    xp = array_namespace(wavelengths)
+
     # Convert FWHM to sigma: FWHM = 2 * sigma * (2 * ln(2))^(1/exponent)
-    sigma = fwhm / (2 * (2 * np.log(2)) ** (1 / exponent))
+    sigma = fwhm / (2 * (2 * xp.log(as_float_array(2))) ** (1 / exponent))
     # Super-Gaussian: exp(-|x/sigma|^exponent)
-    values = np.exp(-(np.abs((wavelengths - peak_wavelength) / sigma) ** exponent))
+    values = xp.exp(-(xp.abs((wavelengths - peak_wavelength) / sigma) ** exponent))
 
     sd = SpectralDistribution(values, wavelengths, **settings)
     sd.range = sd.range / sd.range.max()  # Normalize peak to 1
@@ -714,9 +725,11 @@ def sd_single_led_Ohno2005(
     }
     settings.update(kwargs)
 
-    values = np.exp(
-        -(((shape.wavelengths - peak_wavelength) / half_spectral_width) ** 2)
-    )
+    wavelengths = as_float_array(shape.wavelengths)
+
+    xp = array_namespace(wavelengths)
+
+    values = xp.exp(-(((wavelengths - peak_wavelength) / half_spectral_width) ** 2))
     values = (values + 2 * values**5) / 3
 
     return SpectralDistribution(values, shape.wavelengths, **settings)
@@ -840,6 +853,7 @@ def sd_multi_leds_Ohno2005(
 
     Examples
     --------
+    >>> import numpy as np
     >>> sd = sd_multi_leds_Ohno2005(
     ...     np.array([457, 530, 615]),
     ...     np.array([20, 30, 20]),
@@ -852,21 +866,25 @@ def sd_multi_leds_Ohno2005(
     """
 
     peak_wavelengths = as_float_array(peak_wavelengths)
-    half_spectral_widths = np.resize(half_spectral_widths, peak_wavelengths.shape)
+
+    xp = array_namespace(peak_wavelengths)
+
+    half_spectral_widths = xp_resize(
+        half_spectral_widths, peak_wavelengths.shape, xp=xp
+    )
     if peak_power_ratios is None:
         peak_power_ratios = ones(peak_wavelengths.shape)
     else:
-        peak_power_ratios = np.resize(peak_power_ratios, peak_wavelengths.shape)
+        peak_power_ratios = xp_resize(peak_power_ratios, peak_wavelengths.shape, xp=xp)
 
     sd = sd_zeros(shape)
 
     for peak_wavelength, half_spectral_width, peak_power_ratio in zip(
         peak_wavelengths, half_spectral_widths, peak_power_ratios, strict=True
     ):
-        sd += (
-            sd_single_led_Ohno2005(peak_wavelength, half_spectral_width, **kwargs)
-            * peak_power_ratio
-        )
+        sd += sd_single_led_Ohno2005(
+            float(peak_wavelength), float(half_spectral_width), **kwargs
+        ) * float(peak_power_ratio)
 
     def _format_array(a: NDArrayFloat) -> str:
         """Format specified array :math:`a`."""
@@ -936,6 +954,7 @@ def sd_multi_leds(
 
     Examples
     --------
+    >>> import numpy as np
     >>> sd = sd_multi_leds(
     ...     np.array([457, 530, 615]),
     ...     half_spectral_widths=np.array([20, 30, 20]),

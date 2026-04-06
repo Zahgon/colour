@@ -63,6 +63,10 @@ optional = [
     "trimesh>=4,<5",
     "xxhash>=3,<4",
 ]
+array-api = [
+    "array-api-compat>=1,<2",
+    "array-api-extra<1",
+]
 docs = [
     "biblib-simple",
     "pydata-sphinx-theme",

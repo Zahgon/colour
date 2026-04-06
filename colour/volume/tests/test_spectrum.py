@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
@@ -13,7 +18,14 @@ from colour.colorimetry import (
     reshape_msds,
 )
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
-from colour.utilities import ignore_numpy_errors, is_scipy_installed
+from colour.utilities import (
+    ignore_numpy_errors,
+    is_scipy_installed,
+    xp_asarray,
+    xp_assert_close,
+    xp_assert_equal,
+    xp_reshape,
+)
 from colour.volume import (
     XYZ_outer_surface,
     generate_pulse_waves,
@@ -46,7 +58,7 @@ class TestGeneratePulseWaves:
         definition.
         """
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             generate_pulse_waves(5),
             np.array(
                 [
@@ -76,7 +88,7 @@ class TestGeneratePulseWaves:
             ),
         )
 
-        np.testing.assert_array_equal(
+        xp_assert_equal(
             generate_pulse_waves(5, "Pulse Wave Width"),
             np.array(
                 [
@@ -111,7 +123,7 @@ class TestGeneratePulseWaves:
         np.sort(generate_pulse_waves(5, "Pulse Wave Width"), axis=0),
     )
 
-    np.testing.assert_array_equal(
+    xp_assert_equal(
         generate_pulse_waves(5, "Pulse Wave Width", True),
         np.array(
             [
@@ -149,7 +161,7 @@ class TestXYZOuterSurface:
         )
         cmfs = MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_outer_surface(reshape_msds(cmfs, shape)),
             np.array(
                 [
@@ -197,7 +209,7 @@ class TestIsWithinVisibleSpectrum:
     definition unit tests methods.
     """
 
-    def test_is_within_visible_spectrum(self) -> None:
+    def test_is_within_visible_spectrum(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.volume.spectrum.is_within_visible_spectrum`
         definition.
@@ -206,15 +218,19 @@ class TestIsWithinVisibleSpectrum:
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        assert is_within_visible_spectrum(np.array([0.3205, 0.4131, 0.5100]))
+        assert is_within_visible_spectrum(xp_asarray([0.3205, 0.4131, 0.5100], xp=xp))
 
-        assert not is_within_visible_spectrum(np.array([-0.0005, 0.0031, 0.0010]))
+        assert not is_within_visible_spectrum(
+            xp_asarray([-0.0005, 0.0031, 0.0010], xp=xp)
+        )
 
-        assert is_within_visible_spectrum(np.array([0.4325, 0.3788, 0.1034]))
+        assert is_within_visible_spectrum(xp_asarray([0.4325, 0.3788, 0.1034], xp=xp))
 
-        assert not is_within_visible_spectrum(np.array([0.0025, 0.0088, 0.0340]))
+        assert not is_within_visible_spectrum(
+            xp_asarray([0.0025, 0.0088, 0.0340], xp=xp)
+        )
 
-    def test_n_dimensional_is_within_visible_spectrum(self) -> None:
+    def test_n_dimensional_is_within_visible_spectrum(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.volume.spectrum.is_within_visible_spectrum`
         definition n-dimensional arrays support.
@@ -223,16 +239,24 @@ class TestIsWithinVisibleSpectrum:
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        a = np.array([0.3205, 0.4131, 0.5100])
-        b = is_within_visible_spectrum(a)
+        a = xp_asarray([0.3205, 0.4131, 0.5100], xp=xp)
+        b = np.asarray(is_within_visible_spectrum(a))
 
-        a = np.tile(a, (6, 1))
-        b = np.tile(b, 6)
-        np.testing.assert_allclose(is_within_visible_spectrum(a), b)
+        a = xp.tile(xp_asarray(a, xp=xp), (6, 1))
+        b = xp.tile(xp_asarray(b, xp=xp), (6,))
+        xp_assert_close(
+            is_within_visible_spectrum(a),
+            b,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
 
-        a = np.reshape(a, (2, 3, 3))
-        b = np.reshape(b, (2, 3))
-        np.testing.assert_allclose(is_within_visible_spectrum(a), b)
+        a = xp_reshape(xp_asarray(a, xp=xp), (2, 3, 3), xp=xp)
+        b = xp_reshape(xp_asarray(b, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(
+            is_within_visible_spectrum(a),
+            b,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
+        )
 
     @ignore_numpy_errors
     def test_nan_is_within_visible_spectrum(self) -> None:

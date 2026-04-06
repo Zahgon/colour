@@ -15,8 +15,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from colour.colorimetry import (
     CCS_ILLUMINANTS,
     MultiSpectralDistributions,
@@ -25,10 +23,15 @@ from colour.colorimetry import (
 from colour.models import RGB_Colourspace, RGB_COLOURSPACE_sRGB, XYZ_to_RGB
 from colour.recovery import MSDS_SMITS1999
 from colour.utilities import (
+    array_namespace,
     as_float_array,
     optional,
     to_domain_1,
     tsplit,
+    xp_asarray,
+    xp_atleast_2d,
+    xp_reshape,
+    xp_select,
 )
 
 if TYPE_CHECKING:
@@ -173,23 +176,26 @@ def RGB_to_msds_Smits1999(
     basis = optional(basis, MSDS_SMITS1999)
 
     RGB = to_domain_1(as_float_array(RGB))
+
+    xp = array_namespace(RGB)
+
     shape = RGB.shape
-    RGB = np.atleast_2d(RGB.reshape(-1, 3))
+    RGB = xp_atleast_2d(RGB.reshape(-1, 3), xp=xp)
 
     R, G, B = tsplit(RGB)
 
     labels = list(basis.labels)
-    white = basis.values[:, labels.index("white")]
-    cyan = basis.values[:, labels.index("cyan")]
-    magenta = basis.values[:, labels.index("magenta")]
-    yellow = basis.values[:, labels.index("yellow")]
-    red = basis.values[:, labels.index("red")]
-    green = basis.values[:, labels.index("green")]
-    blue = basis.values[:, labels.index("blue")]
+    white = xp_asarray(basis.values[:, labels.index("white")], xp=xp, like=RGB)
+    cyan = xp_asarray(basis.values[:, labels.index("cyan")], xp=xp, like=RGB)
+    magenta = xp_asarray(basis.values[:, labels.index("magenta")], xp=xp, like=RGB)
+    yellow = xp_asarray(basis.values[:, labels.index("yellow")], xp=xp, like=RGB)
+    red = xp_asarray(basis.values[:, labels.index("red")], xp=xp, like=RGB)
+    green = xp_asarray(basis.values[:, labels.index("green")], xp=xp, like=RGB)
+    blue = xp_asarray(basis.values[:, labels.index("blue")], xp=xp, like=RGB)
 
-    R = R[..., np.newaxis]
-    G = G[..., np.newaxis]
-    B = B[..., np.newaxis]
+    R = R[..., None]
+    G = G[..., None]
+    B = B[..., None]
 
     # if R <= G and R <= B:
     #     sd += white * R
@@ -218,7 +224,7 @@ def RGB_to_msds_Smits1999(
     B_lt_R_le_G = (B < R) & (B < G) & (R <= G)
     B_lt_G_lt_R = (B < R) & (B < G) & (R > G)
 
-    spectra = np.select(
+    spectra = xp_select(
         [R_le_G_le_B, R_le_B_lt_G, G_lt_R_le_B, G_le_B_lt_R, B_lt_R_le_G, B_lt_G_lt_R],
         [
             white * R + cyan * (G - R) + blue * (B - G),
@@ -228,9 +234,10 @@ def RGB_to_msds_Smits1999(
             white * B + yellow * (R - B) + green * (G - R),
             white * B + yellow * (G - B) + red * (R - G),
         ],
+        xp=xp,
     )
 
-    return np.reshape(spectra, [*list(shape[:-1]), len(white)])
+    return xp_reshape(spectra, [*list(shape[:-1]), len(white)], xp=xp)
 
 
 def RGB_to_sd_Smits1999(

@@ -38,10 +38,14 @@ from colour.hints import (  # noqa: TC001
 )
 from colour.models import XYZ_to_xyY
 from colour.utilities import (
+    array_namespace,
     from_range_100,
     to_domain_100,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_atleast_1d,
+    xp_reshape,
 )
 
 __author__ = "Colour Developers"
@@ -125,6 +129,9 @@ def XYZ_to_OSA_UCS(XYZ: Domain100) -> Range100:
     """
 
     XYZ = to_domain_100(XYZ)
+
+    xp = array_namespace(XYZ)
+
     x, y, Y = tsplit(XYZ_to_xyY(XYZ))
 
     Y_0 = Y * (
@@ -137,15 +144,15 @@ def XYZ_to_OSA_UCS(XYZ: Domain100) -> Range100:
     Y_0_s = Y_0 - 30
     Lambda = 5.9 * (Y_0_es + 0.042 * spow(Y_0_s, o_3))
 
-    RGB = vecmul(MATRIX_XYZ_TO_RGB_OSA_UCS, XYZ)
+    RGB = vecmul(xp_asarray(MATRIX_XYZ_TO_RGB_OSA_UCS, xp=xp, like=XYZ), XYZ)
     RGB_3 = spow(RGB, 1 / 3)
 
     with sdiv_mode():
-        C = sdiv(Lambda, 5.9 * Y_0_es)
+        C = xp_asarray(sdiv(Lambda, 5.9 * Y_0_es), xp=xp, like=XYZ)
 
-    L = (Lambda - 14.4) / spow(2, 1 / 2)
-    j = C * np.dot(RGB_3, np.array([1.7, 8, -9.7]))
-    g = C * np.dot(RGB_3, np.array([-13.7, 17.7, -4]))
+    L = xp_asarray((Lambda - 14.4) / spow(2, 1 / 2), xp=xp, like=XYZ)
+    j = C * xp.matmul(RGB_3, xp_asarray([1.7, 8, -9.7], xp=xp, like=RGB_3))
+    g = C * xp.matmul(RGB_3, xp_asarray([-13.7, 17.7, -4], xp=xp, like=RGB_3))
 
     Ljg = tstack([L, j, g])
 
@@ -211,8 +218,11 @@ def OSA_UCS_to_XYZ(Ljg: Domain100, optimisation_kwargs: dict | None = None) -> R
     """
 
     Ljg = to_domain_100(Ljg)
+
+    xp = array_namespace(Ljg)
+
     shape = Ljg.shape
-    Ljg = np.atleast_1d(np.reshape(Ljg, (-1, 3)))
+    Ljg = xp_atleast_1d(xp_reshape(Ljg, (-1, 3), xp=xp), xp=xp)
 
     # Default optimization settings
     settings: dict[str, typing.Any] = {
@@ -229,7 +239,7 @@ def OSA_UCS_to_XYZ(Ljg: Domain100, optimisation_kwargs: dict | None = None) -> R
     # Forward: L = (Lambda - 14.4) / sqrt(2)
     # Backward: Lambda = L * sqrt(2) + 14.4
     # But L' = Lambda in the intermediate calculation
-    sqrt_2 = np.sqrt(2)
+    sqrt_2 = xp.sqrt(xp_asarray(2.0, xp=xp))
     L_prime = L * sqrt_2 + 14.4
 
     # Step 2: Solve for Y0 using Cardano's formula
@@ -254,8 +264,8 @@ def OSA_UCS_to_XYZ(Ljg: Domain100, optimisation_kwargs: dict | None = None) -> R
     with sdiv_mode():
         t = (
             -b / (3 * a)
-            + spow(-q / 2 + np.sqrt(discriminant), 1.0 / 3.0)
-            + spow(-q / 2 - np.sqrt(discriminant), 1.0 / 3.0)
+            + spow(-q / 2 + xp.sqrt(discriminant), 1.0 / 3.0)
+            + spow(-q / 2 - xp.sqrt(discriminant), 1.0 / 3.0)
         )
 
     Y0 = t**3
@@ -268,21 +278,23 @@ def OSA_UCS_to_XYZ(Ljg: Domain100, optimisation_kwargs: dict | None = None) -> R
 
     # Step 4: Solve for RGB using Newton iteration
     # Matrix A from equation (4)
-    A = np.array([[-13.7, 17.7, -4.0], [1.7, 8.0, -9.7]])
+    A = xp_asarray([[-13.7, 17.7, -4.0], [1.7, 8.0, -9.7]], xp=xp)
 
     # Augment A with [1, 0, 0] to make it non-singular (set w = cbrt(R))
-    A_augmented = np.vstack([A, [1.0, 0.0, 0.0]])
-    A_inv = np.linalg.inv(A_augmented)
+    A_augmented = xp.concat(
+        [xp_asarray(A, xp=xp, like=L), xp_asarray([[1.0, 0.0, 0.0]], xp=xp)], axis=0
+    )
+    A_inv = xp.linalg.inv(A_augmented)
 
     # Initial guess for w (corresponds to cbrt(R))
     # w0 = cbrt(79.9 + 41.94) from paper
-    w = np.full_like(L, (79.9 + 41.94) ** (1.0 / 3.0))
+    w = xp.full(L.shape, (79.9 + 41.94) ** (1.0 / 3.0), dtype=L.dtype)
 
     # Newton iteration
     for _iteration in range(settings["iterations_maximum"]):
         # Solve for [cbrt(R), cbrt(G), cbrt(B)] given current w
-        ab_w = np.array([a_coef, b_coef, w]).T
-        RGB_cbrt = np.dot(ab_w, A_inv.T)
+        ab_w = xp.stack([a_coef, b_coef, w], axis=-1)
+        RGB_cbrt = xp.matmul(ab_w, A_inv.T)
 
         RGB = RGB_cbrt**3
 
@@ -305,7 +317,7 @@ def OSA_UCS_to_XYZ(Ljg: Domain100, optimisation_kwargs: dict | None = None) -> R
         Y0_computed = Y * K
 
         error = Y0_computed - Y0
-        if np.all(np.abs(error) < settings["tolerance"]):
+        if xp.all(xp.abs(error) < settings["tolerance"]):
             break
 
         # Newton step: compute derivative and update w
@@ -313,8 +325,8 @@ def OSA_UCS_to_XYZ(Ljg: Domain100, optimisation_kwargs: dict | None = None) -> R
         epsilon = settings["epsilon"]
         w_plus = w + epsilon
 
-        ab_w_plus = np.array([a_coef, b_coef, w_plus]).T
-        RGB_cbrt_plus = np.dot(ab_w_plus, A_inv.T)
+        ab_w_plus = xp.stack([a_coef, b_coef, w_plus], axis=-1)
+        RGB_cbrt_plus = xp.matmul(ab_w_plus, A_inv.T)
         RGB_plus = RGB_cbrt_plus**3
         XYZ_plus = vecmul(MATRIX_RGB_TO_XYZ_OSA_UCS, RGB_plus)
         X_plus, Y_plus, Z_plus = tsplit(XYZ_plus)
@@ -338,4 +350,4 @@ def OSA_UCS_to_XYZ(Ljg: Domain100, optimisation_kwargs: dict | None = None) -> R
             derivative = sdiv(Y0_computed_plus - Y0_computed, epsilon)
             w = w - sdiv(error, derivative)
 
-    return from_range_100(np.reshape(XYZ, shape))
+    return from_range_100(xp_reshape(XYZ, shape, xp=xp))

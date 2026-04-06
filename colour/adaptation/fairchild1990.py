@@ -29,12 +29,14 @@ from colour.hints import (  # noqa: TC001
     Range100,
 )
 from colour.utilities import (
+    array_namespace,
     as_float_array,
     from_range_100,
     ones,
     row_as_diagonal,
     to_domain_100,
     tstack,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -136,6 +138,10 @@ def chromatic_adaptation_Fairchild1990(
     XYZ_r = to_domain_100(XYZ_r)
     Y_n = as_float_array(Y_n)
 
+    xp = array_namespace(XYZ_1, Y_n)
+
+    Y_n = xp_asarray(Y_n, xp=xp, like=XYZ_1)
+
     LMS_1 = XYZ_to_RGB_Fairchild1990(XYZ_1)
     LMS_n = XYZ_to_RGB_Fairchild1990(XYZ_n)
     LMS_r = XYZ_to_RGB_Fairchild1990(XYZ_r)
@@ -150,13 +156,13 @@ def chromatic_adaptation_Fairchild1990(
 
     LMSp_1 = vecmul(A_1, LMS_1)
 
-    c = 0.219 - 0.0784 * np.log10(Y_n)
+    c = 0.219 - 0.0784 * xp.log10(Y_n)
     C = row_as_diagonal(tstack([c, c, c]))
 
     LMS_a = vecmul(C, LMSp_1)
-    LMSp_2 = vecmul(np.linalg.inv(C), LMS_a)
+    LMSp_2 = vecmul(xp.linalg.inv(C), LMS_a)
 
-    LMS_c = vecmul(np.linalg.inv(A_2), LMSp_2)
+    LMS_c = vecmul(xp.linalg.inv(A_2), LMSp_2)
     XYZ_c = RGB_to_XYZ_Fairchild1990(LMS_c)
 
     return from_range_100(XYZ_c)
@@ -249,11 +255,16 @@ def degrees_of_adaptation(
 
     LMS = as_float_array(LMS)
 
+    xp = array_namespace(LMS)
+
     if discount_illuminant:
         return ones(LMS.shape)
 
     Y_n = as_float_array(Y_n)
     v = as_float_array(v)
+
+    Y_n = xp_asarray(Y_n, xp=xp, like=LMS)
+    v = xp_asarray(v, xp=xp, like=LMS)
 
     # E illuminant.
     LMS_E = vecmul(CAT_VON_KRIES, ones(LMS.shape))
@@ -263,7 +274,7 @@ def degrees_of_adaptation(
     def m_E(x: NDArrayFloat, y: NDArrayFloat) -> NDArrayFloat:
         """Compute the :math:`m_E` term."""
 
-        return (3 * x / y) / np.sum(x / y, axis=-1)[..., None]
+        return (3 * x / y) / xp.sum(x / y, axis=-1)[..., None]
 
     def P_c(x: NDArrayFloat) -> NDArrayFloat:
         """Compute the :math:`P_L`, :math:`P_M` or :math:`P_S` terms."""

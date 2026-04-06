@@ -20,6 +20,11 @@ reproducibility-of-python-pseudo-random-numbers-across-systems-and-versions
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
@@ -28,7 +33,11 @@ from colour.models import (
     RGB_COLOURSPACE_BT709,
     RGB_COLOURSPACE_BT2020,
 )
-from colour.utilities import disable_multiprocessing, is_scipy_installed
+from colour.utilities import (
+    disable_multiprocessing,
+    is_scipy_installed,
+    xp_assert_close,
+)
 from colour.volume import (
     RGB_colourspace_limits,
     RGB_colourspace_pointer_gamut_coverage_MonteCarlo,
@@ -63,7 +72,7 @@ class TestRGB_colourspaceLimits:
     def test_RGB_colourspace_limits(self) -> None:
         """Test :func:`colour.volume.rgb.RGB_colourspace_limits` definition."""
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_colourspace_limits(RGB_COLOURSPACE_BT709),
             np.array(
                 [
@@ -75,7 +84,7 @@ class TestRGB_colourspaceLimits:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_colourspace_limits(RGB_COLOURSPACE_BT2020),
             np.array(
                 [
@@ -87,7 +96,7 @@ class TestRGB_colourspaceLimits:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_colourspace_limits(RGB_COLOURSPACE_ACES2065_1),
             np.array(
                 [
@@ -117,7 +126,7 @@ class TestRGB_colourspaceVolumeMonteCarlo:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_colourspace_volume_MonteCarlo(
                 RGB_COLOURSPACE_BT709,
                 int(10e3),
@@ -125,7 +134,7 @@ class TestRGB_colourspaceVolumeMonteCarlo:
             )
             * 1e-6,
             821700.0 * 1e-6,
-            atol=1,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10000000,
         )
 
 
@@ -148,7 +157,7 @@ RGB_colourspace_volume_coverage_MonteCarlo` definition.
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_colourspace_volume_coverage_MonteCarlo(
                 RGB_COLOURSPACE_BT709,
                 is_within_pointer_gamut,
@@ -171,7 +180,10 @@ RGB_colourspace_pointer_gamut_coverage_MonteCarlo` definition unit tests
     :cite:`Laurent2012a`
     """
 
-    def test_RGB_colourspace_pointer_gamut_coverage_MonteCarlo(self) -> None:
+    def test_RGB_colourspace_pointer_gamut_coverage_MonteCarlo(
+        self,
+        xp: ModuleType,  # noqa: ARG002
+    ) -> None:
         """
         Test :func:`colour.volume.rgb.\
 RGB_colourspace_pointer_gamut_coverage_MonteCarlo` definition.
@@ -180,7 +192,7 @@ RGB_colourspace_pointer_gamut_coverage_MonteCarlo` definition.
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_colourspace_pointer_gamut_coverage_MonteCarlo(
                 RGB_COLOURSPACE_BT709,
                 int(10e3),
@@ -202,7 +214,10 @@ RGB_colourspace_visible_spectrum_coverage_MonteCarlo` definition unit tests
     :cite:`Laurent2012a`
     """
 
-    def test_RGB_colourspace_visible_spectrum_coverage_MonteCarlo(self) -> None:
+    def test_RGB_colourspace_visible_spectrum_coverage_MonteCarlo(
+        self,
+        xp: ModuleType,  # noqa: ARG002
+    ) -> None:
         """
         Test :func:`colour.volume.rgb.\
 RGB_colourspace_visible_spectrum_coverage_MonteCarlo` definition.
@@ -211,7 +226,7 @@ RGB_colourspace_visible_spectrum_coverage_MonteCarlo` definition.
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_colourspace_visible_spectrum_coverage_MonteCarlo(
                 RGB_COLOURSPACE_BT709,
                 int(10e3),

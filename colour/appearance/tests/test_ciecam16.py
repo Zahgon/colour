@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
@@ -20,6 +25,9 @@ from colour.utilities import (
     domain_range_scale,
     ignore_numpy_errors,
     tsplit,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
 )
 
 __author__ = "Colour Developers"
@@ -41,17 +49,17 @@ class TestXYZ_to_CIECAM16:
     tests methods.
     """
 
-    def test_XYZ_to_CIECAM16(self) -> None:
+    def test_XYZ_to_CIECAM16(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.ciecam16.XYZ_to_CIECAM16` definition.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_CIECAM16["Average"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -68,9 +76,9 @@ class TestXYZ_to_CIECAM16:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.array([57.06, 43.06, 31.96])
+        XYZ = xp_asarray([57.06, 43.06, 31.96], xp=xp)
         L_A = 31.83
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -87,10 +95,10 @@ class TestXYZ_to_CIECAM16:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.array([3.53, 6.56, 2.14])
-        XYZ_w = np.array([109.85, 100, 35.58])
+        XYZ = xp_asarray([3.53, 6.56, 2.14], xp=xp)
+        XYZ_w = xp_asarray([109.85, 100, 35.58], xp=xp)
         L_A = 318.31
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -107,9 +115,9 @@ class TestXYZ_to_CIECAM16:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.array([19.01, 20.00, 21.78])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
         L_A = 318.31
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -126,10 +134,10 @@ class TestXYZ_to_CIECAM16:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.array([61.45276998, 7.00421901, 82.2406738])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([61.45276998, 7.00421901, 82.2406738], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 4.074366543152521
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -146,11 +154,11 @@ class TestXYZ_to_CIECAM16:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.array([60.70, 49.60, 10.29])
-        XYZ_w = np.array([96.46, 100.00, 108.62])
+        XYZ = xp_asarray([60.70, 49.60, 10.29], xp=xp)
+        XYZ_w = xp_asarray([96.46, 100.00, 108.62], xp=xp)
         L_A = 40
         Y_b = 16
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -164,55 +172,55 @@ class TestXYZ_to_CIECAM16:
                     np.nan,
                 ]
             ),
-            atol=5e-5,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 500,
         )
 
-    def test_n_dimensional_XYZ_to_CIECAM16(self) -> None:
+    def test_n_dimensional_XYZ_to_CIECAM16(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.ciecam16.XYZ_to_CIECAM16` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_CIECAM16["Average"]
         specification = XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround)
 
-        XYZ = np.tile(XYZ, (6, 1))
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
         specification = np.tile(specification, (6, 1))
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround),
             specification,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_w = np.tile(XYZ_w, (6, 1))
-        np.testing.assert_allclose(
+        XYZ_w = xp.tile(xp_asarray(XYZ_w, xp=xp), (6, 1))
+        xp_assert_close(
             XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround),
             specification,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        specification = np.reshape(specification, (2, 3, 8))
-        np.testing.assert_allclose(
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_w = xp_reshape(xp_asarray(XYZ_w, xp=xp), (2, 3, 3), xp=xp)
+        specification = xp_reshape(xp_asarray(specification, xp=xp), (2, 3, 8), xp=xp)
+        xp_assert_close(
             XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround),
             specification,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
     @ignore_numpy_errors
-    def test_domain_range_scale_XYZ_to_CIECAM16(self) -> None:
+    def test_domain_range_scale_XYZ_to_CIECAM16(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.ciecam16.XYZ_to_CIECAM16` definition
         domain and range scale support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_CIECAM16["Average"]
@@ -244,7 +252,7 @@ class TestXYZ_to_CIECAM16:
         )
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     XYZ_to_CIECAM16(
                         XYZ * factor_a, XYZ_w * factor_a, L_A, Y_b, surround
                     ),
@@ -271,7 +279,7 @@ class TestCIECAM16_to_XYZ:
     tests methods.
     """
 
-    def test_CIECAM16_to_XYZ(self) -> None:
+    def test_CIECAM16_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.ciecam16.CIECAM16_to_XYZ` definition.
         """
@@ -279,11 +287,11 @@ class TestCIECAM16_to_XYZ:
         specification = CAM_Specification_CIECAM16(
             41.73120791, 0.10335574, 217.06795977
         )
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_CIECAM16["Average"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([19.01, 20.00, 21.78]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -293,7 +301,7 @@ class TestCIECAM16_to_XYZ:
             65.42828069, 49.67956420, 17.48659243
         )
         L_A = 31.83
-        np.testing.assert_allclose(
+        xp_assert_close(
             CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([57.06, 43.06, 31.96]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -302,9 +310,9 @@ class TestCIECAM16_to_XYZ:
         specification = CAM_Specification_CIECAM16(
             21.36052893, 50.99381895, 178.86724266
         )
-        XYZ_w = np.array([109.85, 100, 35.58])
+        XYZ_w = xp_asarray([109.85, 100, 35.58], xp=xp)
         L_A = 318.31
-        np.testing.assert_allclose(
+        xp_assert_close(
             CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([3.53, 6.56, 2.14]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -314,7 +322,7 @@ class TestCIECAM16_to_XYZ:
             41.36326063, 52.81154022, 258.88676291
         )
         L_A = 318.31
-        np.testing.assert_allclose(
+        xp_assert_close(
             CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([19.01, 20.00, 21.78]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -323,50 +331,50 @@ class TestCIECAM16_to_XYZ:
         specification = CAM_Specification_CIECAM16(
             2.212842606688056, 597.366327557872864, 352.035143755398565
         )
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 4.074366543152521
-        np.testing.assert_allclose(
+        xp_assert_close(
             CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([61.45276998, 7.00421901, 82.2406738]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         specification = CAM_Specification_CIECAM16(70.4406, 58.6035, 57.9145)
-        XYZ_w = np.array([96.46, 100.00, 108.62])
+        XYZ_w = xp_asarray([96.46, 100.00, 108.62], xp=xp)
         L_A = 40
         Y_b = 16
-        np.testing.assert_allclose(
+        xp_assert_close(
             CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([60.70, 49.60, 10.29]),
-            atol=1e-4,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1000,
         )
 
-    def test_n_dimensional_CIECAM16_to_XYZ(self) -> None:
+    def test_n_dimensional_CIECAM16_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.ciecam16.CIECAM16_to_XYZ` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_CIECAM16["Average"]
         specification = XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround)
-        XYZ = CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround)
+        XYZ = np.asarray(CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround))
 
         specification = CAM_Specification_CIECAM16(
             *np.transpose(np.tile(tsplit(specification), (6, 1))).tolist()
         )
-        XYZ = np.tile(XYZ, (6, 1))
-        np.testing.assert_allclose(
+        XYZ = xp_asarray(np.tile(np.asarray(XYZ), (6, 1)), xp=xp)
+        xp_assert_close(
             CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_w = np.tile(XYZ_w, (6, 1))
-        np.testing.assert_allclose(
+        XYZ_w = xp_asarray(np.tile(np.asarray(XYZ_w), (6, 1)), xp=xp)
+        xp_assert_close(
             CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -375,28 +383,28 @@ class TestCIECAM16_to_XYZ:
         specification = CAM_Specification_CIECAM16(
             *tsplit(np.reshape(specification, (2, 3, 8))).tolist()
         )
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        np.testing.assert_allclose(
+        XYZ_w = xp_asarray(np.reshape(np.asarray(XYZ_w), (2, 3, 3)), xp=xp)
+        XYZ = xp_asarray(np.reshape(np.asarray(XYZ), (2, 3, 3)), xp=xp)
+        xp_assert_close(
             CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
     @ignore_numpy_errors
-    def test_domain_range_scale_CIECAM16_to_XYZ(self) -> None:
+    def test_domain_range_scale_CIECAM16_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.ciecam16.CIECAM16_to_XYZ` definition
         domain and range scale support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_CIECAM16["Average"]
         specification = XYZ_to_CIECAM16(XYZ, XYZ_w, L_A, Y_b, surround)
-        XYZ = CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround)
+        XYZ = np.asarray(CIECAM16_to_XYZ(specification, XYZ_w, L_A, Y_b, surround))
 
         d_r = (
             ("reference", 1, 1),
@@ -424,7 +432,7 @@ class TestCIECAM16_to_XYZ:
         )
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     CIECAM16_to_XYZ(
                         specification * factor_a,
                         XYZ_w * factor_b,

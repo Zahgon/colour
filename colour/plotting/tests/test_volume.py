@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.plotting import plot_RGB_colourspaces_gamuts, plot_RGB_scatter
 from colour.plotting.volume import RGB_identity_cube, nadir_grid
+from colour.utilities import xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -36,7 +37,7 @@ class TestNadirGrid:
 
         quads, faces_colours, edges_colours = nadir_grid(segments=1)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             quads,
             np.array(
                 [
@@ -87,7 +88,7 @@ class TestNadirGrid:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             faces_colours,
             np.array(
                 [
@@ -103,7 +104,7 @@ class TestNadirGrid:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             edges_colours,
             np.array(
                 [
@@ -131,7 +132,7 @@ class TestRGBIdentityCube:
 
         vertices, RGB = RGB_identity_cube(1, 1, 1)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             vertices,
             np.array(
                 [
@@ -176,7 +177,7 @@ class TestRGBIdentityCube:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB,
             np.array(
                 [

@@ -28,14 +28,19 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import spow
 
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, DTypeFloat, Literal, NDArray, NDArrayFloat
 
-from colour.utilities import CanonicalMapping, as_float_array, tsplit, validate_method
+from colour.utilities import (
+    CanonicalMapping,
+    array_namespace,
+    as_float,
+    as_float_array,
+    tsplit,
+    validate_method,
+)
 
 __author__ = "Ilia Sibiryakov"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -120,11 +125,13 @@ def HelmholtzKohlrausch_effect_object_Nayatani1997(
     u, v = tsplit(uv)
     u_c, v_c = tsplit(uv_c)
 
+    xp = array_namespace(u, v)
+
     method = validate_method(method, tuple(HKE_NAYATANI1997_METHODS))
 
     K_Br = coefficient_K_Br_Nayatani1997(L_a)
-    q = coefficient_q_Nayatani1997(np.arctan2(v - v_c, u - u_c))
-    S_uv = 13 * np.sqrt((u - u_c) ** 2 + (v - v_c) ** 2)
+    q = coefficient_q_Nayatani1997(xp.atan2(v - v_c, u - u_c))
+    S_uv = 13 * xp.sqrt((u - u_c) ** 2 + (v - v_c) ** 2)
 
     return 1 + (HKE_NAYATANI1997_METHODS[method] * q + 0.0872 * K_Br) * S_uv
 
@@ -222,6 +229,7 @@ def coefficient_q_Nayatani1997(
     --------
     This recreates *FIG. A-1*.
 
+    >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> angles = [(np.pi * 2 / 100 * i) for i in range(100)]
     >>> q_values = coefficient_q_Nayatani1997(angles)
@@ -233,18 +241,20 @@ def coefficient_q_Nayatani1997(
 
     theta = as_float_array(theta)
 
+    xp = array_namespace(theta)
+
     theta_2, theta_3, theta_4 = 2 * theta, 3 * theta, 4 * theta
 
     return (
         -0.01585
-        - 0.03017 * np.cos(theta)
-        - 0.04556 * np.cos(theta_2)
-        - 0.02667 * np.cos(theta_3)
-        - 0.00295 * np.cos(theta_4)
-        + 0.14592 * np.sin(theta)
-        + 0.05084 * np.sin(theta_2)
-        - 0.01900 * np.sin(theta_3)
-        - 0.00764 * np.sin(theta_4)
+        - 0.03017 * xp.cos(theta)
+        - 0.04556 * xp.cos(theta_2)
+        - 0.02667 * xp.cos(theta_3)
+        - 0.00295 * xp.cos(theta_4)
+        + 0.14592 * xp.sin(theta)
+        + 0.05084 * xp.sin(theta_2)
+        - 0.01900 * xp.sin(theta_3)
+        - 0.00764 * xp.sin(theta_4)
     )
 
 
@@ -287,6 +297,8 @@ def coefficient_K_Br_Nayatani1997(L_a: ArrayLike) -> DTypeFloat | NDArrayFloat:
     np.float64(1.0001284...)
     """
 
+    L_a = as_float_array(L_a)
+
     L_a_4495 = spow(L_a, 0.4495)
 
-    return (L_a_4495 * 6.362 + 6.469) * 0.2717 / (L_a_4495 + 6.469)
+    return as_float((L_a_4495 * 6.362 + 6.469) * 0.2717 / (L_a_4495 + 6.469))

@@ -47,15 +47,18 @@ from colour.models import JMh_CIECAM02_to_CAM02UCS, UCS_to_uv, XYZ_to_UCS
 from colour.temperature import CCT_to_xy_CIE_D, uv_to_CCT_Ohno2013
 from colour.utilities import (
     CACHE_REGISTRY,
+    array_namespace,
     as_float,
     as_float_array,
-    as_float_scalar,
     as_int_scalar,
     attest,
     is_caching_enabled,
     tsplit,
     tstack,
     usage_warning,
+    xp_asarray,
+    xp_average,
+    xp_reshape,
 )
 
 __author__ = "Colour Developers"
@@ -270,8 +273,10 @@ def colour_fidelity_index_CIE2017(
         reference_tcs_colorimetry_data.Jpapbp,
     )
 
+    xp = array_namespace(delta_E_s)
+
     R_s = delta_E_to_R_f(delta_E_s)
-    R_f = cast("float", delta_E_to_R_f(np.average(delta_E_s)))
+    R_f = cast("float", delta_E_to_R_f(xp_average(delta_E_s, xp=xp)))
 
     if additional_data:
         return ColourRendering_Specification_CIE2017(
@@ -448,9 +453,9 @@ def sd_reference_illuminant(CCT: float, shape: SpectralShape) -> SpectralDistrib
         m = (CCT - 4000) / 1000
         values = linstep_function(m, sd_planckian.values, sd_daylight.values)
         name = (
-            f"{as_int_scalar(CCT)}K "
+            f"{int(CCT)}K "
             f"Blackbody & CIE Illuminant D Series Mixture - "
-            f"{as_float_scalar(100 * m):.1f}%"
+            f"{float(100 * m):.1f}%"
         )
         sd_reference = SpectralDistribution(values, shape.wavelengths, name=name)
     elif CCT > 5000:
@@ -509,14 +514,18 @@ def tcs_colorimetry_data(
     XYZ_w = as_float_array([k * XYZ_t for k, XYZ_t in zip(k_s, XYZ_t_s, strict=False)])
     sd_irradiance = [sd.copy() * k for sd, k in zip(sd_irradiance, k_s, strict=False)]
 
+    xp = array_namespace(sds_tcs.values, sd_irradiance[0].values)
+
     Y_b = 20
     L_A = 100
     surround = VIEWING_CONDITIONS_CIECAM02["Average"]
-
-    sds_tcs_t = np.tile(np.transpose(sds_tcs.values), (len(sd_irradiance), 1, 1))
-    sds_tcs_t = sds_tcs_t * np.reshape(
-        as_float_array([sd.values for sd in sd_irradiance]),
+    sds_tcs_values = xp_asarray(sds_tcs.values, xp=xp, like=sd_irradiance[0].values)
+    sds_tcs_t = xp.tile(xp.matrix_transpose(sds_tcs_values), (len(sd_irradiance), 1, 1))
+    irradiance_values = xp.stack([xp_asarray(sd.values, xp=xp) for sd in sd_irradiance])
+    sds_tcs_t = sds_tcs_t * xp_reshape(
+        irradiance_values,
         (len(sd_irradiance), 1, len(sd_irradiance[0])),
+        xp=xp,
     )
 
     XYZ = msds_to_XYZ(
@@ -527,7 +536,7 @@ def tcs_colorimetry_data(
     )
     specification = XYZ_to_CIECAM02(
         XYZ,
-        np.reshape(XYZ_w, (len(sd_irradiance), 1, 3)),
+        xp_reshape(XYZ_w, (len(sd_irradiance), 1, 3), xp=xp),
         L_A,
         Y_b,
         surround,
@@ -544,7 +553,7 @@ def tcs_colorimetry_data(
     )
     Jpapbp = JMh_CIECAM02_to_CAM02UCS(JMh)
 
-    specification = as_float_array(specification).transpose((0, 2, 1))
+    specification = np.transpose(as_float_array(specification), (0, 2, 1))
     specification = [CAM_Specification_CIECAM02(*t) for t in specification]
 
     return tuple(
@@ -580,6 +589,8 @@ def delta_E_to_R_f(delta_E: ArrayLike) -> NDArrayFloat:
 
     delta_E = as_float_array(delta_E)
 
+    xp = array_namespace(delta_E)
+
     c_f = 6.73
 
-    return as_float(10 * np.log1p(np.exp((100 - c_f * delta_E) / 10)))
+    return as_float(10 * xp.log1p(xp.exp((100 - c_f * delta_E) / 10)))

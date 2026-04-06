@@ -31,9 +31,14 @@ from colour.characterisation.correction import (
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 
 if typing.TYPE_CHECKING:
-    from colour.hints import NDArrayFloat
+    from colour.hints import NDArrayFloat, ModuleType
 
-from colour.utilities import ignore_numpy_errors
+from colour.utilities import (
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -124,13 +129,13 @@ class TestMatrixAugmentedCheung2004:
 matrix_augmented_Cheung2004` definition unit tests methods.
     """
 
-    def test_matrix_augmented_Cheung2004(self) -> None:
+    def test_matrix_augmented_Cheung2004(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 matrix_augmented_Cheung2004` definition.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
 
         polynomials = [
             np.array([0.17224810, 0.09170660, 0.06416938]),
@@ -362,7 +367,7 @@ matrix_augmented_Cheung2004` definition.
         ]
 
         for i, terms in enumerate([3, 4, 5, 7, 8, 10, 11, 14, 16, 17, 19, 20, 22, 35]):
-            np.testing.assert_allclose(
+            xp_assert_close(
                 matrix_augmented_Cheung2004(RGB, terms),
                 polynomials[i],
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -399,13 +404,13 @@ class TestPolynomialExpansionFinlayson2015:
 polynomial_expansion_Finlayson2015` definition unit tests methods.
     """
 
-    def test_polynomial_expansion_Finlayson2015(self) -> None:
+    def test_polynomial_expansion_Finlayson2015(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 polynomial_expansion_Finlayson2015` definition.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
 
         polynomials = [
             [
@@ -548,12 +553,12 @@ polynomial_expansion_Finlayson2015` definition.
         ]
 
         for i in range(4):
-            np.testing.assert_allclose(
+            xp_assert_close(
                 polynomial_expansion_Finlayson2015(RGB, i + 1, False),
                 polynomials[i][0],
                 atol=TOLERANCE_ABSOLUTE_TESTS,
             )
-            np.testing.assert_allclose(
+            xp_assert_close(
                 polynomial_expansion_Finlayson2015(RGB, i + 1, True),
                 polynomials[i][1],
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -590,13 +595,13 @@ class TestPolynomialExpansionVandermonde:
 polynomial_expansion_Vandermonde` definition unit tests methods.
     """
 
-    def test_polynomial_expansion_Vandermonde(self) -> None:
+    def test_polynomial_expansion_Vandermonde(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 polynomial_expansion_Vandermonde` definition.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
 
         polynomials = [
             np.array([0.17224810, 0.09170660, 0.06416938, 1.00000000]),
@@ -645,7 +650,7 @@ polynomial_expansion_Vandermonde` definition.
         ]
 
         for i in range(4):
-            np.testing.assert_allclose(
+            xp_assert_close(
                 polynomial_expansion_Vandermonde(RGB, i + 1),
                 polynomials[i],
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -669,14 +674,16 @@ class TestMatrixColourCorrectionCheung2004:
 matrix_colour_correction_Cheung2004` definition unit tests methods.
     """
 
-    def test_matrix_colour_correction_Cheung2004(self) -> None:
+    def test_matrix_colour_correction_Cheung2004(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 matrix_colour_correction_Cheung2004` definition.
         """
 
-        np.testing.assert_allclose(
-            matrix_colour_correction_Cheung2004(MATRIX_TEST, MATRIX_REFERENCE),
+        xp_assert_close(
+            matrix_colour_correction_Cheung2004(
+                xp_asarray(MATRIX_TEST, xp=xp), xp_asarray(MATRIX_REFERENCE, xp=xp)
+            ),
             np.array(
                 [
                     [0.69822661, 0.03071629, 0.16210422],
@@ -687,8 +694,12 @@ matrix_colour_correction_Cheung2004` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            matrix_colour_correction_Cheung2004(MATRIX_TEST, MATRIX_REFERENCE, terms=7),
+        xp_assert_close(
+            matrix_colour_correction_Cheung2004(
+                xp_asarray(MATRIX_TEST, xp=xp),
+                xp_asarray(MATRIX_REFERENCE, xp=xp),
+                terms=7,
+            ),
             np.array(
                 [
                     [
@@ -750,14 +761,16 @@ class TestMatrixColourCorrectionFinlayson2015:
 matrix_colour_correction_Finlayson2015` definition unit tests methods.
     """
 
-    def test_matrix_colour_correction_Finlayson2015(self) -> None:
+    def test_matrix_colour_correction_Finlayson2015(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 matrix_colour_correction_Finlayson2015` definition.
         """
 
-        np.testing.assert_allclose(
-            matrix_colour_correction_Finlayson2015(MATRIX_TEST, MATRIX_REFERENCE),
+        xp_assert_close(
+            matrix_colour_correction_Finlayson2015(
+                xp_asarray(MATRIX_TEST, xp=xp), xp_asarray(MATRIX_REFERENCE, xp=xp)
+            ),
             np.array(
                 [
                     [0.69822661, 0.03071629, 0.16210422],
@@ -768,9 +781,11 @@ matrix_colour_correction_Finlayson2015` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_colour_correction_Finlayson2015(
-                MATRIX_TEST, MATRIX_REFERENCE, degree=3
+                xp_asarray(MATRIX_TEST, xp=xp),
+                xp_asarray(MATRIX_REFERENCE, xp=xp),
+                degree=3,
             ),
             np.array(
                 [
@@ -853,14 +868,16 @@ class TestMatrixColourCorrectionVandermonde:
 matrix_colour_correction_Vandermonde` definition unit tests methods.
     """
 
-    def test_matrix_colour_correction_Vandermonde(self) -> None:
+    def test_matrix_colour_correction_Vandermonde(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 matrix_colour_correction_Vandermonde` definition.
         """
 
-        np.testing.assert_allclose(
-            matrix_colour_correction_Vandermonde(MATRIX_TEST, MATRIX_REFERENCE),
+        xp_assert_close(
+            matrix_colour_correction_Vandermonde(
+                xp_asarray(MATRIX_TEST, xp=xp), xp_asarray(MATRIX_REFERENCE, xp=xp)
+            ),
             np.array(
                 [
                     [0.66770040, 0.02514036, 0.12745797, 0.02485425],
@@ -871,9 +888,11 @@ matrix_colour_correction_Vandermonde` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             matrix_colour_correction_Vandermonde(
-                MATRIX_TEST, MATRIX_REFERENCE, degree=3
+                xp_asarray(MATRIX_TEST, xp=xp),
+                xp_asarray(MATRIX_REFERENCE, xp=xp),
+                degree=3,
             ),
             np.array(
                 [
@@ -947,15 +966,15 @@ class TestApplyMatrixColourCorrectionCheung2004:
 apply_matrix_colour_correction_Cheung2004` definition unit tests methods.
     """
 
-    def test_apply_matrix_colour_correction_Cheung2004(self) -> None:
+    def test_apply_matrix_colour_correction_Cheung2004(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 apply_matrix_colour_correction_Cheung2004` definition.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             apply_matrix_colour_correction_Cheung2004(
                 RGB,
                 np.array(
@@ -970,13 +989,15 @@ apply_matrix_colour_correction_Cheung2004` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_apply_matrix_colour_correction_Cheung2004(self) -> None:
+    def test_n_dimensional_apply_matrix_colour_correction_Cheung2004(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 apply_matrix_colour_correction_Cheung2004` definition n-dimensional support.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
         CCM = np.array(
             [
                 [0.69822661, 0.03071629, 0.16210422],
@@ -986,17 +1007,17 @@ apply_matrix_colour_correction_Cheung2004` definition n-dimensional support.
         )
         RGB_c = apply_matrix_colour_correction_Cheung2004(RGB, CCM)
 
-        RGB = np.tile(RGB, (6, 1))
-        RGB_c = np.tile(RGB_c, (6, 1))
-        np.testing.assert_allclose(
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (6, 1))
+        RGB_c = xp.tile(xp_asarray(RGB_c, xp=xp), (6, 1))
+        xp_assert_close(
             apply_matrix_colour_correction_Cheung2004(RGB, CCM),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        RGB = np.reshape(RGB, (2, 3, 3))
-        RGB_c = np.reshape(RGB_c, (2, 3, 3))
-        np.testing.assert_allclose(
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (2, 3, 3), xp=xp)
+        RGB_c = xp_reshape(xp_asarray(RGB_c, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(
             apply_matrix_colour_correction_Cheung2004(RGB, CCM),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1031,15 +1052,15 @@ class TestApplyMatrixColourCorrectionFinlayson2015:
 apply_matrix_colour_correction_Finlayson2015` definition unit tests methods.
     """
 
-    def test_apply_matrix_colour_correction_Finlayson2015(self) -> None:
+    def test_apply_matrix_colour_correction_Finlayson2015(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 apply_matrix_colour_correction_Finlayson2015` definition.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             apply_matrix_colour_correction_Finlayson2015(
                 RGB,
                 np.array(
@@ -1054,13 +1075,15 @@ apply_matrix_colour_correction_Finlayson2015` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_apply_matrix_colour_correction_Finlayson2015(self) -> None:
+    def test_n_dimensional_apply_matrix_colour_correction_Finlayson2015(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 apply_matrix_colour_correction_Finlayson2015` definition n-dimensional support.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
         CCM = np.array(
             [
                 [0.69822661, 0.03071629, 0.16210422],
@@ -1070,17 +1093,17 @@ apply_matrix_colour_correction_Finlayson2015` definition n-dimensional support.
         )
         RGB_c = apply_matrix_colour_correction_Finlayson2015(RGB, CCM)
 
-        RGB = np.tile(RGB, (6, 1))
-        RGB_c = np.tile(RGB_c, (6, 1))
-        np.testing.assert_allclose(
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (6, 1))
+        RGB_c = xp.tile(xp_asarray(RGB_c, xp=xp), (6, 1))
+        xp_assert_close(
             apply_matrix_colour_correction_Finlayson2015(RGB, CCM),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        RGB = np.reshape(RGB, (2, 3, 3))
-        RGB_c = np.reshape(RGB_c, (2, 3, 3))
-        np.testing.assert_allclose(
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (2, 3, 3), xp=xp)
+        RGB_c = xp_reshape(xp_asarray(RGB_c, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(
             apply_matrix_colour_correction_Finlayson2015(RGB, CCM),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1115,15 +1138,15 @@ class TestApplyMatrixColourCorrectionVandermonde:
 apply_matrix_colour_correction_Vandermonde` definition unit tests methods.
     """
 
-    def test_apply_matrix_colour_correction_Vandermonde(self) -> None:
+    def test_apply_matrix_colour_correction_Vandermonde(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 apply_matrix_colour_correction_Vandermonde` definition.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             apply_matrix_colour_correction_Vandermonde(
                 RGB,
                 np.array(
@@ -1138,13 +1161,15 @@ apply_matrix_colour_correction_Vandermonde` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_apply_matrix_colour_correction_Vandermonde(self) -> None:
+    def test_n_dimensional_apply_matrix_colour_correction_Vandermonde(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 apply_matrix_colour_correction_Vandermonde` definition n-dimensional support.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
         CCM = np.array(
             [
                 [0.66770040, 0.02514036, 0.12745797, 0.02485425],
@@ -1154,17 +1179,17 @@ apply_matrix_colour_correction_Vandermonde` definition n-dimensional support.
         )
         RGB_c = apply_matrix_colour_correction_Vandermonde(RGB, CCM)
 
-        RGB = np.tile(RGB, (6, 1))
-        RGB_c = np.tile(RGB_c, (6, 1))
-        np.testing.assert_allclose(
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (6, 1))
+        RGB_c = xp.tile(xp_asarray(RGB_c, xp=xp), (6, 1))
+        xp_assert_close(
             apply_matrix_colour_correction_Vandermonde(RGB, CCM),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        RGB = np.reshape(RGB, (2, 3, 3))
-        RGB_c = np.reshape(RGB_c, (2, 3, 3))
-        np.testing.assert_allclose(
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (2, 3, 3), xp=xp)
+        RGB_c = xp_reshape(xp_asarray(RGB_c, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(
             apply_matrix_colour_correction_Vandermonde(RGB, CCM),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1199,46 +1224,46 @@ class TestColourCorrectionCheung2004:
 colour_correction_Cheung2004` definition unit tests methods.
     """
 
-    def test_colour_correction_Cheung2004(self) -> None:
+    def test_colour_correction_Cheung2004(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 colour_correction_Cheung2004` definition.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colour_correction_Cheung2004(RGB, MATRIX_TEST, MATRIX_REFERENCE),
             np.array([0.13348722, 0.08439216, 0.05990144]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colour_correction_Cheung2004(RGB, MATRIX_TEST, MATRIX_REFERENCE, terms=7),
             np.array([0.15850295, 0.09871628, 0.08105752]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_colour_correction_Cheung2004(self) -> None:
+    def test_n_dimensional_colour_correction_Cheung2004(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 colour_correction_Cheung2004` definition n-dimensional support.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
         RGB_c = colour_correction_Cheung2004(RGB, MATRIX_TEST, MATRIX_REFERENCE)
 
-        RGB = np.tile(RGB, (6, 1))
-        RGB_c = np.tile(RGB_c, (6, 1))
-        np.testing.assert_allclose(
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (6, 1))
+        RGB_c = xp.tile(xp_asarray(RGB_c, xp=xp), (6, 1))
+        xp_assert_close(
             colour_correction_Cheung2004(RGB, MATRIX_TEST, MATRIX_REFERENCE),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        RGB = np.reshape(RGB, (2, 3, 3))
-        RGB_c = np.reshape(RGB_c, (2, 3, 3))
-        np.testing.assert_allclose(
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (2, 3, 3), xp=xp)
+        RGB_c = xp_reshape(xp_asarray(RGB_c, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(
             colour_correction_Cheung2004(RGB, MATRIX_TEST, MATRIX_REFERENCE),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1272,21 +1297,21 @@ class TestColourCorrectionFinlayson2015:
 colour_correction_Finlayson2015` definition unit tests methods.
     """
 
-    def test_colour_correction_Finlayson2015(self) -> None:
+    def test_colour_correction_Finlayson2015(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 colour_correction_Finlayson2015` definition.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colour_correction_Finlayson2015(RGB, MATRIX_TEST, MATRIX_REFERENCE),
             np.array([0.13348722, 0.08439216, 0.05990144]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colour_correction_Finlayson2015(
                 RGB, MATRIX_TEST, MATRIX_REFERENCE, degree=3
             ),
@@ -1294,26 +1319,28 @@ colour_correction_Finlayson2015` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_colour_correction_Finlayson2015(self) -> None:
+    def test_n_dimensional_colour_correction_Finlayson2015(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 colour_correction_Finlayson2015` definition n-dimensional support.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
         RGB_c = colour_correction_Finlayson2015(RGB, MATRIX_TEST, MATRIX_REFERENCE)
 
-        RGB = np.tile(RGB, (6, 1))
-        RGB_c = np.tile(RGB_c, (6, 1))
-        np.testing.assert_allclose(
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (6, 1))
+        RGB_c = xp.tile(xp_asarray(RGB_c, xp=xp), (6, 1))
+        xp_assert_close(
             colour_correction_Finlayson2015(RGB, MATRIX_TEST, MATRIX_REFERENCE),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        RGB = np.reshape(RGB, (2, 3, 3))
-        RGB_c = np.reshape(RGB_c, (2, 3, 3))
-        np.testing.assert_allclose(
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (2, 3, 3), xp=xp)
+        RGB_c = xp_reshape(xp_asarray(RGB_c, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(
             colour_correction_Finlayson2015(RGB, MATRIX_TEST, MATRIX_REFERENCE),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1347,46 +1374,46 @@ class TestColourCorrectionVandermonde:
 colour_correction_Vandermonde` definition unit tests methods.
     """
 
-    def test_colour_correction_Vandermonde(self) -> None:
+    def test_colour_correction_Vandermonde(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 colour_correction_Vandermonde` definition.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colour_correction_Vandermonde(RGB, MATRIX_TEST, MATRIX_REFERENCE),
             np.array([0.15034881, 0.10503956, 0.10512517]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             colour_correction_Vandermonde(RGB, MATRIX_TEST, MATRIX_REFERENCE, degree=3),
             np.array([0.15747814, 0.10035799, 0.06616709]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_colour_correction_Vandermonde(self) -> None:
+    def test_n_dimensional_colour_correction_Vandermonde(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.characterisation.correction.\
 colour_correction_Vandermonde` definition n-dimensional support.
         """
 
-        RGB = np.array([0.17224810, 0.09170660, 0.06416938])
+        RGB = xp_asarray([0.17224810, 0.09170660, 0.06416938], xp=xp)
         RGB_c = colour_correction_Vandermonde(RGB, MATRIX_TEST, MATRIX_REFERENCE)
 
-        RGB = np.tile(RGB, (6, 1))
-        RGB_c = np.tile(RGB_c, (6, 1))
-        np.testing.assert_allclose(
+        RGB = xp.tile(xp_asarray(RGB, xp=xp), (6, 1))
+        RGB_c = xp.tile(xp_asarray(RGB_c, xp=xp), (6, 1))
+        xp_assert_close(
             colour_correction_Vandermonde(RGB, MATRIX_TEST, MATRIX_REFERENCE),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        RGB = np.reshape(RGB, (2, 3, 3))
-        RGB_c = np.reshape(RGB_c, (2, 3, 3))
-        np.testing.assert_allclose(
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (2, 3, 3), xp=xp)
+        RGB_c = xp_reshape(xp_asarray(RGB_c, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(
             colour_correction_Vandermonde(RGB, MATRIX_TEST, MATRIX_REFERENCE),
             RGB_c,
             atol=TOLERANCE_ABSOLUTE_TESTS,

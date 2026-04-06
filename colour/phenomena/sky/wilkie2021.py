@@ -15,11 +15,11 @@ radiance, transmittance and polarisation as presented in
 
 References
 ----------
--   :cite:`Wilkie2021` : Wilkie, A., Vevoda, P., Bashford-Rogers, T., Hošek,
-    L., Iser, T., Kolářová, M., Rittig, T., & Křivánek, J. (2021). A fitted
+-   :cite:`Wilkie2021` : Wilkie, A., Vevoda, P., Bashford-Rogers, T., Hošek,
+    L., Iser, T., Kolářová, M., Rittig, T., & Křivánek, J. (2021). A fitted
     radiance and attenuation model for realistic atmospheres. ACM Transactions
     on Graphics, 40(4), 1-14. doi:10.1145/3450626.3459758
--   :cite:`Vevoda2022` : Vévoda, P., Bashford-Rogers, T., Kolářová, M., &
+-   :cite:`Vevoda2022` : Vévoda, P., Bashford-Rogers, T., Kolářová, M., &
     Wilkie, A. (2022). A Wide Spectral Range Sky Radiance Model. Computer
     Graphics Forum, 41(7), 291-298. doi:10.1111/cgf.14677
 """
@@ -41,9 +41,14 @@ from colour.geometry.intersection import intersect_ray_circle_2d
 from colour.utilities import (
     MixinDataclassIterable,
     Structure,
+    array_namespace,
     as_float_array,
     as_int_array,
     url_download,
+    xp_asarray,
+    xp_atleast_1d,
+    xp_degrees,
+    zeros,
 )
 
 __author__ = "Colour Developers"
@@ -632,7 +637,7 @@ class SkyDataset_Wilkie2021(MixinDataclassIterable):
 
             self.metadata_radiance = metadata_radiance
 
-            data_radiance = np.zeros(
+            data_radiance = zeros(
                 metadata_radiance.total_coefficients_all_configurations,
                 dtype=np.float32,
             )
@@ -752,7 +757,7 @@ class SkyDataset_Wilkie2021(MixinDataclassIterable):
                     len(metadata_polarisation.sun_break_points)
                     + len(metadata_polarisation.zenith_break_points)
                 ) * metadata_polarisation.rank
-                data_polarisation = np.zeros(
+                data_polarisation = zeros(
                     metadata_polarisation.total_coefficients_all_configurations,
                     dtype=np.float32,
                 )
@@ -853,15 +858,19 @@ def compute_sky_parameters_Wilkie2021(
 
     view_point_array = as_float_array(view_point)
     view_direction_array = as_float_array(view_direction)
-    view_direction_array = view_direction_array / np.linalg.norm(
+
+    xp = array_namespace(view_point_array, view_direction_array)
+
+    view_direction_array = view_direction_array / xp.linalg.vector_norm(
         view_direction_array, axis=-1, keepdims=True
     )
 
-    center = np.array([0.0, 0.0, -CONSTANTS_WILKIE2021.planet_radius])
+    center = xp_asarray([0.0, 0.0, -CONSTANTS_WILKIE2021.planet_radius], xp=xp)
     to_view_point = view_point_array - center
-    to_view_point_normalised = to_view_point / np.linalg.norm(to_view_point)
+    to_view_point_normalised = to_view_point / xp.linalg.vector_norm(to_view_point)
     distance_to_view = (
-        np.linalg.norm(to_view_point) + CONSTANTS_WILKIE2021.safety_altitude
+        float(xp.linalg.vector_norm(to_view_point))
+        + CONSTANTS_WILKIE2021.safety_altitude
     )
     to_shifted_view_point = to_view_point_normalised * distance_to_view
     shifted_view_point = center + to_shifted_view_point
@@ -869,58 +878,62 @@ def compute_sky_parameters_Wilkie2021(
     altitude = max(distance_to_view - CONSTANTS_WILKIE2021.planet_radius, 0.0)
 
     # Direction to sun.
-    direction_to_sun = np.array(
+    sun_az = xp_asarray(sun_azimuth, xp=xp)
+    sun_el = xp_asarray(sun_elevation, xp=xp)
+    direction_to_sun = xp.stack(
         [
-            np.cos(sun_azimuth) * np.cos(sun_elevation),
-            np.sin(sun_azimuth) * np.cos(sun_elevation),
-            np.sin(sun_elevation),
+            xp.cos(sun_az) * xp.cos(sun_el),
+            xp.sin(sun_az) * xp.cos(sun_el),
+            xp.sin(sun_el),
         ]
     )
 
     # Solar elevation at view point.
-    dot_zenith_sun = float(np.dot(to_view_point_normalised, direction_to_sun))
-    elevation = 0.5 * np.pi - np.arccos(dot_zenith_sun)
+    dot_zenith_sun = float(xp.sum(to_view_point_normalised * direction_to_sun))
+    elevation = 0.5 * np.pi - xp.acos(xp_asarray(dot_zenith_sun, xp=xp))
 
     # Altitude-corrected view direction.
     if distance_to_view > CONSTANTS_WILKIE2021.planet_radius:
         look_at_point = shifted_view_point + view_direction_array
         correction = (
-            np.sqrt(distance_to_view**2 - CONSTANTS_WILKIE2021.planet_radius**2)
+            xp.sqrt(
+                xp_asarray(
+                    distance_to_view**2 - CONSTANTS_WILKIE2021.planet_radius**2, xp=xp
+                )
+            )
             / distance_to_view
         )
         to_new_origin = to_view_point_normalised * (distance_to_view - correction)
         new_origin = center + to_new_origin
         correct_view = look_at_point - new_origin
-        correct_view_n = correct_view / np.linalg.norm(
+        correct_view_n = correct_view / xp.linalg.vector_norm(
             correct_view, axis=-1, keepdims=True
         )
     else:
         correct_view_n = view_direction_array
 
     # Gamma (sun angle) - no correction.  Shape: (...,).
-    gamma = np.arccos(
-        np.clip(np.sum(view_direction_array * direction_to_sun, axis=-1), -1, 1)
+    gamma = xp.acos(
+        xp.clip(xp.sum(view_direction_array * direction_to_sun, axis=-1), -1, 1)
     )
 
     # Shadow angle - requires correction.
-    shadow_angle = sun_elevation + np.pi * 0.5
-    shadow_direction = np.array(
+    shadow_angle = xp_asarray(sun_elevation + np.pi * 0.5, xp=xp)
+    shadow_direction = xp.stack(
         [
-            np.cos(shadow_angle) * np.cos(sun_azimuth),
-            np.cos(shadow_angle) * np.sin(sun_azimuth),
-            np.sin(shadow_angle),
+            xp.cos(shadow_angle) * xp.cos(sun_az),
+            xp.cos(shadow_angle) * xp.sin(sun_az),
+            xp.sin(shadow_angle),
         ]
     )
-    shadow = np.arccos(
-        np.clip(np.sum(correct_view_n * shadow_direction, axis=-1), -1, 1)
-    )
+    shadow = xp.acos(xp.clip(xp.sum(correct_view_n * shadow_direction, axis=-1), -1, 1))
 
     # Zenith angle (corrected and uncorrected).  Shape: (...,).
-    zero = np.arccos(
-        np.clip(np.sum(correct_view_n * to_view_point_normalised, axis=-1), -1, 1)
+    zero = xp.acos(
+        xp.clip(xp.sum(correct_view_n * to_view_point_normalised, axis=-1), -1, 1)
     )
-    theta = np.arccos(
-        np.clip(np.sum(view_direction_array * to_view_point_normalised, axis=-1), -1, 1)
+    theta = xp.acos(
+        xp.clip(xp.sum(view_direction_array * to_view_point_normalised, axis=-1), -1, 1)
     )
 
     return SkyParameters_Wilkie2021(
@@ -966,7 +979,9 @@ def _reconstruct_sky_model(
         Reconstructed values, shape ``(*S, W)``.
     """
 
-    result = np.zeros(offsets.shape, dtype=np.float64)
+    xp = array_namespace(offsets)
+
+    result = xp.zeros(offsets.shape, dtype=xp.float64)
 
     for rank_index in range(metadata.rank):
         sun_index = as_int_array(
@@ -993,7 +1008,7 @@ def _reconstruct_sky_model(
             as_float_array(data[zenith_index + 1]),
         )
 
-        result += sun_value * zenith_value
+        result = result + sun_value * zenith_value
 
     if len(metadata.emphasis_break_points) > 0:
         emphasis_index = as_int_array(
@@ -1004,8 +1019,8 @@ def _reconstruct_sky_model(
             as_float_array(data[emphasis_index]),
             as_float_array(data[emphasis_index + 1]),
         )
-        result *= emphasis_value
-        np.maximum(result, 0.0, out=result)
+        result = result * emphasis_value
+        result = xp.maximum(result, xp_asarray(0.0, xp=xp))
 
     return result
 
@@ -1024,7 +1039,9 @@ def _evaluate_sky_model(
     shape ``(W,)``, the result has shape ``(*S, W)``.
     """
 
-    wavelength = np.atleast_1d(wavelength)
+    xp = array_namespace(wavelength)
+
+    wavelength = xp_atleast_1d(wavelength, xp=xp)
     wavelength_count = len(wavelength)
 
     # Angle parameters.
@@ -1037,7 +1054,7 @@ def _evaluate_sky_model(
     zero = as_float_array(parameters.zero)
 
     if len(metadata.emphasis_break_points) > 0:
-        alpha_value = np.where(elevation < 0, shadow, zero)
+        alpha_value = xp.where(xp_asarray(elevation < 0, xp=xp), shadow, zero)
         alpha_index, alpha_factor = linear_interpolation_index_and_factor(
             alpha_value, metadata.zenith_break_points
         )
@@ -1048,8 +1065,8 @@ def _evaluate_sky_model(
         alpha_index, alpha_factor = linear_interpolation_index_and_factor(
             zero, metadata.zenith_break_points
         )
-        zero_index = np.zeros_like(gamma_index)
-        zero_factor = np.zeros_like(gamma_factor)
+        zero_index = xp.zeros_like(gamma_index)
+        zero_factor = xp.zeros_like(gamma_factor)
 
     # Configuration parameters.
     visibility_index, visibility_factor = linear_interpolation_index_and_factor(
@@ -1062,44 +1079,53 @@ def _evaluate_sky_model(
         parameters.altitude, dataset.altitudes_radiance
     )
     elevation_index, elevation_factor = linear_interpolation_index_and_factor(
-        np.degrees(elevation), dataset.elevations_radiance
+        xp_degrees(elevation), dataset.elevations_radiance
     )
 
+    # Promote configuration parameter indices/factors to the compute namespace.
+    visibility_index = xp_asarray(visibility_index, xp=xp)
+    visibility_factor = xp_asarray(visibility_factor, xp=xp)
+    albedo_index = xp_asarray(albedo_index, xp=xp)
+    albedo_factor = xp_asarray(albedo_factor, xp=xp)
+    altitude_index = xp_asarray(altitude_index, xp=xp)
+    altitude_factor = xp_asarray(altitude_factor, xp=xp)
+    elevation_index = xp_asarray(elevation_index, xp=xp)
+    elevation_factor = xp_asarray(elevation_factor, xp=xp)
+
     # Broadcast all parameter arrays to the common batch shape.
-    shape = np.broadcast_shapes(
-        np.shape(gamma_index),
-        np.shape(alpha_index),
-        np.shape(zero_index),
-        np.shape(visibility_index),
-        np.shape(albedo_index),
-        np.shape(altitude_index),
-        np.shape(elevation_index),
+    shape = xp.broadcast_shapes(
+        gamma_index.shape,
+        alpha_index.shape,
+        zero_index.shape,
+        visibility_index.shape,
+        albedo_index.shape,
+        altitude_index.shape,
+        elevation_index.shape,
     )
-    gamma_index = np.broadcast_to(gamma_index, shape)
-    gamma_factor = np.broadcast_to(gamma_factor, shape)
-    alpha_index = np.broadcast_to(alpha_index, shape)
-    alpha_factor = np.broadcast_to(alpha_factor, shape)
-    zero_index = np.broadcast_to(zero_index, shape)
-    zero_factor = np.broadcast_to(zero_factor, shape)
-    visibility_index = np.broadcast_to(visibility_index, shape)
-    visibility_factor = np.broadcast_to(visibility_factor, shape)
-    albedo_index = np.broadcast_to(albedo_index, shape)
-    albedo_factor = np.broadcast_to(albedo_factor, shape)
-    altitude_index = np.broadcast_to(altitude_index, shape)
-    altitude_factor = np.broadcast_to(altitude_factor, shape)
-    elevation_index = np.broadcast_to(elevation_index, shape)
-    elevation_factor = np.broadcast_to(elevation_factor, shape)
+    gamma_index = xp.broadcast_to(gamma_index, shape)
+    gamma_factor = xp.broadcast_to(gamma_factor, shape)
+    alpha_index = xp.broadcast_to(alpha_index, shape)
+    alpha_factor = xp.broadcast_to(alpha_factor, shape)
+    zero_index = xp.broadcast_to(zero_index, shape)
+    zero_factor = xp.broadcast_to(zero_factor, shape)
+    visibility_index = xp.broadcast_to(visibility_index, shape)
+    visibility_factor = xp.broadcast_to(visibility_factor, shape)
+    albedo_index = xp.broadcast_to(albedo_index, shape)
+    albedo_factor = xp.broadcast_to(albedo_factor, shape)
+    altitude_index = xp.broadcast_to(altitude_index, shape)
+    altitude_factor = xp.broadcast_to(altitude_factor, shape)
+    elevation_index = xp.broadcast_to(elevation_index, shape)
+    elevation_factor = xp.broadcast_to(elevation_factor, shape)
 
     # Filter wavelength within dataset range.
     wavelength_end = dataset.channel_start + dataset.channels * dataset.channel_width
     valid = (wavelength >= dataset.channel_start) & (wavelength < wavelength_end)
-    if not np.any(valid):
-        return np.zeros((*shape, wavelength_count), dtype=np.float64)
+    if not bool(xp.any(valid)):
+        return xp.zeros((*shape, wavelength_count), dtype=xp.float64)
 
     channel_indices = as_int_array(
-        np.floor((wavelength[valid] - dataset.channel_start) / dataset.channel_width)
+        xp.floor((wavelength[valid] - dataset.channel_start) / dataset.channel_width)
     )
-    n_valid = len(channel_indices)
 
     # Precompute strides for offset calculation.
     elevation_count = len(dataset.elevations_radiance)
@@ -1108,18 +1134,22 @@ def _evaluate_sky_model(
     total_coefficients_single = metadata.total_coefficients_single_configuration
 
     # Build 16-point interpolation grid — shape (16, *S, n_valid).
-    grid_shape = (16, *shape, n_valid)
-    grid = np.zeros(grid_shape, dtype=np.float64)
+    grid_parts = []
 
     for i in range(16):
-        visibility_grid_index = np.minimum(
-            visibility_index + i // 8, len(dataset.visibilities_radiance) - 1
+        visibility_grid_index = xp.minimum(
+            visibility_index + i // 8,
+            xp_asarray(len(dataset.visibilities_radiance) - 1, xp=xp),
         )
-        albedo_grid_index = np.minimum(albedo_index + (i % 8) // 4, albedo_count - 1)
-        altitude_grid_index = np.minimum(
-            altitude_index + (i % 4) // 2, altitude_count - 1
+        albedo_grid_index = xp.minimum(
+            albedo_index + (i % 8) // 4, xp_asarray(albedo_count - 1, xp=xp)
         )
-        elevation_grid_index = np.minimum(elevation_index + i % 2, elevation_count - 1)
+        altitude_grid_index = xp.minimum(
+            altitude_index + (i % 4) // 2, xp_asarray(altitude_count - 1, xp=xp)
+        )
+        elevation_grid_index = xp.minimum(
+            elevation_index + i % 2, xp_asarray(elevation_count - 1, xp=xp)
+        )
 
         # Offsets — shape (*S, n_valid) via broadcasting.
         offsets = total_coefficients_single * (
@@ -1137,17 +1167,21 @@ def _evaluate_sky_model(
             * visibility_grid_index[..., None]
         )
 
-        grid[i] = _reconstruct_sky_model(
-            data,
-            offsets,
-            gamma_index,
-            gamma_factor,
-            alpha_index,
-            alpha_factor,
-            zero_index,
-            zero_factor,
-            metadata,
+        grid_parts.append(
+            _reconstruct_sky_model(
+                data,
+                offsets,
+                gamma_index,
+                gamma_factor,
+                alpha_index,
+                alpha_factor,
+                zero_index,
+                zero_factor,
+                metadata,
+            )
         )
+
+    grid = xp.stack(grid_parts)
 
     # 4-level hierarchical interpolation (elevation, altitude, albedo,
     # visibility).
@@ -1160,11 +1194,17 @@ def _evaluate_sky_model(
     # grid now has shape (1, *S, n_valid) — squeeze grid dimension.
     result_valid = grid[0]
 
-    # Place valid wavelength into full result.
-    result = np.zeros((*shape, wavelength_count), dtype=np.float64)
-    result[..., valid] = result_valid
+    # Place valid wavelengths into full result.
+    j = 0
+    parts = []
+    for w in range(wavelength_count):
+        if bool(valid[w]):
+            parts.append(result_valid[..., j])
+            j += 1
+        else:
+            parts.append(xp.zeros(shape, dtype=result_valid.dtype))
 
-    return result
+    return xp.stack(parts, axis=-1)
 
 
 def sky_radiance_Wilkie2021(
@@ -1233,34 +1273,38 @@ def sun_radiance_Wilkie2021(
 
     wavelength = as_float_array(wavelength)
     gamma = as_float_array(parameters.gamma)
-    shape = np.shape(gamma)
+
+    xp = array_namespace(wavelength, gamma)
+
+    shape = gamma.shape
 
     wavelength_count = len(wavelength)
-    result = np.zeros((*shape, wavelength_count), dtype=np.float64)
+    result = xp.zeros((*shape, wavelength_count), dtype=xp.float64)
 
     # Mask: only directions hitting the sun disk.
     hits_sun = gamma <= CONSTANTS_WILKIE2021.sun_radius
 
-    if not np.any(hits_sun):
+    if not bool(xp.any(hits_sun)):
         return result
 
     valid_wavelength = (wavelength >= CONSTANTS_WILKIE2021.sun_radiance_start) & (
         wavelength < CONSTANTS_WILKIE2021.sun_radiance_end
     )
-    if not np.any(valid_wavelength):
+    if not bool(xp.any(valid_wavelength)):
         return result
 
     # Interpolate solar radiance from table.
     index_float = (
         wavelength[valid_wavelength] - CONSTANTS_WILKIE2021.sun_radiance_start
     ) / CONSTANTS_WILKIE2021.sun_radiance_step
-    index_integer = as_int_array(np.floor(index_float))
+    index_integer = as_int_array(xp.floor(index_float))
     index_fraction = index_float - index_integer
-    index_integer = np.clip(index_integer, 0, len(SUN_RAD_TABLE) - 2)
+    index_integer = xp.clip(index_integer, 0, len(SUN_RAD_TABLE) - 2)
 
+    sun_rad_table = xp_asarray(SUN_RAD_TABLE, xp=xp, like=wavelength)
     sun_radiance_value = (
-        SUN_RAD_TABLE[index_integer] * (1.0 - index_fraction)
-        + SUN_RAD_TABLE[index_integer + 1] * index_fraction
+        sun_rad_table[index_integer] * (1.0 - index_fraction)
+        + sun_rad_table[index_integer + 1] * index_fraction
     )
 
     # Compute transmittance towards the sun.
@@ -1268,10 +1312,18 @@ def sun_radiance_Wilkie2021(
         dataset, parameters, wavelength[valid_wavelength], np.inf
     )
 
-    result[..., valid_wavelength] = sun_radiance_value * transmittance
-    result *= hits_sun[..., None]
+    sun_result = sun_radiance_value * transmittance
 
-    return result
+    j = 0
+    parts = []
+    for w in range(wavelength_count):
+        if bool(valid_wavelength[w]):
+            parts.append(sun_result[..., j])
+            j += 1
+        else:
+            parts.append(xp.zeros(shape, dtype=sun_result.dtype))
+
+    return xp.stack(parts, axis=-1) * hits_sun[..., None]
 
 
 def sky_polarisation_Wilkie2021(
@@ -1327,19 +1379,24 @@ def _compute_transmittance_interpolation(
     """Compute transmittance-specific interpolation index and factor."""
 
     value = as_float_array(value)
-    index = np.minimum(as_int_array(value * count), count - 1)
+
+    xp = array_namespace(value)
+
+    index = xp.minimum(as_int_array(value * count), xp_asarray(count - 1, xp=xp))
     lower = index / count
     upper = (index + 1) / count
     denominator = upper**power - lower**power
-    factor = np.where(
+    factor = xp.where(
         (index < count - 1) & (denominator != 0),
-        np.clip(
+        xp.clip(
             (value**power - lower**power)
-            / np.where(denominator == 0, 1.0, denominator),
+            / xp.where(
+                xp_asarray(denominator == 0, xp=xp), xp_asarray(1.0, xp=xp), denominator
+            ),
             0.0,
             1.0,
         ),
-        0.0,
+        xp_asarray(0.0, xp=xp),
     )
     return index, factor
 
@@ -1355,19 +1412,26 @@ def _compute_transmittance_parameters(
     theta = as_float_array(theta)
     altitude = as_float_array(altitude)
 
-    ray_direction_x = np.sin(theta)
-    ray_direction_y = np.cos(theta)
+    xp = array_namespace(theta, altitude)
+
+    altitude = xp_asarray(altitude, xp=xp, like=theta)
+
+    ray_direction_x = xp.sin(theta)
+    ray_direction_y = xp.cos(theta)
     ray_position_y = CONSTANTS_WILKIE2021.planet_radius + altitude
 
-    shape = np.broadcast_shapes(np.shape(theta), np.shape(altitude))
-    ray_origin = np.stack(
-        [np.broadcast_to(0.0, shape), np.broadcast_to(ray_position_y, shape)],
+    shape = xp.broadcast_shapes(theta.shape, altitude.shape)
+    ray_origin = xp.stack(
+        [
+            xp.broadcast_to(xp.asarray(0.0, dtype=xp.float64), shape),
+            xp.broadcast_to(xp_asarray(ray_position_y, xp=xp), shape),
+        ],
         axis=-1,
     )
-    ray_direction = np.stack(
+    ray_direction = xp.stack(
         [
-            np.broadcast_to(ray_direction_x, shape),
-            np.broadcast_to(ray_direction_y, shape),
+            xp.broadcast_to(xp_asarray(ray_direction_x, xp=xp), shape),
+            xp.broadcast_to(xp_asarray(ray_direction_y, xp=xp), shape),
         ],
         axis=-1,
     )
@@ -1382,7 +1446,9 @@ def _compute_transmittance_parameters(
     distance_low_atmosphere = intersect_ray_circle_2d(
         ray_origin, ray_direction, atmosphere_edge
     )
-    distance_low = np.where(theta <= 0.5 * np.pi, distance_low_atmosphere, 0.0)
+    distance_low = xp.where(
+        theta <= 0.5 * np.pi, distance_low_atmosphere, xp_asarray(0.0, xp=xp)
+    )
 
     # High altitude: planet first, atmosphere edge if planet missed.
     distance_planet = intersect_ray_circle_2d(
@@ -1391,19 +1457,21 @@ def _compute_transmittance_parameters(
     distance_atmosphere = intersect_ray_circle_2d(
         ray_origin, ray_direction, atmosphere_edge
     )
-    distance_high = np.where(distance_planet < 0, distance_atmosphere, distance_planet)
+    distance_high = xp.where(distance_planet < 0, distance_atmosphere, distance_planet)
 
-    distance_to_intersection = np.where(is_low_altitude, distance_low, distance_high)
-    distance_to_intersection = np.minimum(distance_to_intersection, distance)
+    distance_to_intersection = xp.where(is_low_altitude, distance_low, distance_high)
+    distance_to_intersection = xp.minimum(
+        distance_to_intersection, xp_asarray(distance, xp=xp)
+    )
 
     intersection_x = ray_direction_x * distance_to_intersection
     intersection_y = ray_direction_y * distance_to_intersection + ray_position_y
 
-    intersection_distance = np.sqrt(
+    intersection_distance = xp.sqrt(
         intersection_x * intersection_x + intersection_y * intersection_y
     )
 
-    altitude_parameter = np.clip(
+    altitude_parameter = xp.clip(
         intersection_distance - CONSTANTS_WILKIE2021.planet_radius,
         0.0,
         CONSTANTS_WILKIE2021.atmosphere_width,
@@ -1413,16 +1481,21 @@ def _compute_transmittance_parameters(
     ) ** (1.0 / 3.0)
 
     distance_parameter = (
-        np.arccos(
-            np.clip(intersection_y / np.maximum(intersection_distance, 1e-10), -1, 1)
+        xp.acos(
+            xp.clip(
+                intersection_y
+                / xp.maximum(intersection_distance, xp_asarray(1e-10, xp=xp)),
+                -1,
+                1,
+            )
         )
         * CONSTANTS_WILKIE2021.planet_radius
     )
-    distance_parameter = np.sqrt(
+    distance_parameter = xp.sqrt(
         distance_parameter / CONSTANTS_WILKIE2021.distance_to_edge
     )
-    distance_parameter = np.sqrt(distance_parameter)
-    distance_parameter = np.minimum(1.0, distance_parameter)
+    distance_parameter = xp.sqrt(distance_parameter)
+    distance_parameter = xp.minimum(xp_asarray(1.0, xp=xp), distance_parameter)
 
     altitude_interpolation = _compute_transmittance_interpolation(
         altitude_parameter, dataset.altitude_dimension, 3
@@ -1453,6 +1526,8 @@ def _reconstruct_transmittance(
     altitude_i, altitude_f = altitude_interpolation
     distance_i, distance_f = distance_interpolation
 
+    xp = array_namespace(altitude_i, distance_i, visibility_index)
+
     altitude_d = dataset.altitude_dimension
     distance_d = dataset.distance_dimension
     rank = dataset.rank_transmittance
@@ -1468,17 +1543,16 @@ def _reconstruct_transmittance(
         + channel_indices
     ) * rank
 
-    v_coefficient_offsets = v_coefficient_base[..., None] + np.arange(rank)
-    v_coefficients = as_float_array(
-        dataset.data_transmittance_v[as_int_array(v_coefficient_offsets)]
+    v_coefficient_offsets = v_coefficient_base[..., None] + xp.arange(rank)
+    v_coefficients = xp_asarray(
+        dataset.data_transmittance_v[as_int_array(v_coefficient_offsets)],
+        xp=xp,
+        like=altitude_i,
     )
 
     # U-coefficients: iterate 2x2 grid (altitude x distance).
-    transmittance = np.zeros(
-        (*np.shape(altitude_i), len(channel_indices), 4), dtype=np.float64
-    )
+    transmittance_parts = []
 
-    grid_index = 0
     for altitude_offset in range(2):
         a = altitude_i + altitude_offset
         altitude_valid = a < altitude_d
@@ -1490,25 +1564,30 @@ def _reconstruct_transmittance(
                 altitude_index[..., None] * altitude_d * distance_d * rank
                 + (d[..., None] * altitude_d + a[..., None]) * rank
             )
-            u_coefficient_offsets = u_coefficient_base[..., None] + np.arange(rank)
+            u_coefficient_offsets = u_coefficient_base[..., None] + xp.arange(rank)
 
-            safe_u_offsets = np.clip(
+            safe_u_offsets = xp.clip(
                 u_coefficient_offsets, 0, len(dataset.data_transmittance_u) - 1
             )
-            u_coefficients = as_float_array(
-                dataset.data_transmittance_u[as_int_array(safe_u_offsets)]
+            u_coefficients = xp_asarray(
+                dataset.data_transmittance_u[as_int_array(safe_u_offsets)],
+                xp=xp,
+                like=altitude_i,
             )
 
-            dot = np.sum(u_coefficients * v_coefficients, axis=-1)
+            dot = xp.sum(u_coefficients * v_coefficients, axis=-1)
             mask = altitude_valid & distance_valid
-            transmittance[..., grid_index] = np.where(mask[..., None], dot, 0.0)
-            grid_index += 1
+            transmittance_parts.append(
+                xp.where(mask[..., None], dot, xp_asarray(0.0, xp=xp))
+            )
+
+    transmittance = xp.stack(transmittance_parts, axis=-1)
 
     # Bilinear interpolation over distance then altitude.
     low = lerp(distance_f[..., None], transmittance[..., 0], transmittance[..., 1])
     high = lerp(distance_f[..., None], transmittance[..., 2], transmittance[..., 3])
-    low = np.maximum(low, 0.0)
-    high = np.maximum(high, 0.0)
+    low = xp.maximum(low, xp_asarray(0.0, xp=xp))
+    high = xp.maximum(high, xp_asarray(0.0, xp=xp))
 
     return lerp(altitude_f[..., None], low, high)
 
@@ -1544,18 +1623,21 @@ def sky_transmittance_Wilkie2021(
     """
 
     wavelength = as_float_array(wavelength)
+
+    xp = array_namespace(wavelength)
+
     wavelength_count = len(wavelength)
 
-    theta = as_float_array(parameters.theta)
-    shape = np.shape(theta)
+    theta = xp_asarray(as_float_array(parameters.theta), xp=xp, like=wavelength)
+    shape = theta.shape
 
     wavelength_end = dataset.channel_start + dataset.channels * dataset.channel_width
     valid = (wavelength >= dataset.channel_start) & (wavelength < wavelength_end)
-    if not np.any(valid):
-        return np.zeros((*shape, wavelength_count), dtype=np.float64)
+    if not bool(xp.any(valid)):
+        return xp.zeros((*shape, wavelength_count), dtype=xp.float64)
 
     channel_indices = as_int_array(
-        np.floor((wavelength[valid] - dataset.channel_start) / dataset.channel_width)
+        xp.floor((wavelength[valid] - dataset.channel_start) / dataset.channel_width)
     )
 
     visibility_index, visibility_factor = linear_interpolation_index_and_factor(
@@ -1566,15 +1648,20 @@ def sky_transmittance_Wilkie2021(
     )
 
     # Broadcast config indices to common shape.
-    shape = np.broadcast_shapes(
-        np.shape(theta),
-        np.shape(visibility_index),
-        np.shape(altitude_index),
+    visibility_index = xp_asarray(visibility_index, xp=xp, like=wavelength)
+    visibility_factor = xp_asarray(visibility_factor, xp=xp, like=wavelength)
+    altitude_index = xp_asarray(altitude_index, xp=xp, like=wavelength)
+    altitude_factor = xp_asarray(altitude_factor, xp=xp, like=wavelength)
+
+    shape = xp.broadcast_shapes(
+        theta.shape,
+        visibility_index.shape,
+        altitude_index.shape,
     )
-    visibility_index = np.broadcast_to(visibility_index, shape)
-    visibility_factor = np.broadcast_to(visibility_factor, shape)
-    altitude_index = np.broadcast_to(altitude_index, shape)
-    altitude_factor = np.broadcast_to(altitude_factor, shape)
+    visibility_index = xp.broadcast_to(visibility_index, shape)
+    visibility_factor = xp.broadcast_to(visibility_factor, shape)
+    altitude_index = xp.broadcast_to(altitude_index, shape)
+    altitude_factor = xp.broadcast_to(altitude_factor, shape)
 
     altitude_interpolation, distance_interpolation = _compute_transmittance_parameters(
         dataset, parameters.theta, distance, parameters.altitude
@@ -1593,7 +1680,10 @@ def sky_transmittance_Wilkie2021(
     transmittance_altitude_high = _reconstruct_transmittance(
         dataset,
         visibility_index,
-        np.minimum(altitude_index + 1, len(dataset.altitudes_transmittance) - 1),
+        xp.minimum(
+            altitude_index + 1,
+            xp_asarray(len(dataset.altitudes_transmittance) - 1, xp=xp),
+        ),
         altitude_interpolation,
         distance_interpolation,
         channel_indices,
@@ -1604,7 +1694,10 @@ def sky_transmittance_Wilkie2021(
 
     transmittance_visibility_high = _reconstruct_transmittance(
         dataset,
-        np.minimum(visibility_index + 1, len(dataset.visibilities_transmittance) - 1),
+        xp.minimum(
+            visibility_index + 1,
+            xp_asarray(len(dataset.visibilities_transmittance) - 1, xp=xp),
+        ),
         altitude_index,
         altitude_interpolation,
         distance_interpolation,
@@ -1612,8 +1705,14 @@ def sky_transmittance_Wilkie2021(
     )
     transmittance_visibility_altitude_high = _reconstruct_transmittance(
         dataset,
-        np.minimum(visibility_index + 1, len(dataset.visibilities_transmittance) - 1),
-        np.minimum(altitude_index + 1, len(dataset.altitudes_transmittance) - 1),
+        xp.minimum(
+            visibility_index + 1,
+            xp_asarray(len(dataset.visibilities_transmittance) - 1, xp=xp),
+        ),
+        xp.minimum(
+            altitude_index + 1,
+            xp_asarray(len(dataset.altitudes_transmittance) - 1, xp=xp),
+        ),
         altitude_interpolation,
         distance_interpolation,
         channel_indices,
@@ -1629,9 +1728,15 @@ def sky_transmittance_Wilkie2021(
 
     # Transmittance is stored as square root.
     transmittance = transmittance * transmittance
-    transmittance = np.clip(transmittance, 0.0, 1.0)
+    transmittance = xp.clip(transmittance, 0.0, 1.0)
 
-    result = np.zeros((*shape, wavelength_count), dtype=np.float64)
-    result[..., valid] = transmittance
+    j = 0
+    parts = []
+    for w in range(wavelength_count):
+        if bool(valid[w]):
+            parts.append(transmittance[..., j])
+            j += 1
+        else:
+            parts.append(xp.zeros(shape, dtype=transmittance.dtype))
 
-    return result
+    return xp.stack(parts, axis=-1)

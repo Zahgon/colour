@@ -25,6 +25,7 @@ from colour.utilities import (
     domain_range_scale,
     ignore_numpy_errors,
     is_onnxruntime_installed,
+    xp_assert_close,
 )
 
 __author__ = "Colour Developers"
@@ -63,10 +64,10 @@ class TestMunsellSpecification_to_xyY_Onnx:
             as_float_array(list(MUNSELL_SPECIFICATIONS[..., 0])),
             as_float_array(list(MUNSELL_SPECIFICATIONS[..., 1])),
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             munsell_specification_to_xyY_Onnx(specification),
             xyY,
-            atol=5e-2,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 500000,
         )
 
     def test_n_dimensional_munsell_specification_to_xyY_Onnx(
@@ -83,18 +84,18 @@ class TestMunsellSpecification_to_xyY_Onnx:
 
         specification = np.tile(specification, (6, 1))
         xyY = np.tile(xyY, (6, 1))
-        np.testing.assert_allclose(
+        xp_assert_close(
             munsell_specification_to_xyY_Onnx(specification),
             xyY,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
         specification = np.reshape(specification, (2, 3, 4))
         xyY = np.reshape(xyY, (2, 3, 3))
-        np.testing.assert_allclose(
+        xp_assert_close(
             munsell_specification_to_xyY_Onnx(specification),
             xyY,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
         specification = np.array([np.nan, 8.9, np.nan, np.nan])
@@ -102,18 +103,18 @@ class TestMunsellSpecification_to_xyY_Onnx:
 
         specification = np.tile(specification, (6, 1))
         xyY = np.tile(xyY, (6, 1))
-        np.testing.assert_allclose(
+        xp_assert_close(
             munsell_specification_to_xyY_Onnx(specification),
             xyY,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
         specification = np.reshape(specification, (2, 3, 4))
         xyY = np.reshape(xyY, (2, 3, 3))
-        np.testing.assert_allclose(
+        xp_assert_close(
             munsell_specification_to_xyY_Onnx(specification),
             xyY,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
     def test_domain_range_scale_munsell_specification_to_xyY_Onnx(
@@ -135,7 +136,7 @@ class TestMunsellSpecification_to_xyY_Onnx:
         )
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     munsell_specification_to_xyY_Onnx(specification * factor_a),
                     xyY * factor_b,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -184,7 +185,7 @@ class TestMunsellColour_to_xyY_Onnx:
         )
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     munsell_colour_to_xyY_Onnx(munsell_colour),
                     xyY * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -201,18 +202,18 @@ class TestMunsellColour_to_xyY_Onnx:
 
         munsell_colour = np.tile(munsell_colour, 6)
         xyY = np.tile(xyY, (6, 1))
-        np.testing.assert_allclose(
+        xp_assert_close(
             munsell_colour_to_xyY_Onnx(munsell_colour),
             xyY,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
         munsell_colour = np.reshape(munsell_colour, (2, 3))
         xyY = np.reshape(xyY, (2, 3, 3))
-        np.testing.assert_allclose(
+        xp_assert_close(
             munsell_colour_to_xyY_Onnx(munsell_colour),
             xyY,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
         munsell_colour = "N8.9"
@@ -220,18 +221,18 @@ class TestMunsellColour_to_xyY_Onnx:
 
         munsell_colour = np.tile(munsell_colour, 6)
         xyY = np.tile(xyY, (6, 1))
-        np.testing.assert_allclose(
+        xp_assert_close(
             munsell_colour_to_xyY_Onnx(munsell_colour),
             xyY,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
         munsell_colour = np.reshape(munsell_colour, (2, 3))
         xyY = np.reshape(xyY, (2, 3, 3))
-        np.testing.assert_allclose(
+        xp_assert_close(
             munsell_colour_to_xyY_Onnx(munsell_colour),
             xyY,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
 
@@ -257,10 +258,10 @@ class TestxyY_to_munsell_specification_Onnx:
             as_float_array(list(MUNSELL_SPECIFICATIONS[..., 1])),
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             xyY_to_munsell_specification_Onnx(xyY),
             specification,
-            atol=1,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10000000,
         )
 
     def test_n_dimensional_xyY_to_munsell_specification_Onnx(
@@ -277,18 +278,18 @@ class TestxyY_to_munsell_specification_Onnx:
 
         xyY = np.tile(xyY, (6, 1))
         specification = np.tile(specification, (6, 1))
-        np.testing.assert_allclose(
+        xp_assert_close(
             xyY_to_munsell_specification_Onnx(xyY),
             specification,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
         xyY = np.reshape(xyY, (2, 3, 3))
         specification = np.reshape(specification, (2, 3, 4))
-        np.testing.assert_allclose(
+        xp_assert_close(
             xyY_to_munsell_specification_Onnx(xyY),
             specification,
-            atol=1e-6,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 10,
         )
 
     def test_domain_range_scale_xyY_to_munsell_specification_Onnx(
@@ -310,7 +311,7 @@ class TestxyY_to_munsell_specification_Onnx:
         )
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     xyY_to_munsell_specification_Onnx(xyY * factor_a),
                     specification * factor_b,
                     atol=TOLERANCE_ABSOLUTE_TESTS,

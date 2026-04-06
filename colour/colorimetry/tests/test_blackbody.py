@@ -18,9 +18,14 @@ from colour.colorimetry import (
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 
 if typing.TYPE_CHECKING:
-    from colour.hints import NDArrayFloat
+    from colour.hints import NDArrayFloat, ModuleType
 
-from colour.utilities import ignore_numpy_errors
+from colour.utilities import (
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -1206,49 +1211,49 @@ class TestPlanckLaw:
     tests methods.
     """
 
-    def test_planck_law(self) -> None:
+    def test_planck_law(self, xp: ModuleType) -> None:
         """Test :func:`colour.colorimetry.blackbody.planck_law` definition."""
 
-        wavelengths = 2 ** np.arange(0, 16, 1) * 1e-9
+        wavelengths = xp_asarray(2 ** np.arange(0, 16, 1) * 1e-9, xp=xp)
         for temperature, radiance in sorted(DATA_PLANCK_LAW.items()):
-            np.testing.assert_allclose(
+            xp_assert_close(
                 planck_law(wavelengths, temperature),
                 radiance,
                 atol=TOLERANCE_ABSOLUTE_TESTS,
             )
 
-    def test_n_dimensional_planck_law(self) -> None:
+    def test_n_dimensional_planck_law(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.blackbody.planck_law` definition
         n-dimensional arrays support.
         """
 
         wl = 500 * 1e-9
-        p = planck_law(wl, 5500)
+        p = np.asarray(planck_law(wl, 5500))
 
-        wl = np.tile(wl, 6)
-        p = np.tile(p, 6)
-        np.testing.assert_allclose(
+        wl = xp.tile(xp_asarray(wl, xp=xp), (6,))
+        p = xp.tile(xp_asarray(p, xp=xp), (6,))
+        xp_assert_close(
             planck_law(wl, 5500),
             p,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        wl = np.reshape(wl, (2, 3))
+        wl = xp_reshape(xp_asarray(wl, xp=xp), (2, 3), xp=xp)
         # The "colour.colorimetry.planck_law" definition behaviour with
         # n-dimensional arrays is unusual.
-        # p = np.np.reshape(p, (2, 3))
-        np.testing.assert_allclose(
+        # p = np.xp_reshape(xp_asarray(p, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(
             planck_law(wl, 5500),
             p,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        wl = np.reshape(wl, (2, 3, 1))
+        wl = xp_reshape(xp_asarray(wl, xp=xp), (2, 3, 1), xp=xp)
         # The "colour.colorimetry.planck_law" definition behaviour with
         # n-dimensional arrays is unusual.
-        # p = np.reshape(p, (2, 3, 1))
-        np.testing.assert_allclose(
+        # p = xp_reshape(xp_asarray(p, xp=xp), (2, 3, 1), xp=xp)
+        xp_assert_close(
             planck_law(wl, 5500),
             p,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1256,9 +1261,9 @@ class TestPlanckLaw:
 
         # The "colour.colorimetry.planck_law" definition behaviour with
         # n-dimensional arrays is unusual.
-        p = planck_law(500 * 1e-9, [5000, 5500, 6000])
-        p = np.tile(p, (6, 1))
-        np.testing.assert_allclose(
+        p = np.asarray(planck_law(500 * 1e-9, [5000, 5500, 6000]))
+        p = xp.tile(xp_asarray(p, xp=xp), (6, 1))
+        xp_assert_close(
             planck_law(wl, [5000, 5500, 6000]),
             p,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1295,7 +1300,7 @@ class TestSdBlackbody:
     def test_sd_blackbody(self) -> None:
         """Test :func:`colour.colorimetry.blackbody.sd_blackbody` definition."""
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_blackbody(5000, SpectralShape(360, 830, 1)).values,
             DATA_BLACKBODY,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1308,52 +1313,52 @@ class TestRayleighJeansLaw:
     tests methods.
     """
 
-    def test_rayleigh_jeans_law(self) -> None:
+    def test_rayleigh_jeans_law(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.blackbody.rayleigh_jeans_law`
         definition.
         """
 
-        wavelengths = 2 ** np.arange(0, 16, 1) * 1e-9
+        wavelengths = xp_asarray(2 ** np.arange(0, 16, 1) * 1e-9, xp=xp)
         for temperature, radiance in sorted(DATA_RAYLEIGH_JEANS_LAW.items()):
-            np.testing.assert_allclose(
+            xp_assert_close(
                 rayleigh_jeans_law(wavelengths, temperature),
                 radiance,
                 atol=TOLERANCE_ABSOLUTE_TESTS,
             )
 
-    def test_n_dimensional_rayleigh_jeans_law(self) -> None:
+    def test_n_dimensional_rayleigh_jeans_law(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.blackbody.rayleigh_jeans_law` definition
         n-dimensional arrays support.
         """
 
         wl = 500 * 1e-9
-        p = rayleigh_jeans_law(wl, 5500)
+        p = np.asarray(rayleigh_jeans_law(wl, 5500))
 
-        wl = np.tile(wl, 6)
-        p = np.tile(p, 6)
-        np.testing.assert_allclose(
+        wl = xp.tile(xp_asarray(wl, xp=xp), (6,))
+        p = xp.tile(xp_asarray(p, xp=xp), (6,))
+        xp_assert_close(
             rayleigh_jeans_law(wl, 5500),
             p,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        wl = np.reshape(wl, (2, 3))
+        wl = xp_reshape(xp_asarray(wl, xp=xp), (2, 3), xp=xp)
         # The "colour.colorimetry.rayleigh_jeans_law" definition behaviour with
         # n-dimensional arrays is unusual.
-        # p = np.np.reshape(p, (2, 3))
-        np.testing.assert_allclose(
+        # p = np.xp_reshape(xp_asarray(p, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(
             rayleigh_jeans_law(wl, 5500),
             p,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        wl = np.reshape(wl, (2, 3, 1))
+        wl = xp_reshape(xp_asarray(wl, xp=xp), (2, 3, 1), xp=xp)
         # The "colour.colorimetry.rayleigh_jeans_law" definition behaviour with
         # n-dimensional arrays is unusual.
-        # p = np.reshape(p, (2, 3, 1))
-        np.testing.assert_allclose(
+        # p = xp_reshape(xp_asarray(p, xp=xp), (2, 3, 1), xp=xp)
+        xp_assert_close(
             rayleigh_jeans_law(wl, 5500),
             p,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1361,9 +1366,9 @@ class TestRayleighJeansLaw:
 
         # The "colour.colorimetry.rayleigh_jeans_law" definition behaviour with
         # n-dimensional arrays is unusual.
-        p = rayleigh_jeans_law(500 * 1e-9, [5000, 5500, 6000])
-        p = np.tile(p, (6, 1))
-        np.testing.assert_allclose(
+        p = np.asarray(rayleigh_jeans_law(500 * 1e-9, [5000, 5500, 6000]))
+        p = xp.tile(xp_asarray(p, xp=xp), (6, 1))
+        xp_assert_close(
             rayleigh_jeans_law(wl, [5000, 5500, 6000]),
             p,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1393,7 +1398,7 @@ class TestSdRayleighJeans:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_rayleigh_jeans(5000, SpectralShape(360, 830, 1)).values,
             DATA_RAYLEIGH_JEANS,
             atol=TOLERANCE_ABSOLUTE_TESTS,

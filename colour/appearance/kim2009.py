@@ -52,6 +52,7 @@ from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArithmetic,
     MixinDataclassIterable,
+    array_namespace,
     as_float,
     as_float_array,
     from_range_100,
@@ -62,6 +63,9 @@ from colour.utilities import (
     to_domain_degrees,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_degrees,
+    xp_radians,
 )
 
 __author__ = "Colour Developers"
@@ -311,8 +315,13 @@ M=np.float64(0.4641738...), H=np.float64(278.0602824...), HC=None)
 
     XYZ = to_domain_100(XYZ)
     XYZ_w = to_domain_100(XYZ_w)
-    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
     L_A = as_float_array(L_A)
+
+    xp = array_namespace(XYZ, XYZ_w)
+
+    XYZ_w = xp_asarray(XYZ_w, xp=xp, like=XYZ)
+    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ)
 
     # Converting *CIE XYZ* tristimulus values to *CMCCAT2000* transform
     # sharpened *RGB* values.
@@ -342,9 +351,9 @@ M=np.float64(0.4641738...), H=np.float64(278.0602824...), HC=None)
     LMS_wp = LMS_w_n_c / (LMS_w_n_c + L_A_n_c)
 
     # Achromatic signal :math:`A` and :math:`A_w`.
-    v_A = np.array([40, 20, 1])
-    A = np.sum(v_A * LMS_p, axis=-1) / 61
-    A_w = np.sum(v_A * LMS_wp, axis=-1) / 61
+    v_A = xp_asarray([40, 20, 1], xp=xp, like=LMS_wp)
+    A = xp.sum(v_A * LMS_p, axis=-1) / 61
+    A_w = xp.sum(v_A * LMS_wp, axis=-1) / 61
 
     # Perceived *Lightness* :math:`J_p`.
     a_j, b_j, o_j, n_j = 0.89, 0.24, 0.65, 3.65
@@ -359,25 +368,25 @@ M=np.float64(0.4641738...), H=np.float64(278.0602824...), HC=None)
     Q = J * spow(Y_w, n_q)
 
     # Opponent signals :math:`a` and :math:`b`.
-    a = (1 / 11) * np.sum(np.array([11, -12, 1]) * LMS_p, axis=-1)
-    b = (1 / 9) * np.sum(np.array([1, 1, -2]) * LMS_p, axis=-1)
+    a = (1 / 11) * xp.sum(xp_asarray([11, -12, 1], xp=xp, like=LMS_p) * LMS_p, axis=-1)
+    b = (1 / 9) * xp.sum(xp_asarray([1, 1, -2], xp=xp, like=LMS_p) * LMS_p, axis=-1)
 
     # Computing the correlate of *chroma* :math:`C`.
     a_k, n_k = 456.5, 0.62
-    C = a_k * spow(np.hypot(a, b), n_k)
+    C = a_k * spow(xp.hypot(a, b), n_k)
 
     # Computing the correlate of *colourfulness* :math:`M`.
     a_m, b_m = 0.11, 0.61
-    M = C * (a_m * np.log10(Y_w) + b_m)
+    M = C * (a_m * xp.log10(Y_w) + b_m)
 
     # Computing the correlate of *saturation* :math:`s`.
-    s = 100 * np.sqrt(M / Q)
+    s = 100 * xp.sqrt(M / Q)
 
     # Computing the *hue* angle :math:`h`.
-    h = np.degrees(np.arctan2(b, a)) % 360
+    h = xp_degrees(xp.atan2(b, a)) % 360
 
     # Computing hue :math:`h` quadrature :math:`H`.
-    H = hue_quadrature(h) if compute_H else np.full(h.shape, np.nan)
+    H = hue_quadrature(h) if compute_H else xp.full(h.shape, np.nan)
 
     return CAM_Specification_Kim2009(
         J=as_float(from_range_100(J)),
@@ -492,6 +501,15 @@ def Kim2009_to_XYZ(
     M = to_domain_100(M)
     L_A = as_float_array(L_A)
     XYZ_w = to_domain_100(XYZ_w)
+
+    xp = array_namespace(XYZ_w, L_A)
+
+    J = xp_asarray(J, xp=xp, like=XYZ_w)
+    C = xp_asarray(C, xp=xp, like=XYZ_w)
+    h = xp_asarray(h, xp=xp, like=XYZ_w)
+    M = xp_asarray(M, xp=xp, like=XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ_w)
+
     _X_w, Y_w, _Z_w = tsplit(XYZ_w)
 
     # Converting *CIE XYZ* tristimulus values to *CMCCAT2000* transform
@@ -500,9 +518,9 @@ def Kim2009_to_XYZ(
 
     # Computing degree of adaptation :math:`D`.
     D = (
-        degree_of_adaptation(surround.F, L_A)
+        xp_asarray(degree_of_adaptation(surround.F, L_A), xp=xp, like=XYZ_w)
         if not discount_illuminant
-        else ones(L_A.shape)
+        else xp_asarray(ones(L_A.shape), xp=xp, like=XYZ_w)
     )
 
     # Computing full chromatic adaptation.
@@ -511,11 +529,9 @@ def Kim2009_to_XYZ(
     # Converting to *Hunt-Pointer-Estevez* colourspace.
     LMS_w = RGB_to_rgb(XYZ_wc)
 
-    # n_q = 0.1308
-    # J = Q / spow(Y_w, n_q)
     if has_only_nan(C) and not has_only_nan(M):
         a_m, b_m = 0.11, 0.61
-        C = M / (a_m * np.log10(Y_w) + b_m)
+        C = M / (a_m * xp.log10(Y_w) + b_m)
     elif has_only_nan(C):
         error = (
             'Either "C" or "M" correlate must be defined in '
@@ -530,8 +546,8 @@ def Kim2009_to_XYZ(
     LMS_wp = LMS_w_n_c / (LMS_w_n_c + L_A_n_c)
 
     # Achromatic signal :math:`A_w`
-    v_A = np.array([40, 20, 1])
-    A_w = np.sum(v_A * LMS_wp, axis=-1) / 61
+    v_A = xp_asarray([40, 20, 1], xp=xp, like=LMS_wp)
+    A_w = xp.sum(v_A * LMS_wp, axis=-1) / 61
 
     # Perceived *Lightness* :math:`J_p`.
     J_p = (J / 100 - 1) / media.E + 1
@@ -544,16 +560,18 @@ def Kim2009_to_XYZ(
     # Opponent signals :math:`a` and :math:`b`.
     a_k, n_k = 456.5, 0.62
     C_a_k_n_k = spow(C / a_k, 1 / n_k)
-    hr = np.radians(h)
-    a, b = np.cos(hr) * C_a_k_n_k, np.sin(hr) * C_a_k_n_k
+    hr = xp_radians(h)
+    a, b = xp.cos(hr) * C_a_k_n_k, xp.sin(hr) * C_a_k_n_k
 
     # Cones absolute response.
-    M = np.array(
+    M = xp_asarray(
         [
             [1.0000, 0.3215, 0.2053],
             [1.0000, -0.6351, -0.1860],
             [1.0000, -0.1568, -4.4904],
-        ]
+        ],
+        xp=xp,
+        like=A,
     )
     LMS_p = vecmul(M, tstack([A, a, b]))
     LMS = spow((-spow(L_A, n_c) * LMS_p) / (LMS_p - 1), 1 / n_c)

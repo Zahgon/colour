@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import numpy as np
 
 from colour.adaptation import chromatic_adaptation
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
-from colour.utilities import domain_range_scale
+from colour.utilities import domain_range_scale, xp_asarray, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -26,13 +31,13 @@ class TestChromaticAdaptation:
     tests methods.
     """
 
-    def test_chromatic_adaptation(self) -> None:
+    def test_chromatic_adaptation(self, xp: ModuleType) -> None:
         """Test :func:`colour.adaptation.chromatic_adaptation` definition."""
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        XYZ_w = np.array([0.95045593, 1.00000000, 1.08905775])
-        XYZ_wr = np.array([0.96429568, 1.00000000, 0.82510460])
-        np.testing.assert_allclose(
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        XYZ_w = xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp)
+        XYZ_wr = xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp)
+        xp_assert_close(
             chromatic_adaptation(XYZ, XYZ_w, XYZ_wr),
             np.array([0.21638819, 0.12570000, 0.03847494]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -40,7 +45,7 @@ class TestChromaticAdaptation:
 
         Y_o = 0.2
         E_o = 1000
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation(
                 XYZ,
                 XYZ_w,
@@ -55,7 +60,7 @@ class TestChromaticAdaptation:
         )
 
         L_A = 200
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation(
                 XYZ, XYZ_w, XYZ_wr, method="CMCCAT2000", L_A1=L_A, L_A2=L_A
             ),
@@ -64,13 +69,13 @@ class TestChromaticAdaptation:
         )
 
         Y_n = 200
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation(XYZ, XYZ_w, XYZ_wr, method="Fairchild 1990", Y_n=Y_n),
             np.array([0.21394049, 0.12262315, 0.03891917]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation(
                 XYZ, XYZ_w, XYZ_wr, method="Li 2025", L_A=100, F_surround=1
             ),
@@ -78,36 +83,41 @@ class TestChromaticAdaptation:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation(XYZ, XYZ_w, XYZ_wr, method="Zhai 2018", L_A=100),
             np.array([0.21638819, 0.1257, 0.03847494]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_wo = np.array([1.0, 1.0, 1.0])
-        np.testing.assert_allclose(
+        XYZ_wo = xp_asarray([1.0, 1.0, 1.0], xp=xp)
+        xp_assert_close(
             chromatic_adaptation(
-                XYZ, XYZ_w, XYZ_wr, method="Zhai 2018", L_A=100, XYZ_wo=XYZ_wo
+                XYZ,
+                XYZ_w,
+                XYZ_wr,
+                method="Zhai 2018",
+                L_A=100,
+                XYZ_wo=XYZ_wo,
             ),
             np.array([0.21638819, 0.1257, 0.03847494]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation(XYZ, XYZ_w, XYZ_wr, method="vK20"),
             np.array([0.21468842, 0.12456164, 0.04662558]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_range_scale_chromatic_adaptation(self) -> None:
+    def test_domain_range_scale_chromatic_adaptation(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.adaptation.chromatic_adaptation` definition domain
         and range scale support.
         """
 
-        XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
-        XYZ_w = np.array([0.95045593, 1.00000000, 1.08905775])
-        XYZ_wr = np.array([0.96429568, 1.00000000, 0.82510460])
+        XYZ = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        XYZ_w = xp_asarray([0.95045593, 1.00000000, 1.08905775], xp=xp)
+        XYZ_wr = xp_asarray([0.96429568, 1.00000000, 0.82510460], xp=xp)
         Y_o = 0.2
         E_o = 1000
         L_A = 200
@@ -115,17 +125,19 @@ class TestChromaticAdaptation:
 
         m = ("Von Kries", "CIE 1994", "CMCCAT2000", "Fairchild 1990")
         v = [
-            chromatic_adaptation(
-                XYZ,
-                XYZ_w,
-                XYZ_wr,
-                method=method,
-                Y_o=Y_o,
-                E_o1=E_o,
-                E_o2=E_o,
-                L_A1=L_A,
-                L_A2=L_A,
-                Y_n=Y_n,
+            np.asarray(
+                chromatic_adaptation(
+                    XYZ,
+                    XYZ_w,
+                    XYZ_wr,
+                    method=method,
+                    Y_o=Y_o,
+                    E_o1=E_o,
+                    E_o2=E_o,
+                    L_A1=L_A,
+                    L_A2=L_A,
+                    Y_n=Y_n,
+                )
             )
             for method in m
         ]
@@ -134,7 +146,7 @@ class TestChromaticAdaptation:
         for method, value in zip(m, v, strict=True):
             for scale, factor in d_r:
                 with domain_range_scale(scale):
-                    np.testing.assert_allclose(
+                    xp_assert_close(
                         chromatic_adaptation(
                             XYZ * factor,
                             XYZ_w * factor,

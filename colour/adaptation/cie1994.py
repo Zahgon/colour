@@ -34,12 +34,14 @@ from colour.hints import (  # noqa: TC001
     Range100,
 )
 from colour.utilities import (
+    array_namespace,
     as_float_array,
     from_range_100,
     to_domain_100,
     tsplit,
     tstack,
     usage_warning,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -154,7 +156,13 @@ def chromatic_adaptation_CIE1994(
     E_o1 = as_float_array(E_o1)
     E_o2 = as_float_array(E_o2)
 
-    if np.any(Y_o < 18) or np.any(Y_o > 100):
+    xp = array_namespace(XYZ_1, Y_o)
+
+    Y_o = xp_asarray(Y_o, xp=xp, like=XYZ_1)
+    E_o1 = xp_asarray(E_o1, xp=xp, like=XYZ_1)
+    E_o2 = xp_asarray(E_o2, xp=xp, like=XYZ_1)
+
+    if xp.any(Y_o < 18) or xp.any(Y_o > 100):
         usage_warning(
             '"Y_o" luminance factor must be in [18, 100] domain, '
             "unpredictable results may occur!"

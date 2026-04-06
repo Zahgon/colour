@@ -18,9 +18,10 @@ from colour.corresponding.prediction import (
     CorrespondingColourDataset,
     convert_experiment_results_Breneman1987,
 )
+from colour.utilities import xp_assert_close
 
 if typing.TYPE_CHECKING:
-    from colour.hints import NDArrayFloat
+    from colour.hints import ModuleType, NDArrayFloat
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -235,37 +236,37 @@ convert_experiment_results_Breneman1987` definition.
 
         corresponding_colour_dataset = convert_experiment_results_Breneman1987(1)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             corresponding_colour_dataset.XYZ_r,
             DATASET_CORRESPONDING_COLOUR_1.XYZ_r,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             corresponding_colour_dataset.XYZ_t,
             DATASET_CORRESPONDING_COLOUR_1.XYZ_t,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             corresponding_colour_dataset.XYZ_cr,
             DATASET_CORRESPONDING_COLOUR_1.XYZ_cr,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             corresponding_colour_dataset.XYZ_ct,
             DATASET_CORRESPONDING_COLOUR_1.XYZ_ct,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             corresponding_colour_dataset.Y_r,
             DATASET_CORRESPONDING_COLOUR_1.Y_r,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             corresponding_colour_dataset.Y_t,
             DATASET_CORRESPONDING_COLOUR_1.Y_t,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -279,13 +280,16 @@ corresponding_chromaticities_prediction_Fairchild1990` definition unit tests
     methods.
     """
 
-    def test_corresponding_chromaticities_prediction_Fairchild1990(self) -> None:
+    def test_corresponding_chromaticities_prediction_Fairchild1990(
+        self,
+        xp: ModuleType,  # noqa: ARG002
+    ) -> None:
         """
         Test :func:`colour.corresponding.prediction.\
 corresponding_chromaticities_prediction_Fairchild1990` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.array(
                 [
                     (p.uv_m, p.uv_p)
@@ -303,13 +307,16 @@ class TestCorrespondingChromaticitiesPredictionCIE1994:
 corresponding_chromaticities_prediction_CIE1994` definition unit tests methods.
     """
 
-    def test_corresponding_chromaticities_prediction_CIE1994(self) -> None:
+    def test_corresponding_chromaticities_prediction_CIE1994(
+        self,
+        xp: ModuleType,  # noqa: ARG002
+    ) -> None:
         """
         Test :func:`colour.corresponding.prediction.\
 corresponding_chromaticities_prediction_CIE1994` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.array(
                 [
                     (p.uv_m, p.uv_p)
@@ -328,13 +335,16 @@ corresponding_chromaticities_prediction_CMCCAT2000` definition unit tests
     methods.
     """
 
-    def test_corresponding_chromaticities_prediction_CMCCAT2000(self) -> None:
+    def test_corresponding_chromaticities_prediction_CMCCAT2000(
+        self,
+        xp: ModuleType,  # noqa: ARG002
+    ) -> None:
         """
         Test :func:`colour.corresponding.prediction.\
 corresponding_chromaticities_prediction_CMCCAT2000` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.array(
                 [
                     (p.uv_m, p.uv_p)
@@ -353,13 +363,16 @@ corresponding_chromaticities_prediction_VonKries` definition unit tests
     methods.
     """
 
-    def test_corresponding_chromaticities_prediction_VonKries(self) -> None:
+    def test_corresponding_chromaticities_prediction_VonKries(
+        self,
+        xp: ModuleType,  # noqa: ARG002
+    ) -> None:
         """
         Test :func:`colour.corresponding.prediction.\
 corresponding_chromaticities_prediction_VonKries` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.array(
                 [
                     (p.uv_m, p.uv_p)
@@ -378,13 +391,16 @@ corresponding_chromaticities_prediction_Zhai2018` definition unit tests
     methods.
     """
 
-    def test_corresponding_chromaticities_prediction_Zhai2018(self) -> None:
+    def test_corresponding_chromaticities_prediction_Zhai2018(
+        self,
+        xp: ModuleType,  # noqa: ARG002
+    ) -> None:
         """
         Test :func:`colour.corresponding.prediction.\
 corresponding_chromaticities_prediction_Zhai2018` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             np.array(
                 [
                     (p.uv_m, p.uv_p)

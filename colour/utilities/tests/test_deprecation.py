@@ -364,7 +364,7 @@ class TestGetAttribute:
 
         assert get_attribute("colour.models.eotf_inverse_sRGB") is eotf_inverse_sRGB
 
-        from colour.utilities.array import as_float  # noqa: PLC0415
+        from colour.utilities import as_float  # noqa: PLC0415
 
         assert get_attribute("colour.utilities.array.as_float") is as_float
 

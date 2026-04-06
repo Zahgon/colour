@@ -19,6 +19,7 @@ from colour.io import (
     read_LUT_ResolveCube,
     write_LUT_ResolveCube,
 )
+from colour.utilities import xp_assert_close, xp_assert_equal
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -53,7 +54,7 @@ class TestReadLUTResolveCube:
             read_LUT_ResolveCube(os.path.join(ROOT_LUTS, "ACES_Proxy_10_to_ACES.cube")),
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.table,
             np.array(
                 [
@@ -95,7 +96,7 @@ class TestReadLUTResolveCube:
         )
         assert LUT_1.name == "ACES Proxy 10 to ACES"
         assert LUT_1.dimensions == 2
-        np.testing.assert_array_equal(LUT_1.domain, np.array([[0, 0, 0], [1, 1, 1]]))
+        xp_assert_equal(LUT_1.domain, np.array([[0, 0, 0], [1, 1, 1]]))
         assert LUT_1.size == 32
         assert LUT_1.comments == []
 
@@ -103,7 +104,7 @@ class TestReadLUTResolveCube:
             "LUT3x1D", read_LUT_ResolveCube(os.path.join(ROOT_LUTS, "Demo.cube"))
         )
         assert LUT_2.comments == ["Comments can't go anywhere"]
-        np.testing.assert_array_equal(LUT_2.domain, np.array([[0, 0, 0], [3, 3, 3]]))
+        xp_assert_equal(LUT_2.domain, np.array([[0, 0, 0], [3, 3, 3]]))
 
         LUT_3 = cast(
             "LUT3D",
@@ -118,7 +119,7 @@ class TestReadLUTResolveCube:
             "LUTSequence",
             read_LUT_ResolveCube(os.path.join(ROOT_LUTS, "LogC_Video.cube")),
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_4[0].table,
             np.array(
                 [

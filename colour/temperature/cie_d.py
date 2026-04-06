@@ -31,7 +31,17 @@ from colour.colorimetry import daylight_locus_function
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, DTypeFloat, NDArrayFloat
 
-from colour.utilities import as_float, as_float_array, required, tstack, usage_warning
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    required,
+    tstack,
+    usage_warning,
+    xp_asarray,
+    xp_atleast_1d,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -89,13 +99,16 @@ def xy_to_CCT_CIE_D(
     from scipy.optimize import minimize  # noqa: PLC0415
 
     xy = as_float_array(xy)
+
+    xp = array_namespace(xy)
+
     shape = xy.shape
-    xy = np.atleast_1d(np.reshape(xy, (-1, 2)))
+    xy = xp_atleast_1d(xp_reshape(xy, (-1, 2), xp=xp), xp=xp)
 
     def objective_function(CCT: NDArrayFloat, xy: NDArrayFloat) -> DTypeFloat:
         """Objective function."""
 
-        objective = np.linalg.norm(CCT_to_xy_CIE_D(CCT) - xy)
+        objective = np.linalg.norm(CCT_to_xy_CIE_D(CCT) - np.asarray(xy))
 
         return as_float(objective)
 
@@ -120,7 +133,8 @@ def xy_to_CCT_CIE_D(
         ]
     )
 
-    return as_float(np.reshape(CCT, shape[:-1]))
+    CCT = xp_asarray(CCT, xp=xp, like=xy)
+    return as_float(xp_reshape(CCT, shape[:-1], xp=xp))
 
 
 def CCT_to_xy_CIE_D(CCT: ArrayLike) -> NDArrayFloat:
@@ -157,7 +171,9 @@ def CCT_to_xy_CIE_D(CCT: ArrayLike) -> NDArrayFloat:
 
     CCT = as_float_array(CCT)
 
-    if np.any(CCT[np.asarray(np.logical_or(CCT < 4000, CCT > 25000))]):
+    xp = array_namespace(CCT)
+
+    if xp.any(CCT[xp.logical_or(CCT < 4000, CCT > 25000)]):
         usage_warning(
             "Correlated colour temperature must be in domain "
             "[4000, 25000], unpredictable results may occur!"
@@ -167,7 +183,7 @@ def CCT_to_xy_CIE_D(CCT: ArrayLike) -> NDArrayFloat:
     CCT_2 = CCT**2
 
     x = as_float(
-        np.where(
+        xp.where(
             CCT <= 7000,
             -4.607 * 10**9 / CCT_3
             + 2.9678 * 10**6 / CCT_2

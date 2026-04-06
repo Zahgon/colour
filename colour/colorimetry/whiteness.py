@@ -58,6 +58,7 @@ from colour.hints import (  # noqa: TC001
 )
 from colour.utilities import (
     CanonicalMapping,
+    array_namespace,
     as_float,
     as_float_array,
     filter_kwargs,
@@ -67,6 +68,7 @@ from colour.utilities import (
     tsplit,
     tstack,
     validate_method,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -360,6 +362,10 @@ def whiteness_Ganz1979(xy: ArrayLike, Y: Domain100) -> Range100:
     x, y = tsplit(xy)
     Y = to_domain_100(Y)
 
+    xp = array_namespace(xy)
+
+    Y = xp_asarray(Y, xp=xp, like=xy)
+
     W = Y - 1868.322 * x - 3695.690 * y + 1809.441
     T = -1001.223 * x + 748.366 * y + 68.261
 
@@ -441,7 +447,11 @@ def whiteness_CIE2004(
 
     x, y = tsplit(xy)
     Y = to_domain_100(Y)
-    x_n, y_n = tsplit(xy_n)
+
+    xp = array_namespace(xy, Y)
+
+    Y = xp_asarray(Y, xp=xp, like=xy)
+    x_n, y_n = tsplit(xp_asarray(xy_n, xp=xp, like=xy))
 
     W = Y + 800 * (x_n - x) + 1700 * (y_n - y)
     T = (1000 if "1931" in observer else 900) * (x_n - x) - 650 * (y_n - y)

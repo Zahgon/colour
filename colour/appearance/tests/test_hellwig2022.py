@@ -9,6 +9,11 @@ References
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
@@ -27,6 +32,9 @@ from colour.utilities import (
     domain_range_scale,
     ignore_numpy_errors,
     tsplit,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
 )
 
 __author__ = "Colour Developers"
@@ -48,18 +56,18 @@ class TestXYZ_to_Hellwig2022:
     unit tests methods.
     """
 
-    def test_XYZ_to_Hellwig2022(self) -> None:
+    def test_XYZ_to_Hellwig2022(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hellwig2022.XYZ_to_Hellwig2022`
         definition.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_HELLWIG2022["Average"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -75,12 +83,12 @@ class TestXYZ_to_Hellwig2022:
                     56.05183586,
                 ]
             ),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
         )
 
-        XYZ = np.array([57.06, 43.06, 31.96])
+        XYZ = xp_asarray([57.06, 43.06, 31.96], xp=xp)
         L_A = 31.83
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -96,13 +104,13 @@ class TestXYZ_to_Hellwig2022:
                     69.04574688,
                 ]
             ),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
         )
 
-        XYZ = np.array([3.53, 6.56, 2.14])
-        XYZ_w = np.array([109.85, 100, 35.58])
+        XYZ = xp_asarray([3.53, 6.56, 2.14], xp=xp)
+        XYZ_w = xp_asarray([109.85, 100, 35.58], xp=xp)
         L_A = 318.31
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -118,13 +126,13 @@ class TestXYZ_to_Hellwig2022:
                     39.28664523,
                 ]
             ),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
         )
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([109.85, 100.00, 35.58])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([109.85, 100.00, 35.58], xp=xp)
         L_A = 31.38
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround),
             np.array(
                 [
@@ -140,55 +148,55 @@ class TestXYZ_to_Hellwig2022:
                     48.627748198047854,
                 ]
             ),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
         )
 
-    def test_n_dimensional_XYZ_to_Hellwig2022(self) -> None:
+    def test_n_dimensional_XYZ_to_Hellwig2022(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hellwig2022.XYZ_to_Hellwig2022` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_HELLWIG2022["Average"]
         specification = XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround)
 
-        XYZ = np.tile(XYZ, (6, 1))
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
         specification = np.tile(specification, (6, 1))
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround),
             specification,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_w = np.tile(XYZ_w, (6, 1))
-        np.testing.assert_allclose(
+        XYZ_w = xp.tile(xp_asarray(XYZ_w, xp=xp), (6, 1))
+        xp_assert_close(
             XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround),
             specification,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        specification = np.reshape(specification, (2, 3, 10))
-        np.testing.assert_allclose(
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_w = xp_reshape(xp_asarray(XYZ_w, xp=xp), (2, 3, 3), xp=xp)
+        specification = xp_reshape(xp_asarray(specification, xp=xp), (2, 3, 10), xp=xp)
+        xp_assert_close(
             XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround),
             specification,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
     @ignore_numpy_errors
-    def test_domain_range_scale_XYZ_to_Hellwig2022(self) -> None:
+    def test_domain_range_scale_XYZ_to_Hellwig2022(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hellwig2022.XYZ_to_Hellwig2022`
         definition domain and range scale support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_HELLWIG2022["Average"]
@@ -222,7 +230,7 @@ class TestXYZ_to_Hellwig2022:
         )
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     XYZ_to_Hellwig2022(
                         XYZ * factor_a, XYZ_w * factor_a, L_A, Y_b, surround
                     ),
@@ -249,7 +257,7 @@ class TestHellwig2022_to_XYZ:
     unit tests methods.
     """
 
-    def test_Hellwig2022_to_XYZ(self) -> None:
+    def test_Hellwig2022_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hellwig2022.Hellwig2022_to_XYZ`
         definition.
@@ -258,11 +266,11 @@ class TestHellwig2022_to_XYZ:
         specification = CAM_Specification_Hellwig2022(
             41.731207905126638, 0.025763615829912909, 217.06795976739301
         )
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_HELLWIG2022["Average"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([19.01, 20.00, 21.78]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -272,7 +280,7 @@ class TestHellwig2022_to_XYZ:
             65.428280687118473, 31.330032520870901, 17.486592427576902
         )
         L_A = 31.83
-        np.testing.assert_allclose(
+        xp_assert_close(
             Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([57.06, 43.06, 31.96]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -281,9 +289,9 @@ class TestHellwig2022_to_XYZ:
         specification = CAM_Specification_Hellwig2022(
             21.360528925833027, 30.603219780800902, 178.8672426588991
         )
-        XYZ_w = np.array([109.85, 100, 35.58])
+        XYZ_w = xp_asarray([109.85, 100, 35.58], xp=xp)
         L_A = 318.31
-        np.testing.assert_allclose(
+        xp_assert_close(
             Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([3.53, 6.56, 2.14]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -293,7 +301,7 @@ class TestHellwig2022_to_XYZ:
             41.064050542871215, 31.939561618552826, 259.03405661643671
         )
         L_A = 31.38
-        np.testing.assert_allclose(
+        xp_assert_close(
             Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([19.01, 20.00, 21.78]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -302,42 +310,42 @@ class TestHellwig2022_to_XYZ:
         specification = CAM_Specification_Hellwig2022(
             J_HK=41.880278283880095, C=0.025763615829913, h=217.067959767393010
         )
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_HELLWIG2022["Average"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             np.array([19.01, 20.00, 21.78]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_Hellwig2022_to_XYZ(self) -> None:
+    def test_n_dimensional_Hellwig2022_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hellwig2022.Hellwig2022_to_XYZ`
         definition n-dimensional support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_HELLWIG2022["Average"]
         specification = XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround)
-        XYZ = Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround)
+        XYZ = np.asarray(Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround))
 
         specification = CAM_Specification_Hellwig2022(
             *np.transpose(np.tile(tsplit(specification), (6, 1))).tolist()
         )
-        XYZ = np.tile(XYZ, (6, 1))
-        np.testing.assert_allclose(
+        XYZ = xp_asarray(np.tile(np.asarray(XYZ), (6, 1)), xp=xp)
+        xp_assert_close(
             Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_w = np.tile(XYZ_w, (6, 1))
-        np.testing.assert_allclose(
+        XYZ_w = xp_asarray(np.tile(np.asarray(XYZ_w), (6, 1)), xp=xp)
+        xp_assert_close(
             Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -346,28 +354,28 @@ class TestHellwig2022_to_XYZ:
         specification = CAM_Specification_Hellwig2022(
             *tsplit(np.reshape(specification, (2, 3, 10))).tolist()
         )
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        np.testing.assert_allclose(
+        XYZ_w = xp_asarray(np.reshape(np.asarray(XYZ_w), (2, 3, 3)), xp=xp)
+        XYZ = xp_asarray(np.reshape(np.asarray(XYZ), (2, 3, 3)), xp=xp)
+        xp_assert_close(
             Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround),
             XYZ,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
     @ignore_numpy_errors
-    def test_domain_range_scale_Hellwig2022_to_XYZ(self) -> None:
+    def test_domain_range_scale_Hellwig2022_to_XYZ(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.appearance.hellwig2022.Hellwig2022_to_XYZ`
         definition domain and range scale support.
         """
 
-        XYZ = np.array([19.01, 20.00, 21.78])
-        XYZ_w = np.array([95.05, 100.00, 108.88])
+        XYZ = xp_asarray([19.01, 20.00, 21.78], xp=xp)
+        XYZ_w = xp_asarray([95.05, 100.00, 108.88], xp=xp)
         L_A = 318.31
         Y_b = 20
         surround = VIEWING_CONDITIONS_HELLWIG2022["Average"]
         specification = XYZ_to_Hellwig2022(XYZ, XYZ_w, L_A, Y_b, surround)
-        XYZ = Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround)
+        XYZ = np.asarray(Hellwig2022_to_XYZ(specification, XYZ_w, L_A, Y_b, surround))
 
         d_r = (
             ("reference", 1, 1),
@@ -397,7 +405,7 @@ class TestHellwig2022_to_XYZ:
         )
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     Hellwig2022_to_XYZ(
                         specification * factor_a,
                         XYZ_w * factor_b,

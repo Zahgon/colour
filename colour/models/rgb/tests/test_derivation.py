@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import contextlib
 import re
 from itertools import product
@@ -18,7 +23,12 @@ from colour.models import (
     primaries_whitepoint,
 )
 from colour.models.rgb.derivation import xy_to_z
-from colour.utilities import ignore_numpy_errors
+from colour.utilities import (
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -43,46 +53,46 @@ class Testxy_to_z:
     tests methods.
     """
 
-    def test_xy_to_z(self) -> None:
+    def test_xy_to_z(self, xp: ModuleType) -> None:
         """Test :func:`colour.models.rgb.derivation.xy_to_z` definition."""
 
-        np.testing.assert_allclose(
-            xy_to_z(np.array([0.2500, 0.2500])),
+        xp_assert_close(
+            xy_to_z(xp_asarray([0.2500, 0.2500], xp=xp)),
             0.50000000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            xy_to_z(np.array([0.0001, -0.0770])),
+        xp_assert_close(
+            xy_to_z(xp_asarray([0.0001, -0.0770], xp=xp)),
             1.07690000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            xy_to_z(np.array([0.0000, 1.0000])),
+        xp_assert_close(
+            xy_to_z(xp_asarray([0.0000, 1.0000], xp=xp)),
             0.00000000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_xy_to_z(self) -> None:
+    def test_n_dimensional_xy_to_z(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.derivation.xy_to_z` definition
         n-dimensional arrays support.
         """
 
-        xy = np.array([0.25, 0.25])
-        z = xy_to_z(xy)
+        xy = xp_asarray([0.25, 0.25], xp=xp)
+        z = np.asarray(xy_to_z(xy))
 
-        xy = np.tile(xy, (6, 1))
-        z = np.tile(
-            z,
-            6,
+        xy = xp.tile(xp_asarray(xy, xp=xp), (6, 1))
+        z = xp.tile(
+            xp_asarray(z, xp=xp),
+            (6,),
         )
-        np.testing.assert_allclose(xy_to_z(xy), z, atol=TOLERANCE_ABSOLUTE_TESTS)
+        xp_assert_close(xy_to_z(xy), z, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        xy = np.reshape(xy, (2, 3, 2))
-        z = np.reshape(z, (2, 3))
-        np.testing.assert_allclose(xy_to_z(xy), z, atol=TOLERANCE_ABSOLUTE_TESTS)
+        xy = xp_reshape(xp_asarray(xy, xp=xp), (2, 3, 2), xp=xp)
+        z = xp_reshape(xp_asarray(z, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(xy_to_z(xy), z, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_xy_to_z(self) -> None:
@@ -102,16 +112,18 @@ class TestNormalisedPrimaryMatrix:
     definition unit tests methods.
     """
 
-    def test_normalised_primary_matrix(self) -> None:
+    def test_normalised_primary_matrix(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.derivation.normalised_primary_matrix`
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             normalised_primary_matrix(
-                np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700]),
-                np.array([0.32168, 0.33767]),
+                xp_asarray(
+                    [0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700], xp=xp
+                ),
+                xp_asarray([0.32168, 0.33767], xp=xp),
             ),
             np.array(
                 [
@@ -123,10 +135,10 @@ class TestNormalisedPrimaryMatrix:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             normalised_primary_matrix(
-                np.array([0.640, 0.330, 0.300, 0.600, 0.150, 0.060]),
-                np.array([0.3127, 0.3290]),
+                xp_asarray([0.640, 0.330, 0.300, 0.600, 0.150, 0.060], xp=xp),
+                xp_asarray([0.3127, 0.3290], xp=xp),
             ),
             np.array(
                 [
@@ -160,17 +172,19 @@ class TestChromaticallyAdaptedPrimaries:
 chromatically_adapted_primaries` definition unit tests methods.
     """
 
-    def test_chromatically_adapted_primaries(self) -> None:
+    def test_chromatically_adapted_primaries(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.derivation.\
 chromatically_adapted_primaries` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatically_adapted_primaries(
-                np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700]),
-                np.array([0.32168, 0.33767]),
-                np.array([0.34570, 0.35850]),
+                xp_asarray(
+                    [0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700], xp=xp
+                ),
+                xp_asarray([0.32168, 0.33767], xp=xp),
+                xp_asarray([0.34570, 0.35850], xp=xp),
             ),
             np.array(
                 [
@@ -182,11 +196,11 @@ chromatically_adapted_primaries` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatically_adapted_primaries(
-                np.array([0.640, 0.330, 0.300, 0.600, 0.150, 0.060]),
-                np.array([0.31270, 0.32900]),
-                np.array([0.34570, 0.35850]),
+                xp_asarray([0.640, 0.330, 0.300, 0.600, 0.150, 0.060], xp=xp),
+                xp_asarray([0.31270, 0.32900], xp=xp),
+                xp_asarray([0.34570, 0.35850], xp=xp),
             ),
             np.array(
                 [
@@ -198,11 +212,11 @@ chromatically_adapted_primaries` definition.
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatically_adapted_primaries(
-                np.array([0.640, 0.330, 0.300, 0.600, 0.150, 0.060]),
-                np.array([0.31270, 0.32900]),
-                np.array([0.34570, 0.35850]),
+                xp_asarray([0.640, 0.330, 0.300, 0.600, 0.150, 0.060], xp=xp),
+                xp_asarray([0.31270, 0.32900], xp=xp),
+                xp_asarray([0.34570, 0.35850], xp=xp),
                 "Bradford",
             ),
             np.array(
@@ -236,22 +250,23 @@ class TestPrimariesWhitepoint:
     definition unit tests methods.
     """
 
-    def test_primaries_whitepoint(self) -> None:
+    def test_primaries_whitepoint(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.derivation.primaries_whitepoint`
         definition.
         """
 
         P, W = primaries_whitepoint(
-            np.array(
+            xp_asarray(
                 [
                     [0.95255240, 0.00000000, 0.00009368],
                     [0.34396645, 0.72816610, -0.07213255],
                     [0.00000000, 0.00000000, 1.00882518],
-                ]
+                ],
+                xp=xp,
             )
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             P,
             np.array(
                 [
@@ -262,20 +277,23 @@ class TestPrimariesWhitepoint:
             ),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
-        np.testing.assert_allclose(
-            W, np.array([0.32168, 0.33767]), atol=TOLERANCE_ABSOLUTE_TESTS
+        xp_assert_close(
+            W,
+            np.array([0.32168, 0.33767]),
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
         P, W = primaries_whitepoint(
-            np.array(
+            xp_asarray(
                 [
                     [0.41240000, 0.35760000, 0.18050000],
                     [0.21260000, 0.71520000, 0.07220000],
                     [0.01930000, 0.11920000, 0.95050000],
-                ]
+                ],
+                xp=xp,
             )
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             P,
             np.array(
                 [
@@ -286,7 +304,7 @@ class TestPrimariesWhitepoint:
             ),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             W,
             np.array([0.31271591, 0.32900148]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -312,7 +330,7 @@ class TestRGBLuminanceEquation:
     definition unit tests methods.
     """
 
-    def test_RGB_luminance_equation(self) -> None:
+    def test_RGB_luminance_equation(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.derivation.RGB_luminance_equation`
         definition.
@@ -320,8 +338,10 @@ class TestRGBLuminanceEquation:
 
         assert isinstance(
             RGB_luminance_equation(
-                np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700]),
-                np.array([0.32168, 0.33767]),
+                xp_asarray(
+                    [0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700], xp=xp
+                ),
+                xp_asarray([0.32168, 0.33767], xp=xp),
             ),
             str,
         )
@@ -333,10 +353,10 @@ class TestRGBLuminanceEquation:
             "\\(G\\)\\s?[+-]\\s?[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?."
             "\\(B\\)"
         )
-        P = np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700])
+        P = xp_asarray([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700], xp=xp)
         assert re.match(
             pattern,
-            RGB_luminance_equation(P, np.array([0.32168, 0.33767])),
+            RGB_luminance_equation(P, xp_asarray([0.32168, 0.33767], xp=xp)),
         )
 
 
@@ -346,64 +366,66 @@ class TestRGBLuminance:
     unit tests methods.
     """
 
-    def test_RGB_luminance(self) -> None:
+    def test_RGB_luminance(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.derivation.RGB_luminance`
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_luminance(
-                np.array([0.18, 0.18, 0.18]),
-                np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700]),
-                np.array([0.32168, 0.33767]),
+                xp_asarray([0.18, 0.18, 0.18], xp=xp),
+                xp_asarray(
+                    [0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700], xp=xp
+                ),
+                xp_asarray([0.32168, 0.33767], xp=xp),
             ),
             0.18000000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_luminance(
-                np.array([0.21959402, 0.06986677, 0.04703877]),
-                np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700]),
-                np.array([0.32168, 0.33767]),
+                xp_asarray([0.21959402, 0.06986677, 0.04703877], xp=xp),
+                xp_asarray(
+                    [0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700], xp=xp
+                ),
+                xp_asarray([0.32168, 0.33767], xp=xp),
             ),
             0.123014562384318,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_luminance(
-                np.array([0.45620519, 0.03081071, 0.04091952]),
-                np.array([0.6400, 0.3300, 0.3000, 0.6000, 0.1500, 0.0600]),
-                np.array([0.31270, 0.32900]),
+                xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp),
+                xp_asarray([0.6400, 0.3300, 0.3000, 0.6000, 0.1500, 0.0600], xp=xp),
+                xp_asarray([0.31270, 0.32900], xp=xp),
             ),
             0.121995947729870,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_RGB_luminance(self) -> None:
+    def test_n_dimensional_RGB_luminance(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.models.rgb.derivation.RGB_luminance` definition
         n_dimensional arrays support.
         """
 
-        RGB = (np.array([0.18, 0.18, 0.18]),)
-        P = (np.array([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700]),)
-        W = np.array([0.32168, 0.33767])
-        Y = RGB_luminance(RGB, P, W)
+        RGB = (xp_asarray([0.18, 0.18, 0.18], xp=xp),)
+        P = (
+            xp_asarray([0.73470, 0.26530, 0.00000, 1.00000, 0.00010, -0.07700], xp=xp),
+        )
+        W = xp_asarray([0.32168, 0.33767], xp=xp)
+        Y = np.asarray(RGB_luminance(RGB, P, W))
 
         RGB = np.tile(RGB, (6, 1))
-        Y = np.tile(Y, 6)
-        np.testing.assert_allclose(
-            RGB_luminance(RGB, P, W), Y, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        Y = np.tile(Y, (6,))
+        xp_assert_close(RGB_luminance(RGB, P, W), Y, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        RGB = np.reshape(RGB, (2, 3, 3))
-        Y = np.reshape(Y, (2, 3))
-        np.testing.assert_allclose(
-            RGB_luminance(RGB, P, W), Y, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        RGB = xp_reshape(xp_asarray(RGB, xp=xp), (2, 3, 3), xp=xp)
+        Y = xp_reshape(xp_asarray(Y, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(RGB_luminance(RGB, P, W), Y, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_RGB_luminance(self) -> None:

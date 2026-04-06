@@ -46,6 +46,7 @@ from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArithmetic,
     MixinDataclassIterable,
+    array_namespace,
     as_float,
     as_float_array,
     domain_range_scale,
@@ -56,6 +57,8 @@ from colour.utilities import (
     to_domain_degrees,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_radians,
 )
 
 __author__ = "Colour Developers"
@@ -280,17 +283,23 @@ D=np.float64(65.0265672...))
     L_A = as_float_array(L_A)
     Y_b = as_float_array(Y_b)
 
+    xp = array_namespace(XYZ, XYZ_w)
+
+    XYZ_w = xp_asarray(XYZ_w, xp=xp, like=XYZ)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ)
+    Y_b = xp_asarray(Y_b, xp=xp, like=XYZ)
+
     Y_w = XYZ_w[..., 1] if XYZ_w.ndim > 1 else XYZ_w[1]
 
     with sdiv_mode():
         z = 1.48 + spow(sdiv(Y_b, Y_w), 0.5)
 
-    F_L = 0.1710 * spow(L_A, 1 / 3) / (1 - 0.4934 * np.exp(-0.9934 * L_A))
+    F_L = 0.1710 * spow(L_A, 1 / 3) / (1 - 0.4934 * xp.exp(-0.9934 * L_A))
 
     with sdiv_mode():
         L_A_D65 = sdiv(L_A * 100, Y_b)
 
-    XYZ_w_D65 = TVS_D65_sCAM * L_A_D65[..., None]
+    XYZ_w_D65 = xp_asarray(TVS_D65_sCAM, xp=xp, like=L_A_D65) * L_A_D65[..., None]
 
     with domain_range_scale("ignore"):
         XYZ_D65 = chromatic_adaptation_Li2025(
@@ -305,7 +314,7 @@ D=np.float64(65.0265672...))
 
     I_a = 100 * spow(I / 100, surround.c * z)
 
-    e_t = 1 + 0.06 * np.cos(np.radians(110 + h))
+    e_t = 1 + 0.06 * xp.cos(xp_radians(110 + h))
 
     with sdiv_mode():
         M = (C * spow(F_L, 0.1) * sdiv(1, spow(I_a, 0.27)) * e_t) * surround.F
@@ -316,11 +325,11 @@ D=np.float64(65.0265672...))
 
     H = hue_quadrature(h)
 
-    V = np.sqrt(I_a**2 + 3 * C**2)
+    V = xp.sqrt(I_a**2 + 3 * C**2)
 
     K = 100 - V
 
-    D = 1.3 * np.sqrt((100 - I_a) ** 2 + 1.6 * C**2)
+    D = 1.3 * xp.sqrt((100 - I_a) ** 2 + 1.6 * C**2)
 
     W = 100 - D
 
@@ -426,6 +435,11 @@ def sCAM_to_XYZ(
     L_A = as_float_array(L_A)
     Y_b = as_float_array(Y_b)
 
+    xp = array_namespace(XYZ_w, L_A)
+
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ_w)
+    Y_b = xp_asarray(Y_b, xp=xp, like=XYZ_w)
+
     if has_only_nan(I_a) or has_only_nan(h):
         error = (
             '"J" and "h" correlates must be defined in '
@@ -448,8 +462,8 @@ def sCAM_to_XYZ(
         z = 1.48 + spow(sdiv(Y_b, Y_w), 0.5)
 
     if C is None and M is not None:
-        F_L = 0.1710 * spow(L_A, 1 / 3) / (1 - 0.4934 * np.exp(-0.9934 * L_A))
-        e_t = 1 + 0.06 * np.cos(np.radians(110 + h))
+        F_L = 0.1710 * spow(L_A, 1 / 3) / (1 - 0.4934 * xp.exp(-0.9934 * L_A))
+        e_t = 1 + 0.06 * xp.cos(xp_radians(110 + h))
 
         with sdiv_mode():
             C = sdiv(M * spow(I_a, 0.27), spow(F_L, 0.1) * e_t * surround.F)
@@ -463,7 +477,7 @@ def sCAM_to_XYZ(
     XYZ_D65 = XYZ_D65 * Y_w[..., None]
 
     L_A_D65 = sdiv(L_A * 100, Y_b)
-    XYZ_w_D65 = TVS_D65_sCAM * L_A_D65[..., None]
+    XYZ_w_D65 = xp_asarray(TVS_D65_sCAM, xp=xp, like=L_A_D65) * L_A_D65[..., None]
 
     with domain_range_scale("ignore"):
         XYZ = chromatic_adaptation_Li2025(
@@ -521,15 +535,17 @@ def hue_quadrature(h: ArrayLike) -> NDArrayFloat:
     h = as_float_array(h)
     h_n = as_float_array(h % 360)
 
-    h_i = HUE_DATA_FOR_HUE_QUADRATURE_sCAM["h_i"]
-    e_i = HUE_DATA_FOR_HUE_QUADRATURE_sCAM["e_i"]
-    H_i = HUE_DATA_FOR_HUE_QUADRATURE_sCAM["H_i"]
+    xp = array_namespace(h)
 
-    h_n = np.where(np.isnan(h_n), 0, h_n)
-    h_n = np.where(h_n < h_i[0], h_n + 360, h_n)
+    h_i = xp_asarray(HUE_DATA_FOR_HUE_QUADRATURE_sCAM["h_i"], xp=xp, like=h)
+    e_i = xp_asarray(HUE_DATA_FOR_HUE_QUADRATURE_sCAM["e_i"], xp=xp, like=h)
+    H_i = xp_asarray(HUE_DATA_FOR_HUE_QUADRATURE_sCAM["H_i"], xp=xp, like=h)
 
-    i = np.searchsorted(h_i, h_n, side="right") - 1
-    i = np.clip(i, 0, len(h_i) - 2)
+    h_n = xp.where(xp.isnan(h_n), 0, h_n)
+    h_n = xp.where(h_n < h_i[0], h_n + 360, h_n)
+
+    i = xp.searchsorted(h_i, h_n, side="right") - 1
+    i = xp.clip(i, 0, len(h_i) - 2)
 
     h1 = h_i[i]
     e1 = e_i[i]
@@ -539,7 +555,7 @@ def hue_quadrature(h: ArrayLike) -> NDArrayFloat:
     h2 = h_i[h2_idx]
     e2 = e_i[i + 1]
 
-    h2 = np.where(h2 < h1, h2 + 360, h2)
+    h2 = xp.where(h2 < h1, h2 + 360, h2)
 
     with sdiv_mode():
         term1 = sdiv(h_n - h1, e1)

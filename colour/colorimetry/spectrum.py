@@ -62,6 +62,7 @@ if typing.TYPE_CHECKING:
 from colour.hints import Any, TypeVar, cast
 from colour.utilities import (
     CACHE_REGISTRY,
+    array_namespace,
     as_float_array,
     as_int,
     attest,
@@ -77,6 +78,9 @@ from colour.utilities import (
     runtime_warning,
     tstack,
     validate_method,
+    xp_isin,
+    xp_linspace,
+    xp_round,
 )
 
 if typing.TYPE_CHECKING or is_pandas_installed():
@@ -409,19 +413,26 @@ class SpectralShape:
         False
         """
 
+        wavelength = as_float_array(wavelength)
+
+        xp = array_namespace(wavelength)
+
         decimals = np.finfo(cast("Any", DTYPE_FLOAT_DEFAULT)).precision
 
         return bool(
-            np.all(
-                np.isin(
-                    np.around(
-                        wavelength,  # pyright: ignore
-                        decimals,
+            xp.all(
+                xp_isin(
+                    xp_round(
+                        wavelength,
+                        decimals=decimals,
+                        xp=xp,
                     ),
-                    np.around(
+                    xp_round(
                         self.wavelengths,
-                        decimals,
+                        decimals=decimals,
+                        xp=xp,
                     ),
+                    xp=xp,
                 )
             )
         )
@@ -467,7 +478,9 @@ class SpectralShape:
         """
 
         if isinstance(other, SpectralShape):
-            return np.array_equal(self.wavelengths, other.wavelengths)
+            return self.wavelengths.shape == other.wavelengths.shape and bool(
+                np.all(self.wavelengths == other.wavelengths)
+            )
 
         return False
 
@@ -541,8 +554,13 @@ class SpectralShape:
         )
 
         samples = as_int(round((interval + end - start) / interval))
-        range_, interval_effective = np.linspace(
-            start, end, samples, retstep=True, dtype=dtype
+        range_, interval_effective = xp_linspace(
+            start,
+            end,
+            num=int(samples),
+            xp=np,
+            retstep=True,
+            dtype=dtype,
         )
 
         _CACHE_SHAPE_RANGE[hash_key] = range_
@@ -1329,11 +1347,14 @@ class SpectralDistribution(Signal):
             ]
         )
 
-        wavelengths = np.hstack(
+        xp = array_namespace(shape_start)
+
+        wavelengths = xp.concat(
             [
-                np.arange(shape.start, shape_start, shape_interval),
-                np.arange(shape_end, shape.end, shape_interval) + shape_interval,
-            ]
+                xp.arange(shape.start, shape_start, shape_interval),
+                xp.arange(shape_end, shape.end, shape_interval) + shape_interval,
+            ],
+            axis=0,
         )
 
         extrapolator = optional(extrapolator, Extrapolator)
@@ -1598,7 +1619,11 @@ class SpectralDistribution(Signal):
         start = max([shape.start, self.shape.start])
         end = min([shape.end, self.shape.end])
 
-        indexes = np.where(np.logical_and(self.domain >= start, self.domain <= end))
+        domain = as_float_array(self.domain)
+
+        xp = array_namespace(domain)
+
+        indexes = xp.nonzero(xp.logical_and(domain >= start, domain <= end))
 
         wavelengths = self.wavelengths[indexes]
         values = self.values[indexes]
@@ -2757,7 +2782,9 @@ def reshape_sd(
         if isinstance(value, Mapping):
             kwargs_items[i] = (keyword, tuple(value.items()))
 
-    hash_key = hash((sd, shape, method, tuple(kwargs_items)))
+    hash_key = hash(
+        (sd, shape, method, tuple(kwargs_items), type(sd.values).__module__)
+    )
 
     if is_caching_enabled() and hash_key in _CACHE_RESHAPED_SDS_AND_MSDS:
         reshaped_sd = _CACHE_RESHAPED_SDS_AND_MSDS[hash_key]

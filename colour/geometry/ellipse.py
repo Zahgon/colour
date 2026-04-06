@@ -23,18 +23,20 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 if typing.TYPE_CHECKING:
-    from colour.hints import ArrayLike, Literal
-
-from colour.hints import NDArrayFloat, cast
+    from colour.hints import ArrayLike, Literal, NDArrayFloat
 from colour.utilities import (
     CanonicalMapping,
+    array_namespace,
     ones,
     tsplit,
     tstack,
     validate_method,
+    xp_asarray,
+    xp_degrees,
+    xp_radians,
+    xp_reshape,
+    xp_select,
 )
 
 __author__ = "Colour Developers"
@@ -85,6 +87,7 @@ def ellipse_coefficients_general_form(coefficients: ArrayLike) -> NDArrayFloat:
 
     Examples
     --------
+    >>> import numpy as np
     >>> coefficients = np.array([0.5, 0.5, 2, 1, 45])
     >>> ellipse_coefficients_general_form(coefficients)
     array([ 2.5, -3. ,  2.5, -1. , -1. , -3.5])
@@ -92,9 +95,11 @@ def ellipse_coefficients_general_form(coefficients: ArrayLike) -> NDArrayFloat:
 
     x_c, y_c, a_a, a_b, theta = tsplit(coefficients)
 
-    theta = np.radians(theta)
-    cos_theta = np.cos(theta)
-    sin_theta = np.sin(theta)
+    xp = array_namespace(x_c)
+
+    theta = xp_radians(theta)
+    cos_theta = xp.cos(theta)
+    sin_theta = xp.sin(theta)
     cos_theta_2 = cos_theta**2
     sin_theta_2 = sin_theta**2
     a_a_2 = a_a**2
@@ -107,7 +112,7 @@ def ellipse_coefficients_general_form(coefficients: ArrayLike) -> NDArrayFloat:
     e = -b * x_c - 2 * c * y_c
     f = a * x_c**2 + b * x_c * y_c + c * y_c**2 - a_a_2 * a_b_2
 
-    return np.array([a, b, c, d, e, f])
+    return xp_asarray([a, b, c, d, e, f], xp=xp)
 
 
 def ellipse_coefficients_canonical_form(
@@ -143,6 +148,7 @@ def ellipse_coefficients_canonical_form(
 
     Examples
     --------
+    >>> import numpy as np
     >>> coefficients = np.array([2.5, -3.0, 2.5, -1.0, -1.0, -3.5])
     >>> ellipse_coefficients_canonical_form(coefficients)
     array([ 0.5,  0.5,  2. ,  1. , 45. ])
@@ -150,30 +156,32 @@ def ellipse_coefficients_canonical_form(
 
     a, b, c, d, e, f = tsplit(coefficients)
 
+    xp = array_namespace(a)
+
     d_1 = b**2 - 4 * a * c
     n_p_1 = 2 * (a * e**2 + c * d**2 - b * d * e + d_1 * f)
-    n_p_2 = np.sqrt((a - c) ** 2 + b**2)
+    n_p_2 = xp.sqrt((a - c) ** 2 + b**2)
 
-    a_a = (-np.sqrt(n_p_1 * (a + c + n_p_2))) / d_1
-    a_b = (-np.sqrt(n_p_1 * (a + c - n_p_2))) / d_1
+    a_a = (-xp.sqrt(n_p_1 * (a + c + n_p_2))) / d_1
+    a_b = (-xp.sqrt(n_p_1 * (a + c - n_p_2))) / d_1
 
     x_c = (2 * c * d - b * e) / d_1
     y_c = (2 * a * e - b * d) / d_1
-
-    theta = np.select(
+    theta = xp_select(
         [
-            np.logical_and(b == 0, a < c),
-            np.logical_and(b == 0, a > c),
+            xp.logical_and(b == 0, a < c),
+            xp.logical_and(b == 0, a > c),
             b != 0,
         ],
         [
             0,
             90,
-            np.degrees(np.arctan((c - a - n_p_2) / b)),
+            xp_degrees(xp.arctan((c - a - n_p_2) / b)),
         ],
+        xp=xp,
     )
 
-    return np.array([x_c, y_c, a_a, a_b, theta])
+    return xp_asarray([x_c, y_c, a_a, a_b, theta], xp=xp)
 
 
 def point_at_angle_on_ellipse(phi: ArrayLike, coefficients: ArrayLike) -> NDArrayFloat:
@@ -199,19 +207,23 @@ def point_at_angle_on_ellipse(phi: ArrayLike, coefficients: ArrayLike) -> NDArra
 
     Examples
     --------
+    >>> import numpy as np
     >>> coefficients = np.array([0.5, 0.5, 2, 1, 45])
     >>> point_at_angle_on_ellipse(45, coefficients)  # doctest: +ELLIPSIS
     array([1., 2.])
     """
 
-    phi = np.radians(phi)
-    x_c, y_c, a_a, a_b, theta = tsplit(coefficients)
-    theta = np.radians(theta)
+    phi = xp_radians(phi)
 
-    cos_phi = np.cos(phi)
-    sin_phi = np.sin(phi)
-    cos_theta = np.cos(theta)
-    sin_theta = np.sin(theta)
+    xp = array_namespace(phi)
+
+    x_c, y_c, a_a, a_b, theta = tsplit(coefficients)
+    theta = xp_radians(theta)
+
+    cos_phi = xp.cos(phi)
+    sin_phi = xp.sin(phi)
+    cos_theta = xp.cos(theta)
+    sin_theta = xp.sin(theta)
 
     x = x_c + a_a * cos_theta * cos_phi - a_b * sin_theta * sin_phi
     y = y_c + a_a * sin_theta * cos_phi + a_b * cos_theta * sin_phi
@@ -250,6 +262,7 @@ def ellipse_fitting_Halir1998(a: ArrayLike) -> NDArrayFloat:
 
     Examples
     --------
+    >>> import numpy as np
     >>> a = np.array([[2, 0], [0, 1], [-2, 0], [0, -1]])
     >>> ellipse_fitting_Halir1998(a)  # doctest: +ELLIPSIS
     array([ 0.2425356...,  0.        ,  0.9701425...,  0.        ,  0.        ,
@@ -265,28 +278,31 @@ def ellipse_fitting_Halir1998(a: ArrayLike) -> NDArrayFloat:
     # Linear part of the design matrix.
     D2 = tstack([x, y, ones(x.shape)])
 
-    D1_T = np.transpose(D1)
-    D2_T = np.transpose(D2)
+    xp = array_namespace(D1)
+
+    D1_T = xp.matrix_transpose(D1)
+    D2_T = xp.matrix_transpose(D2)
 
     # Quadratic part of the scatter matrix.
-    S1 = np.dot(D1_T, D1)
+    S1 = xp.matmul(D1_T, D1)
     # Combined part of the scatter matrix.
-    S2 = np.dot(D1_T, D2)
+    S2 = xp.matmul(D1_T, D2)
     # Linear part of the scatter matrix.
-    S3 = np.dot(D2_T, D2)
+    S3 = xp.matmul(D2_T, D2)
 
-    T = -np.dot(np.linalg.inv(S3), np.transpose(S2))
+    T = -xp.matmul(xp.linalg.inv(S3), xp.matrix_transpose(S2))
 
     # Reduced scatter matrix.
-    M = S1 + np.dot(S2, T)
-    M = np.array([M[2, :] / 2, -M[1, :], M[0, :] / 2])
+    M = S1 + xp.matmul(S2, T)
+    M = xp.stack([M[2, :] / 2, -M[1, :], M[0, :] / 2])
 
-    _w, v = np.linalg.eig(M)
+    _w, v = xp.linalg.eig(M)
+    v = xp.real(v)
 
-    A1 = v[:, np.nonzero(4 * v[0, :] * v[2, :] - v[1, :] ** 2 > 0)[0]]
-    A2 = np.dot(T, A1)
+    A1 = v[:, xp.nonzero(4 * v[0, :] * v[2, :] - v[1, :] ** 2 > 0)[0]]
+    A2 = xp.matmul(T, A1)
 
-    return cast("NDArrayFloat", np.ravel([A1, A2]))
+    return xp_reshape(xp.concat([A1, A2], axis=0), (-1,), xp=xp)
 
 
 ELLIPSE_FITTING_METHODS: CanonicalMapping = CanonicalMapping(
@@ -335,6 +351,7 @@ def ellipse_fitting(
 
     Examples
     --------
+    >>> import numpy as np
     >>> a = np.array([[2, 0], [0, 1], [-2, 0], [0, -1]])
     >>> ellipse_fitting(a)  # doctest: +ELLIPSIS
     array([ 0.2425356...,  0.        ,  0.9701425...,  0.        ,  0.        ,

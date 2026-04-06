@@ -22,9 +22,8 @@ References
 
 from __future__ import annotations
 
+import math
 import typing
-
-import numpy as np
 
 from colour.algebra import vecmul
 from colour.colorimetry import (
@@ -52,6 +51,7 @@ from colour.models.ipt import (
     MATRIX_IPT_XYZ_TO_LMS,
 )
 from colour.utilities import (
+    array_namespace,
     as_float_array,
     domain_range_scale,
     from_range_1,
@@ -131,12 +131,15 @@ def exponent_hdr_IPT(
     """
 
     Y_s = to_domain_1(Y_s)
+
+    xp = array_namespace(Y_s)
+
     Y_abs = as_float_array(Y_abs)
     method = validate_method(method, HDR_IPT_METHODS)
 
     epsilon = 1.38 if method == "fairchild 2010" else 0.59
 
-    lf = np.log(318) / np.log(Y_abs)
+    lf = math.log(318) / xp.log(Y_abs)
     sf = 1.25 - 0.25 * (Y_s / 0.184)
     if method == "fairchild 2010":
         epsilon *= sf * lf
@@ -197,6 +200,7 @@ def XYZ_to_hdr_IPT(
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ = np.array([0.20654008, 0.12197225, 0.05136952])
     >>> XYZ_to_hdr_IPT(XYZ)  # doctest: +ELLIPSIS
     array([48.3937634..., 42.4499020..., 22.0195403...])
@@ -205,6 +209,9 @@ def XYZ_to_hdr_IPT(
     """
 
     XYZ = to_domain_1(XYZ)
+
+    xp = array_namespace(XYZ)
+
     method = validate_method(method, HDR_IPT_METHODS)
 
     if method == "fairchild 2010":
@@ -218,7 +225,7 @@ def XYZ_to_hdr_IPT(
 
     # Domain and range scaling has already been handled.
     with domain_range_scale("ignore"):
-        LMS_prime = np.sign(LMS) * np.abs(lightness_callable(LMS, e))
+        LMS_prime = xp.sign(LMS) * xp.abs(lightness_callable(LMS, e))
 
     IPT_hdr = vecmul(MATRIX_IPT_LMS_P_TO_IPT, LMS_prime)
 
@@ -273,6 +280,7 @@ def hdr_IPT_to_XYZ(
 
     Examples
     --------
+    >>> import numpy as np
     >>> IPT_hdr = np.array([48.39376346, 42.44990202, 22.01954033])
     >>> hdr_IPT_to_XYZ(IPT_hdr)  # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
@@ -283,6 +291,9 @@ def hdr_IPT_to_XYZ(
     """
 
     IPT_hdr = to_domain_100(IPT_hdr)
+
+    xp = array_namespace(IPT_hdr)
+
     method = validate_method(method, HDR_IPT_METHODS)
 
     if method == "fairchild 2010":
@@ -296,7 +307,7 @@ def hdr_IPT_to_XYZ(
 
     # Domain and range scaling has already be handled.
     with domain_range_scale("ignore"):
-        LMS_prime = np.sign(LMS) * np.abs(luminance_callable(LMS, e))
+        LMS_prime = xp.sign(LMS) * xp.abs(luminance_callable(LMS, e))
 
     XYZ = vecmul(MATRIX_IPT_LMS_TO_XYZ, LMS_prime)
 

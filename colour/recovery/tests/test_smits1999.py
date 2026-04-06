@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 import numpy as np
 
 from colour.colorimetry import sd_to_XYZ_integration
@@ -13,7 +18,7 @@ from colour.recovery import (
     RGB_to_sd_Smits1999,
 )
 from colour.recovery.smits1999 import XYZ_to_RGB_Smits1999
-from colour.utilities import domain_range_scale
+from colour.utilities import domain_range_scale, xp_asarray, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -36,25 +41,26 @@ class TestMsds_from_RGB_Smits1999:
     definition unit tests methods.
     """
 
-    def test_RGB_to_msds_Smits1999(self) -> None:
+    def test_RGB_to_msds_Smits1999(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.recovery.smits1999.RGB_to_msds_Smits1999`
         definition.
         """
 
-        RGB = np.array(
+        RGB = xp_asarray(
             [
                 [0.45623196, 0.03080455, 0.04093343],
                 [0.05438271, 0.29877169, 0.07188444],
                 [0.01863137, 0.05139773, 0.28887675],
-            ]
+            ],
+            xp=xp,
         )
 
         msds = RGB_to_msds_Smits1999(RGB, MSDS_SMITS1999)
 
         assert msds.shape == (3, 10)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             msds,
             np.array(
                 [
@@ -106,25 +112,26 @@ class TestRGB_to_msds_Smits1999:
     definition unit tests methods.
     """
 
-    def test_RGB_to_msds_Smits1999(self) -> None:
+    def test_RGB_to_msds_Smits1999(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.recovery.smits1999.RGB_to_msds_Smits1999`
         definition.
         """
 
-        RGB = np.array(
+        RGB = xp_asarray(
             [
                 [0.45623196, 0.03080455, 0.04093343],
                 [0.05438271, 0.29877169, 0.07188444],
                 [0.01863137, 0.05139773, 0.28887675],
-            ]
+            ],
+            xp=xp,
         )
 
         msds = RGB_to_msds_Smits1999(RGB)
 
         assert msds.shape == (3, 10)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             msds[0, 0],
             0.08296164,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -149,7 +156,7 @@ class TestSd_from_RGB_Smits1999:
         np.testing.assert_equal(sd.name, "test")
         np.testing.assert_equal(sd.shape, SDS_SMITS1999["white"].shape)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd.values,
             np.array(
                 [
@@ -170,7 +177,7 @@ class TestSd_from_RGB_Smits1999:
 
         RGB_white = np.array([1.0, 1.0, 1.0])
         sd_white = RGB_to_sd_Smits1999(RGB_white, MSDS_SMITS1999, "white")
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_white.values,
             SDS_SMITS1999["white"].values,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -178,7 +185,7 @@ class TestSd_from_RGB_Smits1999:
 
         RGB_red = np.array([1.0, 0.0, 0.0])
         sd_red = RGB_to_sd_Smits1999(RGB_red, MSDS_SMITS1999, "red")
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_red.values,
             SDS_SMITS1999["red"].values,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -186,7 +193,7 @@ class TestSd_from_RGB_Smits1999:
 
         RGB_green = np.array([0.0, 1.0, 0.0])
         sd_green = RGB_to_sd_Smits1999(RGB_green, MSDS_SMITS1999, "green")
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_green.values,
             SDS_SMITS1999["green"].values,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -194,7 +201,7 @@ class TestSd_from_RGB_Smits1999:
 
         RGB_blue = np.array([0.0, 0.0, 1.0])
         sd_blue = RGB_to_sd_Smits1999(RGB_blue, MSDS_SMITS1999, "blue")
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_blue.values,
             SDS_SMITS1999["blue"].values,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -213,7 +220,7 @@ class TestRGB_to_sd_Smits1999:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_sd_Smits1999(
                 XYZ_to_RGB_Smits1999(np.array([0.21781186, 0.12541048, 0.04697113]))
             ).values,
@@ -234,7 +241,7 @@ class TestRGB_to_sd_Smits1999:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_sd_Smits1999(
                 XYZ_to_RGB_Smits1999(np.array([0.15434689, 0.22960951, 0.09620221]))
             ).values,
@@ -255,7 +262,7 @@ class TestRGB_to_sd_Smits1999:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_sd_Smits1999(
                 XYZ_to_RGB_Smits1999(np.array([0.07683480, 0.06006092, 0.25833845]))
             ).values,
@@ -276,7 +283,7 @@ class TestRGB_to_sd_Smits1999:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_sd_Smits1999(XYZ_to_RGB_Smits1999(np.array([0.0, 1.0, 0.0]))).values,
             np.array(
                 [
@@ -295,7 +302,7 @@ class TestRGB_to_sd_Smits1999:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_sd_Smits1999(XYZ_to_RGB_Smits1999(np.array([1.0, 1.0, 0.0]))).values,
             np.array(
                 [
@@ -314,7 +321,7 @@ class TestRGB_to_sd_Smits1999:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             RGB_to_sd_Smits1999(XYZ_to_RGB_Smits1999(np.array([0.5, 0.0, 1.0]))).values,
             np.array(
                 [
@@ -333,20 +340,20 @@ class TestRGB_to_sd_Smits1999:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_range_scale_RGB_to_sd_Smits1999(self) -> None:
+    def test_domain_range_scale_RGB_to_sd_Smits1999(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.recovery.smits1999.RGB_to_sd_Smits1999`
         definition domain and range scale support.
         """
 
-        XYZ_i = np.array([0.20654008, 0.12197225, 0.05136952])
-        RGB_i = XYZ_to_RGB_Smits1999(XYZ_i)
+        XYZ_i = xp_asarray([0.20654008, 0.12197225, 0.05136952], xp=xp)
+        RGB_i = np.asarray(XYZ_to_RGB_Smits1999(XYZ_i))
         XYZ_o = sd_to_XYZ_integration(RGB_to_sd_Smits1999(RGB_i))
 
         d_r = (("reference", 1, 1), ("1", 1, 0.01), ("100", 100, 1))
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     sd_to_XYZ_integration(RGB_to_sd_Smits1999(RGB_i * factor_a)),
                     XYZ_o * factor_b,
                     atol=TOLERANCE_ABSOLUTE_TESTS,

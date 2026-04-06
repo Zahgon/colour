@@ -8,7 +8,7 @@ import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.io.luts import AbstractLUTSequenceOperator, LUTOperatorMatrix
-from colour.utilities import tstack, zeros
+from colour.utilities import tstack, xp_assert_close, xp_assert_equal, zeros
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -87,7 +87,7 @@ class TestLUTOperatorMatrix:
         M = np.identity(3)
 
         lut_operator_matrix = LUTOperatorMatrix(M)
-        np.testing.assert_array_equal(lut_operator_matrix.matrix, np.identity(4))
+        xp_assert_equal(lut_operator_matrix.matrix, np.identity(4))
 
     def test_offset(self) -> None:
         """
@@ -98,7 +98,7 @@ class TestLUTOperatorMatrix:
         offset = zeros(3)
 
         lut_operator_matrix = LUTOperatorMatrix(np.identity(3), offset)
-        np.testing.assert_array_equal(lut_operator_matrix.offset, zeros(4))
+        xp_assert_equal(lut_operator_matrix.offset, zeros(4))
 
     def test__str__(self) -> None:
         """
@@ -171,9 +171,9 @@ LUTOperatorMatrix([[0.        , 0.06666667, 0.13333333, 0.2       ],
         samples = np.linspace(0, 1, 5)
         RGB = tstack([samples, samples, samples])
 
-        np.testing.assert_array_equal(LUTOperatorMatrix().apply(RGB), RGB)
+        xp_assert_equal(LUTOperatorMatrix().apply(RGB), RGB)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._lut_operator_matrix.apply(RGB),
             np.array(
                 [
@@ -187,7 +187,7 @@ LUTOperatorMatrix([[0.        , 0.06666667, 0.13333333, 0.2       ],
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._lut_operator_matrix.apply(RGB, apply_offset_first=True),
             np.array(
                 [
@@ -203,9 +203,9 @@ LUTOperatorMatrix([[0.        , 0.06666667, 0.13333333, 0.2       ],
 
         RGBA = tstack([samples, samples, samples, samples])
 
-        np.testing.assert_array_equal(LUTOperatorMatrix().apply(RGBA), RGBA)
+        xp_assert_equal(LUTOperatorMatrix().apply(RGBA), RGBA)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._lut_operator_matrix.apply(RGBA),
             np.array(
                 [
@@ -219,7 +219,7 @@ LUTOperatorMatrix([[0.        , 0.06666667, 0.13333333, 0.2       ],
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             self._lut_operator_matrix.apply(RGBA, apply_offset_first=True),
             np.array(
                 [

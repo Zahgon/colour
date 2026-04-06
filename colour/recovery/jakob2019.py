@@ -19,6 +19,7 @@ References
 
 from __future__ import annotations
 
+import itertools
 import struct
 import typing
 
@@ -49,6 +50,7 @@ if typing.TYPE_CHECKING:
 from colour.hints import ArrayLike, Domain1, NDArrayFloat  # noqa: TC001
 from colour.models import RGB_Colourspace, RGB_to_XYZ, XYZ_to_Lab, XYZ_to_xy
 from colour.utilities import (
+    array_namespace,
     as_float_array,
     as_float_scalar,
     domain_range_scale,
@@ -60,6 +62,8 @@ from colour.utilities import (
     required,
     to_domain_1,
     tsplit,
+    xp_asarray,
+    xp_reshape,
     zeros,
 )
 
@@ -193,9 +197,12 @@ def sd_Jakob2019(
     """
 
     c_0, c_1, c_2 = as_float_array(coefficients)
+
+    xp = array_namespace(c_2)
+
     wl = shape.wavelengths
     U = c_0 * wl**2 + c_1 * wl + c_2
-    R = 1 / 2 + U / (2 * np.sqrt(1 + U**2))
+    R = 1 / 2 + U / (2 * xp.sqrt(1 + U**2))
 
     name = f"{coefficients!r} (COEFF) - Jakob (2019)"
 
@@ -283,17 +290,20 @@ def error_function(
     target = as_float_array(target)
 
     c_0, c_1, c_2 = as_float_array(coefficients)
-    wv = np.linspace(0, 1, len(cmfs.shape))
+
+    xp = array_namespace(target)
+
+    wv = xp.linspace(0, 1, len(cmfs.shape))
 
     U = c_0 * wv**2 + c_1 * wv + c_2
-    t1 = np.sqrt(1 + U**2)
+    t1 = xp.sqrt(1 + U**2)
     R = 1 / 2 + U / (2 * t1)
 
     t2 = 1 / (2 * t1) - U**2 / (2 * t1**3)
-    dR = np.array([wv**2 * t2, wv * t2, t2])
+    dR = xp_asarray([wv**2 * t2, wv * t2, t2], xp=xp)
 
     XYZ = sd_to_XYZ_integration(R, cmfs, illuminant, shape=cmfs.shape) / 100
-    dXYZ = np.transpose(
+    dXYZ = xp.matrix_transpose(
         sd_to_XYZ_integration(dR, cmfs, illuminant, shape=cmfs.shape) / 100
     )
 
@@ -302,7 +312,7 @@ def error_function(
     XYZ_XYZ_n = XYZ / XYZ_n
 
     XYZ_f = intermediate_lightness_function_CIE1976(XYZ, XYZ_n)
-    dXYZ_f = np.where(
+    dXYZ_f = xp.where(
         XYZ_XYZ_n[..., None] > (24 / 116) ** 3,
         1 / (3 * spow(XYZ_n[..., None], 1 / 3) * spow(XYZ[..., None], 2 / 3)) * dXYZ,
         (841 / 108) * dXYZ / XYZ_n[..., None],
@@ -316,22 +326,23 @@ def error_function(
         conversion.
         """
 
-        return np.array(
+        return xp_asarray(
             [
                 116 * XYZ_i[1] - offset,
                 500 * (XYZ_i[0] - XYZ_i[1]),
                 200 * (XYZ_i[1] - XYZ_i[2]),
-            ]
+            ],
+            xp=xp,
         )
 
     Lab_i = intermediate_XYZ_to_Lab(XYZ_f)
     dLab_i = intermediate_XYZ_to_Lab(dXYZ_f, 0)
 
-    error = np.sqrt(np.sum((Lab_i - target) ** 2))
+    error = xp.sqrt(xp.sum((Lab_i - target) ** 2))
     if max_error is not None and error <= max_error:
         raise StopMinimizationEarlyError(coefficients, error)
 
-    derror = np.sum(dLab_i * (Lab_i[..., None] - target[..., None]), axis=0) / error
+    derror = xp.sum(dLab_i * (Lab_i[..., None] - target[..., None]), axis=0) / error
 
     if additional_data:
         return error, derror, R, XYZ, Lab_i
@@ -368,13 +379,16 @@ def dimensionalise_coefficients(
     """
 
     cp_0, cp_1, cp_2 = tsplit(coefficients)
+
+    xp = array_namespace(cp_0)
+
     span = shape.end - shape.start
 
     c_0 = cp_0 / span**2
     c_1 = cp_1 / span - 2 * cp_0 * shape.start / span**2
     c_2 = cp_0 * shape.start**2 / span**2 - cp_1 * shape.start / span + cp_2
 
-    return np.array([c_0, c_1, c_2])
+    return xp_asarray([c_0, c_1, c_2], xp=xp)
 
 
 def lightness_scale(steps: int) -> NDArrayFloat:
@@ -402,7 +416,9 @@ def lightness_scale(steps: int) -> NDArrayFloat:
     array([0.        , 0.0656127..., 0.5       , 0.9343872..., 1.        ])
     """
 
-    linear = np.linspace(0, 1, steps)
+    xp = array_namespace()
+
+    linear = xp.linspace(0, 1, steps)
 
     return smoothstep_function(smoothstep_function(linear))
 
@@ -677,6 +693,8 @@ def XYZ_to_sd_Jakob2019(
 
     XYZ = to_domain_1(XYZ)
 
+    XYZ = np.asarray(XYZ)
+
     cmfs, illuminant = handle_spectral_arguments(
         cmfs, illuminant, shape_default=SPECTRAL_SHAPE_JAKOB2019
     )
@@ -880,7 +898,8 @@ class LUT3D_Jakob2019:
 
         from scipy.interpolate import RegularGridInterpolator  # noqa: PLC0415
 
-        samples = np.linspace(0, 1, self._size)
+        xp_s = array_namespace()
+        samples = xp_s.linspace(0, 1, self._size)
         axes = ([0, 1, 2], self._lightness_scale, samples, samples)
 
         self._interpolator = RegularGridInterpolator(
@@ -961,26 +980,30 @@ class LUT3D_Jakob2019:
         lightness_steps = size
         chroma_steps = size
 
+        xp = array_namespace()
+
         self._lightness_scale = lightness_scale(lightness_steps)
-        self._coefficients = np.empty(
-            [3, chroma_steps, chroma_steps, lightness_steps, 3]
+        self._coefficients = xp.zeros(
+            (3, chroma_steps, chroma_steps, lightness_steps, 3)
         )
 
-        cube_indexes = np.ndindex(3, chroma_steps, chroma_steps)
+        cube_indexes = itertools.product(
+            range(3), range(chroma_steps), range(chroma_steps)
+        )
         total_coefficients = chroma_steps**2 * 3
 
         # First, create a list of all the fully bright colours with the order
         # matching cube_indexes.
-        samples = np.linspace(0, 1, chroma_steps)
-        ij = np.reshape(
-            np.transpose(np.meshgrid([1], samples, samples, indexing="ij")),
-            (-1, 3),
-        )
-        chromas = np.concatenate(
+        samples = xp.linspace(0, 1, chroma_steps)
+        mg = xp.meshgrid(xp_asarray([1.0], xp=xp), samples, samples, indexing="ij")
+        mg_stacked = xp.stack(mg)
+        mg_t = xp.permute_dims(mg_stacked, tuple(reversed(range(mg_stacked.ndim))))
+        ij = xp_reshape(mg_t, (-1, 3), xp=xp)
+        chromas = xp.concat(
             [
                 ij,
-                np.roll(ij, 1, axis=1),
-                np.roll(ij, 2, axis=1),
+                xp.roll(ij, 1, axis=1),
+                xp.roll(ij, 2, axis=1),
             ]
         )
 
@@ -1024,21 +1047,27 @@ class LUT3D_Jakob2019:
                 # find_coefficients_Jakob2019" definition.
                 L_middle = lightness_steps // 3
                 coefficients_middle = optimize(
-                    np.hstack([ijk, L_middle]), zeros(3), chroma
+                    xp.concat([ijk, xp_asarray([L_middle], xp=xp)], axis=0),
+                    zeros(3),
+                    chroma,
                 )
 
                 # Down the lightness scale.
                 coefficients_0 = coefficients_middle
                 for L in reversed(range(L_middle)):
                     coefficients_0 = optimize(
-                        np.hstack([ijk, L]), coefficients_0, chroma
+                        xp.concat([ijk, xp_asarray([L], xp=xp)], axis=0),
+                        coefficients_0,
+                        chroma,
                     )
 
                 # Up the lightness scale.
                 coefficients_0 = coefficients_middle
                 for L in range(L_middle + 1, lightness_steps):
                     coefficients_0 = optimize(
-                        np.hstack([ijk, L]), coefficients_0, chroma
+                        xp.concat([ijk, xp_asarray([L], xp=xp)], axis=0),
+                        coefficients_0,
+                        chroma,
                     )
 
         self._size = size
@@ -1088,15 +1117,17 @@ class LUT3D_Jakob2019:
         if len(self._interpolator.grid) != 0:
             RGB = as_float_array(RGB)
 
-            value_max = np.max(RGB, axis=-1)
+            xp = array_namespace(RGB)
+
+            value_max = xp.max(RGB, axis=-1)
             chroma = RGB / (value_max[..., None] + 1e-10)
 
-            i_m = np.argmax(RGB, axis=-1)
+            i_m = xp.argmax(RGB, axis=-1)
             i_1 = index_along_last_axis(RGB, i_m)
             i_2 = index_along_last_axis(chroma, (i_m + 2) % 3)
             i_3 = index_along_last_axis(chroma, (i_m + 1) % 3)
 
-            indexes = np.stack([i_m, i_1, i_2, i_3], axis=-1)
+            indexes = xp.stack([i_m, i_1, i_2, i_3], axis=-1)
 
             return self._interpolator(indexes).squeeze()
 
@@ -1249,7 +1280,8 @@ class LUT3D_Jakob2019:
             self._coefficients = np.fromfile(
                 coeff_file, count=3 * (self._size**3) * 3, dtype=np.float32
             )
-            self._coefficients = np.reshape(
+            xp_r = array_namespace(self._coefficients)
+            self._coefficients = xp_r.reshape(
                 self._coefficients, (3, self._size, self._size, self._size, 3)
             )
 

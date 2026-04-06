@@ -4,6 +4,11 @@ Define the unit tests for the :mod:`colour.appearance.zcam` module.
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import permutations
 
 import numpy as np
@@ -16,11 +21,15 @@ from colour.appearance import (
     XYZ_to_ZCAM,
     ZCAM_to_XYZ,
 )
+from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.utilities import (
     as_float_array,
     domain_range_scale,
     ignore_numpy_errors,
     tsplit,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
 )
 
 __author__ = "Colour Developers"
@@ -39,17 +48,17 @@ class TestXYZ_to_ZCAM:
     methods.
     """
 
-    def test_XYZ_to_ZCAM(self) -> None:
+    def test_XYZ_to_ZCAM(self, xp: ModuleType) -> None:
         """
         Tests :func:`colour.appearance.zcam.XYZ_to_ZCAM` definition.
         """
 
-        XYZ = np.array([185, 206, 163])
-        XYZ_w = np.array([256, 264, 202])
+        XYZ = xp_asarray([185, 206, 163], xp=xp)
+        XYZ_w = xp_asarray([256, 264, 202], xp=xp)
         L_a = 264
         Y_b = 100
         surround = VIEWING_CONDITIONS_ZCAM["Average"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround),
             np.array(
                 [
@@ -67,11 +76,11 @@ class TestXYZ_to_ZCAM:
                 ]
             ),
             rtol=0.025,
-            atol=0.025,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 250000,
         )
 
-        XYZ = np.array([89, 96, 120])
-        np.testing.assert_allclose(
+        XYZ = xp_asarray([89, 96, 120], xp=xp)
+        xp_assert_close(
             XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround),
             np.array(
                 [
@@ -89,7 +98,7 @@ class TestXYZ_to_ZCAM:
                 ]
             ),
             rtol=0.025,
-            atol=0.025,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 250000,
         )
 
         # NOTE: Hue quadrature :math:`H_z` is significantly different for this
@@ -97,11 +106,11 @@ class TestXYZ_to_ZCAM:
         # NOTE: :math:`F_L` as reported in the supplemental document has the
         # same value as for :math:`L_a` = 264 instead of 150. The values seem
         # to be computed for :math:`L_a` = 264 and :math:`Y_b` = 100.
-        XYZ = np.array([79, 81, 62])
+        XYZ = xp_asarray([79, 81, 62], xp=xp)
         # L_a = 150
         # Y_b = 60
         surround = VIEWING_CONDITIONS_ZCAM["Dim"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround),
             np.array(
                 [
@@ -119,15 +128,15 @@ class TestXYZ_to_ZCAM:
                 ]
             ),
             rtol=0.025,
-            atol=4,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 40000000,
         )
 
-        XYZ = np.array([910, 1114, 500])
-        XYZ_w = np.array([2103, 2259, 1401])
+        XYZ = xp_asarray([910, 1114, 500], xp=xp)
+        XYZ_w = xp_asarray([2103, 2259, 1401], xp=xp)
         L_a = 359
         Y_b = 16
         surround = VIEWING_CONDITIONS_ZCAM["Dark"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround),
             np.array(
                 [
@@ -145,11 +154,11 @@ class TestXYZ_to_ZCAM:
                 ]
             ),
             rtol=0.025,
-            atol=0.025,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 250000,
         )
 
-        XYZ = np.array([96, 67, 28])
-        np.testing.assert_allclose(
+        XYZ = xp_asarray([96, 67, 28], xp=xp)
+        xp_assert_close(
             XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround),
             np.array(
                 [
@@ -167,49 +176,55 @@ class TestXYZ_to_ZCAM:
                 ]
             ),
             rtol=0.025,
-            atol=0.025,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 250000,
         )
 
-    def test_n_dimensional_XYZ_to_ZCAM(self) -> None:
+    def test_n_dimensional_XYZ_to_ZCAM(self, xp: ModuleType) -> None:
         """
         Tests :func:`colour.appearance.zcam.XYZ_to_ZCAM` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([185, 206, 163])
-        XYZ_w = np.array([256, 264, 202])
+        XYZ = xp_asarray([185, 206, 163], xp=xp)
+        XYZ_w = xp_asarray([256, 264, 202], xp=xp)
         L_a = 264
         Y_b = 100
         surround = VIEWING_CONDITIONS_ZCAM["Average"]
         specification = XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround)
 
-        XYZ = np.tile(XYZ, (6, 1))
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
         specification = np.tile(specification, (6, 1))
         np.testing.assert_almost_equal(
-            XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround), specification, decimal=7
+            np.asarray(XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround)),
+            specification,
+            decimal=7,
         )
 
-        XYZ_w = np.tile(XYZ_w, (6, 1))
+        XYZ_w = xp.tile(xp_asarray(XYZ_w, xp=xp), (6, 1))
         np.testing.assert_almost_equal(
-            XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround), specification, decimal=7
+            np.asarray(XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround)),
+            specification,
+            decimal=7,
         )
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        specification = np.reshape(specification, (2, 3, 11))
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_w = xp_reshape(xp_asarray(XYZ_w, xp=xp), (2, 3, 3), xp=xp)
+        specification = xp_reshape(xp_asarray(specification, xp=xp), (2, 3, 11), xp=xp)
         np.testing.assert_almost_equal(
-            XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround), specification, decimal=7
+            np.asarray(XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround)),
+            specification,
+            decimal=7,
         )
 
     @ignore_numpy_errors
-    def test_domain_range_scale_XYZ_to_ZCAM(self) -> None:
+    def test_domain_range_scale_XYZ_to_ZCAM(self, xp: ModuleType) -> None:
         """
         Tests :func:`colour.appearance.zcam.XYZ_to_ZCAM` definition
         domain and range scale support.
         """
 
-        XYZ = np.array([185, 206, 163])
-        XYZ_w = np.array([256, 264, 202])
+        XYZ = xp_asarray([185, 206, 163], xp=xp)
+        XYZ_w = xp_asarray([256, 264, 202], xp=xp)
         L_a = 264
         Y_b = 100
         surround = VIEWING_CONDITIONS_ZCAM["Average"]
@@ -241,7 +256,11 @@ class TestXYZ_to_ZCAM:
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
                 np.testing.assert_almost_equal(
-                    XYZ_to_ZCAM(XYZ * factor_a, XYZ_w * factor_a, L_a, Y_b, surround),
+                    np.asarray(
+                        XYZ_to_ZCAM(
+                            XYZ * factor_a, XYZ_w * factor_a, L_a, Y_b, surround
+                        )
+                    ),
                     as_float_array(specification) * factor_b,
                     decimal=7,
                 )
@@ -270,7 +289,7 @@ class TestZCAM_to_XYZ:
     tests methods.
     """
 
-    def test_ZCAM_to_XYZ(self) -> None:
+    def test_ZCAM_to_XYZ(self, xp: ModuleType) -> None:
         """
         Tests :func:`colour.appearance.zcam.ZCAM_to_XYZ` definition.
         """
@@ -288,14 +307,14 @@ class TestZCAM_to_XYZ:
             25.2994,
             91.6837,
         )
-        XYZ_w = np.array([256, 264, 202])
+        XYZ_w = xp_asarray([256, 264, 202], xp=xp)
         L_a = 264
         Y_b = 100
         surround = VIEWING_CONDITIONS_ZCAM["Average"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround),
             np.array([185, 206, 163]),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
             rtol=0.01,
         )
 
@@ -312,10 +331,10 @@ class TestZCAM_to_XYZ:
             40.4621,
             70.4026,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround),
             np.array([89, 96, 120]),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
             rtol=0.01,
         )
 
@@ -333,10 +352,10 @@ class TestZCAM_to_XYZ:
             68.8737,
         )
         surround = VIEWING_CONDITIONS_ZCAM["Dim"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround),
             np.array([79, 81, 62]),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
             rtol=0.01,
         )
 
@@ -353,14 +372,14 @@ class TestZCAM_to_XYZ:
             26.8778,
             78.2653,
         )
-        XYZ_w = np.array([2103, 2259, 1401])
+        XYZ_w = xp_asarray([2103, 2259, 1401], xp=xp)
         L_a = 359
         Y_b = 16
         surround = VIEWING_CONDITIONS_ZCAM["Dark"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround),
             np.array([910, 1114, 500]),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
             rtol=0.01,
         )
 
@@ -377,10 +396,10 @@ class TestZCAM_to_XYZ:
             47.9942,
             30.2593,
         )
-        np.testing.assert_allclose(
+        xp_assert_close(
             ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround),
             np.array([96, 67, 28]),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
             rtol=0.01,
         )
 
@@ -388,67 +407,73 @@ class TestZCAM_to_XYZ:
         specification = CAM_Specification_ZCAM(
             J=82.61980483202505, C=13.194790413382647, h=123.77987744640157
         )
-        XYZ_w = np.array([2103, 2259, 1401])
+        XYZ_w = xp_asarray([2103, 2259, 1401], xp=xp)
         L_a = 359
         Y_b = 16
         surround = VIEWING_CONDITIONS_ZCAM["Dark"]
-        np.testing.assert_allclose(
+        xp_assert_close(
             ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround),
             np.array([910, 1114, 500]),
-            atol=0.01,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 100000,
             rtol=0.01,
         )
 
-    def test_n_dimensional_ZCAM_to_XYZ(self) -> None:
+    def test_n_dimensional_ZCAM_to_XYZ(self, xp: ModuleType) -> None:
         """
         Tests :func:`colour.appearance.zcam.ZCAM_to_XYZ` definition
         n-dimensional support.
         """
 
-        XYZ = np.array([185, 206, 163])
-        XYZ_w = np.array([256, 264, 202])
+        XYZ = xp_asarray([185, 206, 163], xp=xp)
+        XYZ_w = xp_asarray([256, 264, 202], xp=xp)
         L_a = 264
         Y_b = 100
         surround = VIEWING_CONDITIONS_ZCAM["Average"]
         specification = XYZ_to_ZCAM(XYZ, XYZ_w, L_a, Y_b, surround)
-        XYZ = ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround)
+        XYZ = np.asarray(ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround))
 
         specification = CAM_Specification_ZCAM(
             *np.transpose(np.tile(tsplit(specification), (6, 1))).tolist()
         )
-        XYZ = np.tile(XYZ, (6, 1))
+        XYZ = xp_asarray(np.tile(np.asarray(XYZ), (6, 1)), xp=xp)
         np.testing.assert_almost_equal(
-            ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround), XYZ, decimal=7
+            np.asarray(ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround)),
+            XYZ,
+            decimal=7,
         )
 
-        XYZ_w = np.tile(XYZ_w, (6, 1))
+        XYZ_w = xp_asarray(np.tile(np.asarray(XYZ_w), (6, 1)), xp=xp)
         np.testing.assert_almost_equal(
-            ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround), XYZ, decimal=7
+            np.asarray(ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround)),
+            XYZ,
+            decimal=7,
         )
 
         specification = CAM_Specification_ZCAM(
             *tsplit(np.reshape(specification, (2, 3, 11))).tolist()
         )
-        XYZ_w = np.reshape(XYZ_w, (2, 3, 3))
-        XYZ = np.reshape(XYZ, (2, 3, 3))
+        XYZ_w = xp_asarray(np.reshape(np.asarray(XYZ_w), (2, 3, 3)), xp=xp)
+        XYZ = xp_asarray(np.reshape(np.asarray(XYZ), (2, 3, 3)), xp=xp)
         np.testing.assert_almost_equal(
-            ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround), XYZ, decimal=7
+            np.asarray(ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround)),
+            XYZ,
+            decimal=7,
         )
 
     @ignore_numpy_errors
-    def test_domain_range_scale_ZCAM_to_XYZ(self) -> None:
+    def test_domain_range_scale_ZCAM_to_XYZ(self, xp: ModuleType) -> None:
         """
         Tests :func:`colour.appearance.zcam.ZCAM_to_XYZ` definition
         domain and range scale support.
         """
 
-        XYZ_i = np.array([185, 206, 163])
-        XYZ_w = np.array([256, 264, 202])
+        XYZ_i = xp_asarray([185, 206, 163], xp=xp)
+        XYZ_w = xp_asarray([256, 264, 202], xp=xp)
         L_a = 264
         Y_b = 100
         surround = VIEWING_CONDITIONS_ZCAM["Average"]
         specification = XYZ_to_ZCAM(XYZ_i, XYZ_w, L_a, Y_b, surround)
-        XYZ = ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround)
+        XYZ = np.asarray(ZCAM_to_XYZ(specification, XYZ_w, L_a, Y_b, surround))
 
         d_r = (
             ("reference", 1, 1),
@@ -476,8 +501,14 @@ class TestZCAM_to_XYZ:
         for scale, factor_a, factor_b in d_r:
             with domain_range_scale(scale):
                 np.testing.assert_almost_equal(
-                    ZCAM_to_XYZ(
-                        specification * factor_a, XYZ_w * factor_b, L_a, Y_b, surround
+                    np.asarray(
+                        ZCAM_to_XYZ(
+                            specification * factor_a,
+                            XYZ_w * factor_b,
+                            L_a,
+                            Y_b,
+                            surround,
+                        )
                     ),
                     XYZ * factor_b,
                     decimal=7,

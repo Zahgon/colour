@@ -21,7 +21,7 @@ from colour.models.rgb.transfer_functions import (
     cctf_decoding,
     cctf_encoding,
 )
-from colour.utilities import ColourUsageWarning
+from colour.utilities import ColourUsageWarning, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -131,7 +131,7 @@ class TestTransferFunctions:
                 samples_e = CCTF_ENCODINGS[name](samples_r)
                 samples_d = CCTF_DECODINGS[name](samples_e)
 
-                np.testing.assert_allclose(
+                xp_assert_close(
                     samples_r,
                     samples_d,
                     atol=tolerance.get(name, TOLERANCE_ABSOLUTE_TESTS),

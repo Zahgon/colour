@@ -9,7 +9,7 @@ from colour.colorimetry import (
     sd_mesopic_luminous_efficiency_function,
 )
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
-from colour.utilities import ignore_numpy_errors
+from colour.utilities import ignore_numpy_errors, xp_assert_close
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -441,19 +441,19 @@ class TestMesopicWeightingFunction:
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             mesopic_weighting_function(500, 0.2),
             0.70522000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             mesopic_weighting_function(500, 0.2, source="Red Heavy", method="LRC"),
             0.90951000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             mesopic_weighting_function(700, 10, source="Red Heavy", method="LRC"),
             0.00410200,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -466,11 +466,11 @@ class TestMesopicWeightingFunction:
         """
 
         wl = 500
-        Vm = mesopic_weighting_function(wl, 0.2)
+        Vm = np.asarray(mesopic_weighting_function(wl, 0.2))
 
         wl = np.tile(wl, 6)
         Vm = np.tile(Vm, 6)
-        np.testing.assert_allclose(
+        xp_assert_close(
             mesopic_weighting_function(wl, 0.2),
             Vm,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -478,7 +478,7 @@ class TestMesopicWeightingFunction:
 
         wl = np.reshape(wl, (2, 3))
         Vm = np.reshape(Vm, (2, 3))
-        np.testing.assert_allclose(
+        xp_assert_close(
             mesopic_weighting_function(wl, 0.2),
             Vm,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -486,7 +486,7 @@ class TestMesopicWeightingFunction:
 
         wl = np.reshape(wl, (2, 3, 1))
         Vm = np.reshape(Vm, (2, 3, 1))
-        np.testing.assert_allclose(
+        xp_assert_close(
             mesopic_weighting_function(wl, 0.2),
             Vm,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -518,7 +518,7 @@ sd_mesopic_luminous_efficiency_function` definition unit tests methods.
 sd_mesopic_luminous_efficiency_function` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             sd_mesopic_luminous_efficiency_function(0.2).values,
             DATA_MESOPIC_LEF,
             atol=TOLERANCE_ABSOLUTE_TESTS,

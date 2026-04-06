@@ -24,7 +24,14 @@ if typing.TYPE_CHECKING:
 
 from colour.io.luts import LUT1D, LUT3D, LUT3x1D, LUT_to_LUT
 from colour.io.luts.lut import AbstractLUT
-from colour.utilities import as_float_array, is_scipy_installed, tsplit, tstack
+from colour.utilities import (
+    as_float_array,
+    is_scipy_installed,
+    tsplit,
+    tstack,
+    xp_assert_close,
+    xp_assert_equal,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -251,13 +258,11 @@ class TestLUT1D:
 
         LUT = LUT1D(self._table_1)
 
-        np.testing.assert_allclose(
-            LUT.table, self._table_1, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xp_assert_close(LUT.table, self._table_1, atol=TOLERANCE_ABSOLUTE_TESTS)
 
         assert str(id(LUT)) == LUT.name
 
-        np.testing.assert_array_equal(LUT.domain, self._domain_1)
+        xp_assert_equal(LUT.domain, self._domain_1)
 
         assert LUT.dimensions == self._dimensions
 
@@ -270,11 +275,11 @@ class TestLUT1D:
 
         LUT = LUT1D()
 
-        np.testing.assert_array_equal(LUT.table, LUT.linear_table(self._size))
+        xp_assert_equal(LUT.table, LUT.linear_table(self._size))
 
         table_1 = self._table_1 * 0.8 + 0.1
         LUT.table = table_1
-        np.testing.assert_allclose(LUT.table, table_1, atol=TOLERANCE_ABSOLUTE_TESTS)
+        xp_assert_close(LUT.table, table_1, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     def test_name(self) -> None:
         """
@@ -296,11 +301,11 @@ class TestLUT1D:
 
         LUT = LUT1D()
 
-        np.testing.assert_array_equal(LUT.domain, self._domain_1)
+        xp_assert_equal(LUT.domain, self._domain_1)
 
         domain = self._domain_1 * 0.8 + 0.1
         LUT.domain = domain
-        np.testing.assert_array_equal(LUT.domain, domain)
+        xp_assert_equal(LUT.domain, domain)
 
     def test_size(self) -> None:
         """
@@ -400,91 +405,91 @@ class TestLUT1D:
         LUT_1 = LUT1D()
         LUT_2 = LUT1D()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "+", False).table,
             self._table_1 + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "-", False).table,
             self._table_1 - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "*", False).table,
             self._table_1 * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "/", False).table,
             self._table_1 / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "**", False).table,
             self._table_1**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 + 10).table,
             self._table_1 + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 - 10).table,
             self._table_1 - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 * 10).table,
             self._table_1 * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 / 10).table,
             self._table_1 / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1**10).table,
             self._table_1**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "+", True).table,
             self._table_1 + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "-", True).table,
             self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "*", True).table,
             self._table_1 * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "/", True).table,
             self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "**", True).table,
             self._table_1**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -492,13 +497,13 @@ class TestLUT1D:
 
         LUT_2 = LUT1D()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(self._table_1, "+", False).table,
             LUT_2.table + self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(LUT_2, "+", False).table,
             LUT_2.table + LUT_2.table,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -511,13 +516,13 @@ class TestLUT1D:
 
         LUT_1 = LUT1D()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.linear_table(self._size),
             self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             spow(LUT1D.linear_table(**self._table_3_kwargs), 1 / 2.6),
             self._table_3,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -542,7 +547,7 @@ class TestLUT1D:
             interpolator=self._interpolator_1, **self._invert_kwargs_1
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_i.apply(RANDOM_TRIPLETS),
             self._inverted_apply_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -552,7 +557,7 @@ class TestLUT1D:
             interpolator=self._interpolator_2, **self._invert_kwargs_2
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_i.apply(RANDOM_TRIPLETS),
             self._inverted_apply_2,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -565,7 +570,7 @@ class TestLUT1D:
                 interpolator=self._interpolator_2, **self._invert_kwargs_2
             )
 
-            np.testing.assert_allclose(  # pragma: no cover
+            xp_assert_close(  # pragma: no cover
                 LUT_i.apply(RANDOM_TRIPLETS),
                 self._inverted_apply_2,
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -583,7 +588,7 @@ class TestLUT1D:
 
         LUT_1 = LUT1D(self._table_2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.apply(RANDOM_TRIPLETS),
             self._applied_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -592,7 +597,7 @@ class TestLUT1D:
         LUT_2 = LUT1D(domain=self._domain_2)
         LUT_2.table = spow(LUT_2.table, 1 / 2.2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.apply(RANDOM_TRIPLETS),
             self._applied_2,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -600,7 +605,7 @@ class TestLUT1D:
 
         LUT_3 = LUT1D(self._table_3, domain=self._domain_3)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_3.apply(RANDOM_TRIPLETS),
             self._applied_3,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -608,7 +613,7 @@ class TestLUT1D:
 
         LUT_4 = LUT1D(self._table_2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_4.apply(
                 RANDOM_TRIPLETS,
                 direction="Inverse",
@@ -803,13 +808,11 @@ class TestLUT3x1D:
 
         LUT = LUT3x1D(self._table_1)
 
-        np.testing.assert_allclose(
-            LUT.table, self._table_1, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xp_assert_close(LUT.table, self._table_1, atol=TOLERANCE_ABSOLUTE_TESTS)
 
         assert str(id(LUT)) == LUT.name
 
-        np.testing.assert_array_equal(LUT.domain, self._domain_1)
+        xp_assert_equal(LUT.domain, self._domain_1)
 
         assert LUT.dimensions == self._dimensions
 
@@ -822,11 +825,11 @@ class TestLUT3x1D:
 
         LUT = LUT3x1D()
 
-        np.testing.assert_array_equal(LUT.table, LUT.linear_table(self._size))
+        xp_assert_equal(LUT.table, LUT.linear_table(self._size))
 
         table_1 = self._table_1 * 0.8 + 0.1
         LUT.table = table_1
-        np.testing.assert_allclose(LUT.table, table_1, atol=TOLERANCE_ABSOLUTE_TESTS)
+        xp_assert_close(LUT.table, table_1, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     def test_name(self) -> None:
         """
@@ -848,11 +851,11 @@ class TestLUT3x1D:
 
         LUT = LUT3x1D()
 
-        np.testing.assert_array_equal(LUT.domain, self._domain_1)
+        xp_assert_equal(LUT.domain, self._domain_1)
 
         domain = self._domain_1 * 0.8 + 0.1
         LUT.domain = domain
-        np.testing.assert_array_equal(LUT.domain, domain)
+        xp_assert_equal(LUT.domain, domain)
 
     def test_size(self) -> None:
         """
@@ -952,91 +955,91 @@ class TestLUT3x1D:
         LUT_1 = LUT3x1D()
         LUT_2 = LUT3x1D()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "+", False).table,
             self._table_1 + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "-", False).table,
             self._table_1 - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "*", False).table,
             self._table_1 * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "/", False).table,
             self._table_1 / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "**", False).table,
             self._table_1**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 + 10).table,
             self._table_1 + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 - 10).table,
             self._table_1 - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 * 10).table,
             self._table_1 * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 / 10).table,
             self._table_1 / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1**10).table,
             self._table_1**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "+", True).table,
             self._table_1 + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "-", True).table,
             self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "*", True).table,
             self._table_1 * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "/", True).table,
             self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "**", True).table,
             self._table_1**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1044,13 +1047,13 @@ class TestLUT3x1D:
 
         LUT_2 = LUT3x1D()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(self._table_1, "+", False).table,
             LUT_2.table + self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(LUT_2, "+", False).table,
             LUT_2.table + LUT_2.table,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1063,13 +1066,13 @@ class TestLUT3x1D:
 
         LUT_1 = LUT3x1D()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.linear_table(self._size),
             self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             spow(LUT3x1D.linear_table(**self._table_3_kwargs), 1 / 2.6),
             self._table_3,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1094,7 +1097,7 @@ class TestLUT3x1D:
             interpolator=self._interpolator_1, **self._invert_kwargs_1
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_i.apply(RANDOM_TRIPLETS),
             self._inverted_apply_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1104,7 +1107,7 @@ class TestLUT3x1D:
             interpolator=self._interpolator_2, **self._invert_kwargs_2
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_i.apply(RANDOM_TRIPLETS),
             self._inverted_apply_2,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1117,7 +1120,7 @@ class TestLUT3x1D:
                 interpolator=self._interpolator_2, **self._invert_kwargs_2
             )
 
-            np.testing.assert_allclose(  # pragma: no cover
+            xp_assert_close(  # pragma: no cover
                 LUT_i.apply(RANDOM_TRIPLETS),
                 self._inverted_apply_2,
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1135,7 +1138,7 @@ class TestLUT3x1D:
 
         LUT_1 = LUT3x1D(self._table_2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.apply(RANDOM_TRIPLETS),
             self._applied_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1144,7 +1147,7 @@ class TestLUT3x1D:
         LUT_2 = LUT3x1D(domain=self._domain_2)
         LUT_2.table = spow(LUT_2.table, 1 / 2.2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.apply(RANDOM_TRIPLETS),
             self._applied_2,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1152,7 +1155,7 @@ class TestLUT3x1D:
 
         LUT_3 = LUT3x1D(self._table_3, domain=self._domain_3)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_3.apply(RANDOM_TRIPLETS),
             self._applied_3,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1160,7 +1163,7 @@ class TestLUT3x1D:
 
         LUT_4 = LUT3x1D(self._table_2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_4.apply(
                 RANDOM_TRIPLETS,
                 direction="Inverse",
@@ -1382,13 +1385,11 @@ class TestLUT3D:
 
         LUT = LUT3D(self._table_1)
 
-        np.testing.assert_allclose(
-            LUT.table, self._table_1, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xp_assert_close(LUT.table, self._table_1, atol=TOLERANCE_ABSOLUTE_TESTS)
 
         assert str(id(LUT)) == LUT.name
 
-        np.testing.assert_array_equal(LUT.domain, self._domain_1)
+        xp_assert_equal(LUT.domain, self._domain_1)
 
         assert LUT.dimensions == self._dimensions
 
@@ -1401,11 +1402,11 @@ class TestLUT3D:
 
         LUT = LUT3D()
 
-        np.testing.assert_array_equal(LUT.table, LUT.linear_table(self._size))
+        xp_assert_equal(LUT.table, LUT.linear_table(self._size))
 
         table_1 = self._table_1 * 0.8 + 0.1
         LUT.table = table_1
-        np.testing.assert_allclose(LUT.table, table_1, atol=TOLERANCE_ABSOLUTE_TESTS)
+        xp_assert_close(LUT.table, table_1, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     def test_name(self) -> None:
         """
@@ -1427,11 +1428,11 @@ class TestLUT3D:
 
         LUT = LUT3D()
 
-        np.testing.assert_array_equal(LUT.domain, self._domain_1)
+        xp_assert_equal(LUT.domain, self._domain_1)
 
         domain = self._domain_1 * 0.8 + 0.1
         LUT.domain = domain
-        np.testing.assert_array_equal(LUT.domain, domain)
+        xp_assert_equal(LUT.domain, domain)
 
     def test_size(self) -> None:
         """
@@ -1531,91 +1532,91 @@ class TestLUT3D:
         LUT_1 = LUT3D()
         LUT_2 = LUT3D()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "+", False).table,
             self._table_1 + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "-", False).table,
             self._table_1 - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "*", False).table,
             self._table_1 * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "/", False).table,
             self._table_1 / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.arithmetical_operation(10, "**", False).table,
             self._table_1**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 + 10).table,
             self._table_1 + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 - 10).table,
             self._table_1 - 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 * 10).table,
             self._table_1 * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1 / 10).table,
             self._table_1 / 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             (LUT_1**10).table,
             self._table_1**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "+", True).table,
             self._table_1 + 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "-", True).table,
             self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "*", True).table,
             self._table_1 * 10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "/", True).table,
             self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(10, "**", True).table,
             self._table_1**10,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1623,13 +1624,13 @@ class TestLUT3D:
 
         LUT_2 = LUT3D()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(self._table_1, "+", False).table,
             LUT_2.table + self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.arithmetical_operation(LUT_2, "+", False).table,
             LUT_2.table + LUT_2.table,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1642,13 +1643,13 @@ class TestLUT3D:
 
         LUT_1 = LUT3D()
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.linear_table(self._size),
             self._table_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             spow(LUT3D.linear_table(**self._table_3_kwargs), 1 / 2.6),
             self._table_3,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1676,7 +1677,7 @@ class TestLUT3D:
             interpolator=self._interpolator_1, **self._invert_kwargs_1
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_i.apply(RANDOM_TRIPLETS),
             self._inverted_apply_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1686,7 +1687,7 @@ class TestLUT3D:
             interpolator=self._interpolator_2, **self._invert_kwargs_2
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_i.apply(RANDOM_TRIPLETS),
             self._inverted_apply_2,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1699,7 +1700,7 @@ class TestLUT3D:
                 interpolator=self._interpolator_2, **self._invert_kwargs_2
             )
 
-            np.testing.assert_allclose(  # pragma: no cover
+            xp_assert_close(  # pragma: no cover
                 LUT_i.apply(RANDOM_TRIPLETS),
                 self._inverted_apply_2,
                 atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1717,7 +1718,7 @@ class TestLUT3D:
 
         LUT_1 = LUT3D(self._table_2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.apply(RANDOM_TRIPLETS),
             self._applied_1,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1726,7 +1727,7 @@ class TestLUT3D:
         LUT_2 = LUT3D(domain=self._domain_2)
         LUT_2.table = spow(LUT_2.table, 1 / 2.2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_2.apply(RANDOM_TRIPLETS),
             self._applied_2,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1734,7 +1735,7 @@ class TestLUT3D:
 
         LUT_3 = LUT3D(self._table_3, domain=self._domain_3)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_3.apply(RANDOM_TRIPLETS),
             self._applied_3,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -1742,7 +1743,7 @@ class TestLUT3D:
 
         LUT_4 = LUT3D(self._table_2)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_4.apply(
                 RANDOM_TRIPLETS,
                 direction="Inverse",
@@ -1792,7 +1793,7 @@ class TestLUT_to_LUT:
 
         LUT = LUT_to_LUT(self._LUT_1, LUT3D, force_conversion=True, size=5)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT.table,
             np.array(
                 [
@@ -2026,7 +2027,7 @@ class TestLUT_to_LUT:
 
         LUT = LUT_to_LUT(self._LUT_2, LUT3D, force_conversion=True, size=5)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT.table,
             np.array(
                 [
@@ -2232,7 +2233,7 @@ class TestLUT_to_LUT:
             channel_weights=channel_weights,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT.table,
             np.array(
                 [
@@ -2266,7 +2267,7 @@ class TestLUT_to_LUT:
             channel_weights=channel_weights,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT.table,
             np.array(
                 [
@@ -2296,7 +2297,7 @@ class TestLUT_to_LUT:
 
         LUT = LUT_to_LUT(self._LUT_3, LUT3x1D, force_conversion=True, size=16)
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT.table,
             np.array(
                 [

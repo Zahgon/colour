@@ -59,7 +59,17 @@ if typing.TYPE_CHECKING:
     from colour.hints import Domain1, NDArrayBoolean, NDArrayFloat, Range1
 
 from colour.hints import ArrayLike, cast
-from colour.utilities import as_float_array, from_range_1, to_domain_1, tsplit, tstack
+from colour.utilities import (
+    array_namespace,
+    as_float_array,
+    as_int_array,
+    from_range_1,
+    to_domain_1,
+    tsplit,
+    tstack,
+    xp_radians,
+    xp_select,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -119,8 +129,11 @@ def RGB_to_HSV(RGB: Domain1) -> Range1:
 
     RGB = to_domain_1(RGB)
 
-    maximum = np.amax(RGB, -1)
-    delta = np.ptp(RGB, -1)
+    xp = array_namespace(RGB)
+
+    maximum = xp.max(RGB, axis=-1)
+
+    delta = xp.max(RGB, axis=-1) - xp.min(RGB, axis=-1)
 
     V = maximum
 
@@ -134,11 +147,16 @@ def RGB_to_HSV(RGB: Domain1) -> Range1:
         delta_B = sdiv(((maximum - B) / 6) + (delta / 2), delta)
 
     H = delta_B - delta_G
-    H = np.where(maximum == G, (1 / 3) + delta_R - delta_B, H)
-    H = np.where(maximum == B, (2 / 3) + delta_G - delta_R, H)
-    H = np.where(H < 0, H + 1, H)
-    H = np.where(H > 1, H - 1, H)
-    H = np.where(delta == 0, 0, H)
+
+    H = xp.where(maximum == G, (1 / 3) + delta_R - delta_B, H)
+
+    H = xp.where(maximum == B, (2 / 3) + delta_G - delta_R, H)
+
+    H = xp.where(H < 0, H + 1, H)
+
+    H = xp.where(H > 1, H - 1, H)
+
+    H = xp.where(delta == 0, 0, H)
 
     HSV = tstack([H, S, V])
 
@@ -186,27 +204,42 @@ def HSV_to_RGB(HSV: Domain1) -> Range1:
 
     H, S, V = tsplit(to_domain_1(HSV))
 
-    h = as_float_array(H * 6)
-    h = np.where(h == 6, 0, h)
+    xp = array_namespace(HSV)
 
-    i = np.floor(h)
+    h = as_float_array(H * 6)
+
+    h = xp.where(h == 6, 0, h)
+
+    i = xp.floor(h)
+
     j = V * (1 - S)
+
     k = V * (1 - S * (h - i))
+
     l = V * (1 - S * (1 - (h - i)))  # noqa: E741
 
-    i = tstack([i, i, i]).astype(np.uint8)
+    i = as_int_array(tstack([i, i, i]))
 
-    RGB = np.choose(
-        i,
-        [
-            tstack([V, l, j]),
+    RGB = xp.where(
+        i == 0,
+        tstack([V, l, j]),
+        xp.where(
+            i == 1,
             tstack([k, V, j]),
-            tstack([j, V, l]),
-            tstack([j, k, V]),
-            tstack([l, j, V]),
-            tstack([V, j, k]),
-        ],
-        mode="clip",
+            xp.where(
+                i == 2,
+                tstack([j, V, l]),
+                xp.where(
+                    i == 3,
+                    tstack([j, k, V]),
+                    xp.where(
+                        i == 4,
+                        tstack([l, j, V]),
+                        tstack([V, j, k]),
+                    ),
+                ),
+            ),
+        ),
     )
 
     return from_range_1(RGB)
@@ -253,16 +286,20 @@ def RGB_to_HSL(RGB: Domain1) -> Range1:
 
     RGB = to_domain_1(RGB)
 
-    minimum = np.amin(RGB, -1)
-    maximum = np.amax(RGB, -1)
-    delta = np.ptp(RGB, -1)
+    xp = array_namespace(RGB)
+
+    minimum = xp.min(RGB, axis=-1)
+
+    maximum = xp.max(RGB, axis=-1)
+
+    delta = xp.max(RGB, axis=-1) - xp.min(RGB, axis=-1)
 
     R, G, B = tsplit(RGB)
 
     L = (maximum + minimum) / 2
 
     with sdiv_mode():
-        S = np.where(
+        S = xp.where(
             L < 0.5,
             sdiv(delta, maximum + minimum),
             sdiv(delta, 2 - maximum - minimum),
@@ -273,11 +310,16 @@ def RGB_to_HSL(RGB: Domain1) -> Range1:
         delta_B = sdiv(((maximum - B) / 6) + (delta / 2), delta)
 
     H = delta_B - delta_G
-    H = np.where(maximum == G, (1 / 3) + delta_R - delta_B, H)
-    H = np.where(maximum == B, (2 / 3) + delta_G - delta_R, H)
-    H = np.where(H < 0, H + 1, H)
-    H = np.where(H > 1, H - 1, H)
-    H = np.where(delta == 0, 0, H)
+
+    H = xp.where(maximum == G, (1 / 3) + delta_R - delta_B, H)
+
+    H = xp.where(maximum == B, (2 / 3) + delta_G - delta_R, H)
+
+    H = xp.where(H < 0, H + 1, H)
+
+    H = xp.where(H > 1, H - 1, H)
+
+    H = xp.where(delta == 0, 0, H)
 
     HSL = tstack([H, S, L])
 
@@ -325,37 +367,48 @@ def HSL_to_RGB(HSL: Domain1) -> Range1:
 
     H, S, L = tsplit(to_domain_1(HSL))
 
+    xp = array_namespace(HSL)
+
     def H_to_RGB(vi: NDArrayFloat, vj: NDArrayFloat, vH: NDArrayFloat) -> NDArrayFloat:
         """Convert *hue* value to *RGB* colourspace."""
 
         vH = as_float_array(vH)
 
-        vH = np.where(vH < 0, vH + 1, vH)
-        vH = np.where(vH > 1, vH - 1, vH)
+        vH = xp.where(vH < 0, vH + 1, vH)
 
-        v = np.where(
+        vH = xp.where(vH > 1, vH - 1, vH)
+
+        v = xp.where(
             6 * vH < 1,
             vi + (vj - vi) * 6 * vH,
             np.nan,
         )
-        v = np.where(np.logical_and(2 * vH < 1, np.isnan(v)), vj, v)
-        v = np.where(
-            np.logical_and(3 * vH < 2, np.isnan(v)),
+
+        v = xp.where(xp.logical_and(2 * vH < 1, xp.isnan(v)), vj, v)
+
+        v = xp.where(
+            xp.logical_and(3 * vH < 2, xp.isnan(v)),
             vi + (vj - vi) * ((2 / 3) - vH) * 6,
             v,
         )
-        return np.where(np.isnan(v), vi, v)
 
-    j = np.where(L < 0.5, L * (1 + S), (L + S) - (S * L))
+        return xp.where(xp.isnan(v), vi, v)
+
+    j = xp.where(L < 0.5, L * (1 + S), (L + S) - (S * L))
+
     i = 2 * L - j
 
     R = H_to_RGB(i, j, H + (1 / 3))
+
     G = H_to_RGB(i, j, H)
+
     B = H_to_RGB(i, j, H - (1 / 3))
 
-    R = np.where(S == 0, L, R)
-    G = np.where(S == 0, L, G)
-    B = np.where(S == 0, L, B)
+    R = xp.where(S == 0, L, R)
+
+    G = xp.where(S == 0, L, G)
+
+    B = xp.where(S == 0, L, B)
 
     RGB = tstack([R, G, B])
 
@@ -412,33 +465,39 @@ def RGB_to_HCL(RGB: Domain1, gamma: float = 3, Y_0: float = 100) -> Range1:
 
     R, G, B = tsplit(to_domain_1(RGB))
 
-    Min = np.minimum(np.minimum(R, G), B)
-    Max = np.maximum(np.maximum(R, G), B)
+    xp = array_namespace(RGB)
+
+    Min = xp.minimum(xp.minimum(R, G), B)
+
+    Max = xp.maximum(xp.maximum(R, G), B)
 
     with sdiv_mode():
-        Q = np.exp(sdiv(Min * gamma, Max * Y_0))
+        Q = xp.exp(sdiv(Min * gamma, Max * Y_0))
 
     L = (Q * Max + (Q - 1) * Min) / 2
 
     R_G = R - G
+
     G_B = G - B
+
     B_R = B - R
 
-    C = Q * (np.abs(R_G) + np.abs(G_B) + np.abs(B_R)) / 3
+    C = Q * (xp.abs(R_G) + xp.abs(G_B) + xp.abs(B_R)) / 3
 
     with sdiv_mode("Ignore"):
-        H = np.arctan(sdiv(G_B, R_G))
+        H = xp.atan(sdiv(G_B, R_G))
 
     _2_H_3 = 2 * H / 3
+
     _4_H_3 = 4 * H / 3
 
-    H = np.select(
+    H = xp_select(
         [
             C == 0,
-            np.logical_and(R_G >= 0, G_B >= 0),
-            np.logical_and(R_G >= 0, G_B < 0),
-            np.logical_and(R_G < 0, G_B >= 0),
-            np.logical_and(R_G < 0, G_B < 0),
+            xp.logical_and(R_G >= 0, G_B >= 0),
+            xp.logical_and(R_G >= 0, G_B < 0),
+            xp.logical_and(R_G < 0, G_B >= 0),
+            xp.logical_and(R_G < 0, G_B < 0),
         ],
         [
             0,
@@ -447,6 +506,7 @@ def RGB_to_HCL(RGB: Domain1, gamma: float = 3, Y_0: float = 100) -> Range1:
             np.pi + _4_H_3,
             _2_H_3 - np.pi,
         ],
+        xp=xp,
     )
 
     HCL = tstack([H, C, L])
@@ -504,21 +564,30 @@ def HCL_to_RGB(HCL: Domain1, gamma: float = 3, Y_0: float = 100) -> Range1:
 
     H, C, L = tsplit(to_domain_1(HCL))
 
+    xp = array_namespace(HCL)
+
     with sdiv_mode():
-        Q = np.exp((1 - sdiv(3 * C, 4 * L)) * gamma / Y_0)
+        Q = xp.exp((1 - sdiv(3 * C, 4 * L)) * gamma / Y_0)
 
         Min = sdiv(4 * L - 3 * C, 4 * Q - 2)
+
         Max = Min + sdiv(3 * C, 2 * Q)
 
-    tan_3_2_H = np.tan(3 / 2 * H)
-    tan_3_4_H_MP = np.tan(3 / 4 * (H - np.pi))
-    tan_3_4_H = np.tan(3 / 4 * H)
-    tan_3_2_H_PP = np.tan(3 / 2 * (H + np.pi))
+    tan_3_2_H = xp.tan(3 / 2 * H)
 
-    r_p60 = np.radians(60)
-    r_p120 = np.radians(120)
-    r_n60 = np.radians(-60)
-    r_n120 = np.radians(-120)
+    tan_3_4_H_MP = xp.tan(3 / 4 * (H - np.pi))
+
+    tan_3_4_H = xp.tan(3 / 4 * H)
+
+    tan_3_2_H_PP = xp.tan(3 / 2 * (H + np.pi))
+
+    r_p60 = xp_radians(60)
+
+    r_p120 = xp_radians(120)
+
+    r_n60 = xp_radians(-60)
+
+    r_n120 = xp_radians(-120)
 
     def _1_2_3(a: ArrayLike) -> NDArrayBoolean:
         """Tail-stack specified :math:`a` array as a *bool* dtype."""
@@ -526,14 +595,14 @@ def HCL_to_RGB(HCL: Domain1, gamma: float = 3, Y_0: float = 100) -> Range1:
         return tstack(cast("ArrayLike", [a, a, a]), dtype=np.bool_)
 
     with sdiv_mode():
-        RGB = np.select(
+        RGB = xp_select(
             [
-                _1_2_3(np.logical_and(H >= 0, r_p60 >= H)),
-                _1_2_3(np.logical_and(r_p60 < H, r_p120 >= H)),
-                _1_2_3(np.logical_and(r_p120 < H, np.pi >= H)),
-                _1_2_3(np.logical_and(r_n60 <= H, H < 0)),
-                _1_2_3(np.logical_and(r_n120 <= H, r_n60 > H)),
-                _1_2_3(np.logical_and(-np.pi < H, r_n120 > H)),
+                _1_2_3(xp.logical_and(H >= 0, r_p60 >= H)),
+                _1_2_3(xp.logical_and(r_p60 < H, r_p120 >= H)),
+                _1_2_3(xp.logical_and(r_p120 < H, np.pi >= H)),
+                _1_2_3(xp.logical_and(r_n60 <= H, H < 0)),
+                _1_2_3(xp.logical_and(r_n120 <= H, r_n60 > H)),
+                _1_2_3(xp.logical_and(-np.pi < H, r_n120 > H)),
             ],
             [
                 tstack(
@@ -579,6 +648,7 @@ def HCL_to_RGB(HCL: Domain1, gamma: float = 3, Y_0: float = 100) -> Range1:
                     ]
                 ),
             ],
+            xp=xp,
         )
 
     return from_range_1(RGB)

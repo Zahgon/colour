@@ -57,6 +57,7 @@ from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArithmetic,
     MixinDataclassIterable,
+    array_namespace,
     as_float,
     as_float_array,
     as_int_array,
@@ -68,7 +69,9 @@ from colour.utilities import (
     to_domain_degrees,
     tsplit,
     tstack,
-    zeros,
+    xp_asarray,
+    xp_degrees,
+    xp_radians,
 )
 from colour.utilities.documentation import DocstringDict, is_documentation_building
 
@@ -330,10 +333,11 @@ M=np.float64(0.1088421...), H=np.float64(278.0607358...), HC=None)
     RGB_w = vecmul(CAT_CAT02, XYZ_w)
 
     # Computing degree of adaptation :math:`D`.
+    xp_D = array_namespace(XYZ_w, L_A)
     D = (
-        degree_of_adaptation(surround.F, L_A)
+        xp_asarray(degree_of_adaptation(surround.F, L_A), xp=xp_D, like=XYZ_w)
         if not discount_illuminant
-        else ones(L_A.shape)
+        else xp_asarray(ones(L_A.shape), xp=xp_D, like=XYZ_w)
     )
 
     # Computing full chromatic adaptation.
@@ -355,7 +359,10 @@ M=np.float64(0.1088421...), H=np.float64(278.0607358...), HC=None)
     h = hue_angle(a, b)
 
     # Computing hue :math:`h` quadrature :math:`H`.
-    H = hue_quadrature(h) if compute_H else np.full(h.shape, np.nan)
+
+    xp = array_namespace(h)
+
+    H = hue_quadrature(h) if compute_H else xp.full(h.shape, np.nan)
     # TODO: Compute hue composition.
 
     # Computing eccentricity factor *e_t*.
@@ -494,6 +501,15 @@ def CIECAM02_to_XYZ(
     M = to_domain_100(M)
     L_A = as_float_array(L_A)
     XYZ_w = to_domain_100(XYZ_w)
+
+    xp = array_namespace(XYZ_w, L_A)
+
+    J = xp_asarray(J, xp=xp, like=XYZ_w)
+    C = xp_asarray(C, xp=xp, like=XYZ_w)
+    h = xp_asarray(h, xp=xp, like=XYZ_w)
+    M = xp_asarray(M, xp=xp, like=XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ_w)
+
     _X_w, Y_w, _Z_w = tsplit(XYZ_w)
 
     n, F_L, N_bb, N_cb, z = viewing_conditions_dependent_parameters(Y_b, Y_w, L_A)
@@ -513,10 +529,11 @@ def CIECAM02_to_XYZ(
     RGB_w = vecmul(CAT_CAT02, XYZ_w)
 
     # Computing degree of adaptation :math:`D`.
+    xp_D = array_namespace(XYZ_w, L_A)
     D = (
-        degree_of_adaptation(surround.F, L_A)
+        xp_asarray(degree_of_adaptation(surround.F, L_A), xp=xp_D, like=XYZ_w)
         if not discount_illuminant
-        else ones(L_A.shape)
+        else xp_asarray(ones(L_A.shape), xp=xp_D, like=XYZ_w)
     )
 
     # Computing full chromatic adaptation.
@@ -534,6 +551,8 @@ def CIECAM02_to_XYZ(
     # Computing temporary magnitude quantity :math:`t`.
     t = temporary_magnitude_quantity_inverse(C, J, n)
 
+    xp = array_namespace(t)
+
     # Computing eccentricity factor *e_t*.
     e_t = eccentricity_factor(h)
 
@@ -546,7 +565,7 @@ def CIECAM02_to_XYZ(
 
     # Computing opponent colour dimensions :math:`a` and :math:`b`.
     ab = opponent_colour_dimensions_inverse(P_n, h)
-    a, b = tsplit(ab) * np.where(t == 0, 0, 1)
+    a, b = tsplit(ab) * xp.where(t == 0, 0, 1)
 
     # Applying post-adaptation non-linear response compression matrix.
     RGB_a = matrix_post_adaptation_non_linear_response_compression(P_2, a, b)
@@ -620,7 +639,9 @@ def base_exponential_non_linearity(
 
     n = as_float_array(n)
 
-    return 1.48 + np.sqrt(n)
+    xp = array_namespace(n)
+
+    return 1.48 + xp.sqrt(n)
 
 
 def viewing_conditions_dependent_parameters(
@@ -704,7 +725,11 @@ def degree_of_adaptation(F: ArrayLike, L_A: ArrayLike) -> NDArrayFloat:
     F = as_float_array(F)
     L_A = as_float_array(L_A)
 
-    return F * (1 - (1 / 3.6) * np.exp((-L_A - 42) / 92))
+    xp = array_namespace(F, L_A)
+
+    F = xp_asarray(F, xp=xp, like=L_A)
+
+    return F * (1 - (1 / 3.6) * xp.exp((-L_A - 42) / 92))
 
 
 def full_chromatic_adaptation_forward(
@@ -749,6 +774,12 @@ def full_chromatic_adaptation_forward(
     RGB_w = as_float_array(RGB_w)
     Y_w = as_float_array(Y_w)
     D = as_float_array(D)
+
+    xp = array_namespace(RGB, RGB_w)
+
+    Y_w = xp_asarray(Y_w, xp=xp, like=RGB)
+    D = xp_asarray(D, xp=xp, like=RGB)
+    RGB_w = xp_asarray(RGB_w, xp=xp, like=RGB)
 
     with sdiv_mode():
         RGB_c = (Y_w[..., None] * sdiv(D[..., None], RGB_w) + 1 - D[..., None]) * RGB
@@ -798,6 +829,12 @@ def full_chromatic_adaptation_inverse(
     Y_w = as_float_array(Y_w)
     D = as_float_array(D)
 
+    xp = array_namespace(RGB, RGB_w)
+
+    Y_w = xp_asarray(Y_w, xp=xp, like=RGB)
+    D = xp_asarray(D, xp=xp, like=RGB)
+    RGB_w = xp_asarray(RGB_w, xp=xp, like=RGB)
+
     with sdiv_mode():
         RGB_c = RGB / (Y_w[..., None] * sdiv(D[..., None], RGB_w) + 1 - D[..., None])
 
@@ -826,7 +863,15 @@ def RGB_to_rgb(RGB: ArrayLike) -> NDArrayFloat:
     array([19.9969397..., 20.0018612..., 20.0135053...])
     """
 
-    return vecmul(np.matmul(MATRIX_XYZ_TO_HPE, CAT_INVERSE_CAT02), RGB)
+    xp = array_namespace(RGB)
+
+    return vecmul(
+        xp.matmul(
+            xp_asarray(MATRIX_XYZ_TO_HPE, xp=xp, like=RGB),
+            xp_asarray(CAT_INVERSE_CAT02, xp=xp, like=RGB),
+        ),
+        RGB,
+    )
 
 
 def rgb_to_RGB(rgb: ArrayLike) -> NDArrayFloat:
@@ -851,7 +896,15 @@ def rgb_to_RGB(rgb: ArrayLike) -> NDArrayFloat:
     array([19.9937078..., 20.0039363..., 20.0132638...])
     """
 
-    return vecmul(np.matmul(CAT_CAT02, MATRIX_HPE_TO_XYZ), rgb)
+    xp = array_namespace(rgb)
+
+    return vecmul(
+        xp.matmul(
+            xp_asarray(CAT_CAT02, xp=xp, like=rgb),
+            xp_asarray(MATRIX_HPE_TO_XYZ, xp=xp, like=rgb),
+        ),
+        rgb,
+    )
 
 
 def post_adaptation_non_linear_response_compression_forward(
@@ -890,9 +943,13 @@ def post_adaptation_non_linear_response_compression_forward(
     RGB = as_float_array(RGB)
     F_L = as_float_array(F_L)
 
-    F_L_RGB = spow(F_L[..., None] * np.absolute(RGB) / 100, 0.42)
+    xp = array_namespace(RGB, F_L)
 
-    return (400 * np.sign(RGB) * F_L_RGB) / (27.13 + F_L_RGB) + 0.1
+    F_L = xp_asarray(F_L, xp=xp, like=RGB)
+
+    F_L_RGB = spow(F_L[..., None] * xp.abs(RGB) / 100, 0.42)
+
+    return (400 * xp.sign(RGB) * F_L_RGB) / (27.13 + F_L_RGB) + 0.1
 
 
 def post_adaptation_non_linear_response_compression_inverse(
@@ -926,12 +983,14 @@ def post_adaptation_non_linear_response_compression_inverse(
     RGB = as_float_array(RGB)
     F_L = as_float_array(F_L)
 
+    xp = array_namespace(RGB, F_L)
+
     return (
-        np.sign(RGB - 0.1)
+        xp.sign(RGB - 0.1)
         * 100
         / F_L[..., None]
         * spow(
-            (27.13 * np.absolute(RGB - 0.1)) / (400 - np.absolute(RGB - 0.1)),
+            (27.13 * xp.abs(RGB - 0.1)) / (400 - xp.abs(RGB - 0.1)),
             1 / 0.42,
         )
     )
@@ -993,10 +1052,12 @@ def opponent_colour_dimensions_inverse(P_n: ArrayLike, h: ArrayLike) -> NDArrayF
     """
 
     P_1, P_2, P_3 = tsplit(P_n)
-    hr = np.radians(h)
+    hr = xp_radians(h)
 
-    sin_hr = np.sin(hr)
-    cos_hr = np.cos(hr)
+    xp = array_namespace(P_1, hr)
+
+    sin_hr = xp.sin(hr)
+    cos_hr = xp.cos(hr)
 
     with sdiv_mode():
         cos_hr_sin_hr = sdiv(cos_hr, sin_hr)
@@ -1007,13 +1068,13 @@ def opponent_colour_dimensions_inverse(P_n: ArrayLike, h: ArrayLike) -> NDArrayF
 
     n = P_2 * (2 + P_3) * (460 / 1403)
 
-    a = zeros(hr.shape)
-    b = zeros(hr.shape)
+    a = xp.zeros(hr.shape, dtype=hr.dtype)
+    b = xp.zeros(hr.shape, dtype=hr.dtype)
 
-    abs_sin_hr_gt_cos_hr = np.abs(sin_hr) >= np.abs(cos_hr)
-    abs_sin_hr_lt_cos_hr = np.abs(sin_hr) < np.abs(cos_hr)
+    abs_sin_hr_gt_cos_hr = xp.abs(sin_hr) >= xp.abs(cos_hr)
+    abs_sin_hr_lt_cos_hr = xp.abs(sin_hr) < xp.abs(cos_hr)
 
-    b = np.where(
+    b = xp.where(
         abs_sin_hr_gt_cos_hr,
         n
         / (
@@ -1025,13 +1086,13 @@ def opponent_colour_dimensions_inverse(P_n: ArrayLike, h: ArrayLike) -> NDArrayF
         b,
     )
 
-    a = np.where(
+    a = xp.where(
         abs_sin_hr_gt_cos_hr,
         b * cos_hr_sin_hr,
         a,
     )
 
-    a = np.where(
+    a = xp.where(
         abs_sin_hr_lt_cos_hr,
         n
         / (
@@ -1042,7 +1103,7 @@ def opponent_colour_dimensions_inverse(P_n: ArrayLike, h: ArrayLike) -> NDArrayF
         a,
     )
 
-    b = np.where(
+    b = xp.where(
         abs_sin_hr_lt_cos_hr,
         a * sin_hr_cos_hr,
         b,
@@ -1079,7 +1140,9 @@ def hue_angle(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
     a = as_float_array(a)
     b = as_float_array(b)
 
-    h = np.degrees(np.arctan2(b, a)) % 360
+    xp = array_namespace(a, b)
+
+    h = xp_degrees(xp.atan2(b, a)) % 360
 
     return as_float(h)
 
@@ -1106,13 +1169,15 @@ def hue_quadrature(h: ArrayLike) -> NDArrayFloat:
 
     h = as_float_array(h)
 
-    h_i = HUE_DATA_FOR_HUE_QUADRATURE["h_i"]
-    e_i = HUE_DATA_FOR_HUE_QUADRATURE["e_i"]
-    H_i = HUE_DATA_FOR_HUE_QUADRATURE["H_i"]
+    xp = array_namespace(h)
 
-    # *np.searchsorted* returns an erroneous index if a *nan* is used as input.
-    h = np.where(np.isnan(h), 0, h)
-    i = as_int_array(np.searchsorted(h_i, h, side="left") - 1)
+    h_i = xp_asarray(HUE_DATA_FOR_HUE_QUADRATURE["h_i"], xp=xp, like=h)
+    e_i = xp_asarray(HUE_DATA_FOR_HUE_QUADRATURE["e_i"], xp=xp, like=h)
+    H_i = xp_asarray(HUE_DATA_FOR_HUE_QUADRATURE["H_i"], xp=xp, like=h)
+
+    # *xp.searchsorted* returns an erroneous index if a *nan* is used as input.
+    h = xp.where(xp.isnan(h), 0, h)
+    i = as_int_array(xp.searchsorted(h_i, h, side="left") - 1)
 
     h_ii = h_i[i]
     e_ii = e_i[i]
@@ -1120,16 +1185,16 @@ def hue_quadrature(h: ArrayLike) -> NDArrayFloat:
     h_ii1 = h_i[i + 1]
     e_ii1 = e_i[i + 1]
 
-    H = H_ii + ((100 * (h - h_ii) / e_ii) / ((h - h_ii) / e_ii + (h_ii1 - h) / e_ii1))
+    H = H_ii + ((100 * (h - h_ii) / e_ii) / ((h - h_ii) / e_ii + (h_ii1 - h) / e_ii1))  # pyright: ignore
 
-    H = np.where(
-        h < 20.14,
-        385.9 + (14.1 * h / 0.856) / (h / 0.856 + (20.14 - h) / 0.8),
+    H = xp.where(
+        h < 20.14,  # pyright: ignore
+        385.9 + (14.1 * h / 0.856) / (h / 0.856 + (20.14 - h) / 0.8),  # pyright: ignore
         H,
     )
-    H = np.where(
-        h >= 237.53,
-        H_ii + ((85.9 * (h - h_ii) / e_ii) / ((h - h_ii) / e_ii + (360 - h) / 0.856)),
+    H = xp.where(
+        h >= 237.53,  # pyright: ignore
+        H_ii + ((85.9 * (h - h_ii) / e_ii) / ((h - h_ii) / e_ii + (360 - h) / 0.856)),  # pyright: ignore
         H,
     )
 
@@ -1159,7 +1224,9 @@ def eccentricity_factor(h: ArrayLike) -> NDArrayFloat:
 
     h = as_float_array(h)
 
-    return 1 / 4 * (np.cos(2 + h * np.pi / 180) + 3.8)
+    xp = array_namespace(h)
+
+    return 1 / 4 * (xp.cos(2 + xp_radians(h)) + 3.8)
 
 
 def achromatic_response_forward(RGB: ArrayLike, N_bb: ArrayLike) -> NDArrayFloat:
@@ -1237,6 +1304,12 @@ def achromatic_response_inverse(
     c = as_float_array(c)
     z = as_float_array(z)
 
+    xp = array_namespace(A_w, J)
+
+    A_w = xp_asarray(A_w, xp=xp, like=J)
+    c = xp_asarray(c, xp=xp, like=J)
+    z = xp_asarray(z, xp=xp, like=J)
+
     return A_w * spow(J / 100, 1 / (c * z))
 
 
@@ -1279,6 +1352,12 @@ def lightness_correlate(
     A_w = as_float_array(A_w)
     c = as_float_array(c)
     z = as_float_array(z)
+
+    xp = array_namespace(A, A_w)
+
+    A_w = xp_asarray(A_w, xp=xp, like=A)
+    c = xp_asarray(c, xp=xp, like=A)
+    z = xp_asarray(z, xp=xp, like=A)
 
     with sdiv_mode():
         return 100 * spow(sdiv(A, A_w), c * z)
@@ -1324,7 +1403,9 @@ def brightness_correlate(
     A_w = as_float_array(A_w)
     F_L = as_float_array(F_L)
 
-    return (4 / c) * np.sqrt(J / 100) * (A_w + 4) * spow(F_L, 0.25)
+    xp = array_namespace(c, J, A_w, F_L)
+
+    return (4 / c) * xp.sqrt(J / 100) * (A_w + 4) * spow(F_L, 0.25)
 
 
 def temporary_magnitude_quantity_forward(
@@ -1416,10 +1497,18 @@ def temporary_magnitude_quantity_inverse(
     """
 
     C = as_float_array(C)
-    J_prime = np.maximum(J, EPSILON)
+    J = as_float_array(J)
     n = as_float_array(n)
 
-    return spow(C / (np.sqrt(J_prime / 100) * spow(1.64 - 0.29**n, 0.73)), 1 / 0.9)
+    xp = array_namespace(C, J, n)
+
+    C = xp_asarray(C, xp=xp, like=n)
+    J = xp_asarray(J, xp=xp, like=n)
+    n = xp_asarray(n, xp=xp, like=J)
+
+    J_prime = xp.clip(J, min=EPSILON)
+
+    return spow(C / (xp.sqrt(J_prime / 100) * spow(1.64 - 0.29**n, 0.73)), 1 / 0.9)
 
 
 def chroma_correlate(

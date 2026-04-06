@@ -19,7 +19,7 @@ from colour.io import (
     read_LUT_Cinespace,
     write_LUT_Cinespace,
 )
-from colour.utilities import tstack
+from colour.utilities import tstack, xp_assert_close, xp_assert_equal
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -54,7 +54,7 @@ class TestReadLUTCinespace:
             read_LUT_Cinespace(os.path.join(ROOT_LUTS, "ACES_Proxy_10_to_ACES.csp")),
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             LUT_1.table,
             np.array(
                 [
@@ -96,13 +96,13 @@ class TestReadLUTCinespace:
         )
         assert LUT_1.name == "ACES Proxy 10 to ACES"
         assert LUT_1.dimensions == 2
-        np.testing.assert_array_equal(LUT_1.domain, np.array([[0, 0, 0], [1, 1, 1]]))
+        xp_assert_equal(LUT_1.domain, np.array([[0, 0, 0], [1, 1, 1]]))
         assert LUT_1.size == 32
         assert LUT_1.comments == []
 
         LUT_2 = cast("LUT3x1D", read_LUT_Cinespace(os.path.join(ROOT_LUTS, "Demo.csp")))
         assert LUT_2.comments == ["Comments are ignored by most parsers"]
-        np.testing.assert_array_equal(LUT_2.domain, np.array([[0, 0, 0], [1, 2, 3]]))
+        xp_assert_equal(LUT_2.domain, np.array([[0, 0, 0], [1, 2, 3]]))
 
         LUT_3 = cast(
             "LUT3D",
@@ -207,10 +207,10 @@ class TestWriteLUTCinespace:
         LUT_4_r = cast(
             "LUT3x1D", read_LUT_Cinespace(os.path.join(ROOT_LUTS, "Ragged_Domain.csp"))
         )
-        np.testing.assert_allclose(
-            LUT_4_t.domain, LUT_4_r.domain, atol=TOLERANCE_ABSOLUTE_TESTS
+        xp_assert_close(LUT_4_t.domain, LUT_4_r.domain, atol=TOLERANCE_ABSOLUTE_TESTS)
+        xp_assert_close(
+            LUT_4_t.table, LUT_4_r.table, atol=TOLERANCE_ABSOLUTE_TESTS * 500
         )
-        np.testing.assert_allclose(LUT_4_t.table, LUT_4_r.table, atol=5e-5)
 
         LUT_5_r = cast(
             "LUTSequence",

@@ -17,14 +17,18 @@ nuke-default/make.py
 
 from __future__ import annotations
 
-import numpy as np
-
 from colour.hints import (  # noqa: TC001
     ArrayLike,
     Domain1,
     Range1,
 )
-from colour.utilities import as_float, as_float_array, from_range_1, to_domain_1
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    from_range_1,
+    to_domain_1,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -83,9 +87,12 @@ def log_encoding_Cineon(
     """
 
     x = to_domain_1(x)
+
+    xp = array_namespace(x)
+
     black_offset = as_float_array(black_offset)
 
-    y = (685 + 300 * np.log10(x * (1 - black_offset) + black_offset)) / 1023
+    y = (685 + 300 * xp.log10(x * (1 - black_offset) + black_offset)) / 1023
 
     return as_float(from_range_1(y))
 

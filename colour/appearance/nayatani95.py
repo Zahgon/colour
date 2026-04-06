@@ -41,12 +41,16 @@ from colour.hints import Annotated, NDArrayFloat, cast
 from colour.models import XYZ_to_xy
 from colour.utilities import (
     MixinDataclassArithmetic,
+    array_namespace,
     as_float,
     as_float_array,
     from_range_degrees,
     to_domain_100,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_degrees,
+    xp_radians,
 )
 
 __author__ = "Colour Developers"
@@ -262,6 +266,12 @@ M=np.float64(0.0167262...), H=None, HC=None, L_star_N=np.float64(50.0039154...))
     E_o = as_float_array(E_o)
     E_or = as_float_array(E_or)
 
+    xp = array_namespace(XYZ)
+
+    Y_o = xp_asarray(Y_o, xp=xp, like=XYZ)
+    E_o = xp_asarray(E_o, xp=xp, like=XYZ)
+    E_or = xp_asarray(E_or, xp=xp, like=XYZ)
+
     # Computing adapting luminance :math:`L_o` and normalising luminance
     # :math:`L_{or}` in in :math:`cd/m^2`.
     # L_o = illuminance_to_luminance(E_o, Y_o)
@@ -420,7 +430,9 @@ def scaling_coefficient(x: ArrayLike, y: ArrayLike) -> NDArrayFloat:
     x = as_float_array(x)
     y = as_float_array(y)
 
-    return as_float(np.where(x >= (20 * y), 1.758, 1))
+    xp = array_namespace(x, y)
+
+    return as_float(xp.where(x >= (20 * y), 1.758, 1))
 
 
 def achromatic_response(
@@ -481,8 +493,10 @@ def achromatic_response(
     eR = as_float_array(eR)
     eG = as_float_array(eG)
 
-    Q = (2 / 3) * bR_o * eR * np.log10((R + n) / (20 * xi + n))
-    Q += (1 / 3) * bG_o * eG * np.log10((G + n) / (20 * eta + n))
+    xp = array_namespace(R, G)
+
+    Q = (2 / 3) * bR_o * eR * xp.log10((R + n) / (20 * xi + n))
+    Q += (1 / 3) * bG_o * eG * xp.log10((G + n) / (20 * eta + n))
     Q *= 41.69 / bL_or
 
     return as_float(Q)
@@ -526,10 +540,12 @@ def tritanopic_response(
     bR_o, bG_o, bB_o = tsplit(bRGB_o)
     xi, eta, zeta = tsplit(xez)
 
+    xp = array_namespace(R, G)
+
     t = (
-        bR_o * np.log10((R + n) / (20 * xi + n))
-        - (12 / 11) * bG_o * np.log10((G + n) / (20 * eta + n))
-        + (1 / 11) * bB_o * np.log10((B + n) / (20 * zeta + n))
+        bR_o * xp.log10((R + n) / (20 * xi + n))
+        - (12 / 11) * bG_o * xp.log10((G + n) / (20 * eta + n))
+        + (1 / 11) * bB_o * xp.log10((B + n) / (20 * zeta + n))
     )
 
     return as_float(t)
@@ -573,9 +589,11 @@ def protanopic_response(
     bR_o, bG_o, bB_o = tsplit(bRGB_o)
     xi, eta, zeta = tsplit(xez)
 
-    p = (1 / 9) * bR_o * np.log10((R + n) / (20 * xi + n))
-    p += (1 / 9) * bG_o * np.log10((G + n) / (20 * eta + n))
-    p += -(2 / 9) * bB_o * np.log10((B + n) / (20 * zeta + n))
+    xp = array_namespace(R, G)
+
+    p = (1 / 9) * bR_o * xp.log10((R + n) / (20 * xi + n))
+    p += (1 / 9) * bG_o * xp.log10((G + n) / (20 * eta + n))
+    p += -(2 / 9) * bB_o * xp.log10((B + n) / (20 * zeta + n))
 
     return as_float(p)
 
@@ -662,8 +680,10 @@ def ideal_white_brightness_correlate(
     xi, eta, _zeta = tsplit(xez)
     bL_or = as_float_array(bL_or)
 
-    B_rw = (2 / 3) * bR_o * 1.758 * np.log10((100 * xi + n) / (20 * xi + n))
-    B_rw += (1 / 3) * bG_o * 1.758 * np.log10((100 * eta + n) / (20 * eta + n))
+    xp = array_namespace(bR_o, xi)
+
+    B_rw = (2 / 3) * bR_o * 1.758 * xp.log10((100 * xi + n) / (20 * xi + n))
+    B_rw += (1 / 3) * bG_o * 1.758 * xp.log10((100 * eta + n) / (20 * eta + n))
     B_rw *= 41.69 / bL_or
     B_rw += (50 / bL_or) * (2 / 3) * bR_o
     B_rw += (50 / bL_or) * (1 / 3) * bG_o
@@ -761,7 +781,9 @@ def hue_angle(p: ArrayLike, t: ArrayLike) -> NDArrayFloat:
     p = as_float_array(p)
     t = as_float_array(t)
 
-    h_L = np.degrees(np.arctan2(p, t)) % 360
+    xp = array_namespace(p, t)
+
+    h_L = xp_degrees(xp.atan2(p, t)) % 360
 
     return as_float(h_L)
 
@@ -791,17 +813,19 @@ def chromatic_strength_function(
     np.float64(1.2267869...)
     """
 
-    theta = np.radians(theta)
+    theta = xp_radians(theta)
+
+    xp = array_namespace(theta)
 
     E_s = cast("NDArrayFloat", 0.9394)
-    E_s += -0.2478 * np.sin(1 * theta)
-    E_s += -0.0743 * np.sin(2 * theta)
-    E_s += +0.0666 * np.sin(3 * theta)
-    E_s += -0.0186 * np.sin(4 * theta)
-    E_s += -0.0055 * np.cos(1 * theta)
-    E_s += -0.0521 * np.cos(2 * theta)
-    E_s += -0.0573 * np.cos(3 * theta)
-    E_s += -0.0061 * np.cos(4 * theta)
+    E_s += -0.2478 * xp.sin(1 * theta)
+    E_s += -0.0743 * xp.sin(2 * theta)
+    E_s += +0.0666 * xp.sin(3 * theta)
+    E_s += -0.0186 * xp.sin(4 * theta)
+    E_s += -0.0055 * xp.cos(1 * theta)
+    E_s += -0.0521 * xp.cos(2 * theta)
+    E_s += -0.0573 * xp.cos(3 * theta)
+    E_s += -0.0061 * xp.cos(4 * theta)
 
     return as_float(E_s)
 
@@ -881,7 +905,9 @@ def saturation_correlate(S_RG: ArrayLike, S_YB: ArrayLike) -> NDArrayFloat:
     S_RG = as_float_array(S_RG)
     S_YB = as_float_array(S_YB)
 
-    S = np.hypot(S_RG, S_YB)
+    xp = array_namespace(S_RG, S_YB)
+
+    S = xp.hypot(S_RG, S_YB)
 
     return as_float(S)
 

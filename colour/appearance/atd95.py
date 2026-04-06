@@ -28,18 +28,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import numpy as np
-
 from colour.algebra import spow, vecmul
 from colour.hints import Annotated, ArrayLike, Domain100, NDArrayFloat  # noqa: TC001
 from colour.utilities import (
     MixinDataclassArithmetic,
+    array_namespace,
     as_float,
     as_float_array,
     from_range_degrees,
     to_domain_100,
     tsplit,
     tstack,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -225,6 +225,7 @@ def XYZ_to_ATD95(
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ = np.array([19.01, 20.00, 21.78])
     >>> XYZ_0 = np.array([95.05, 100.00, 108.88])
     >>> Y_0 = 318.31
@@ -244,6 +245,14 @@ T_2=np.float64(0.0205377...), D_2=np.float64(0.0107584...))
     k_1 = as_float_array(k_1)
     k_2 = as_float_array(k_2)
     sigma = as_float_array(sigma)
+
+    xp = array_namespace(XYZ, XYZ_0)
+
+    XYZ_0 = xp_asarray(XYZ_0, xp=xp, like=XYZ)
+    Y_0 = xp_asarray(Y_0, xp=xp, like=XYZ)
+    k_1 = xp_asarray(k_1, xp=xp, like=XYZ)
+    k_2 = xp_asarray(k_2, xp=xp, like=XYZ)
+    sigma = xp_asarray(sigma, xp=xp, like=XYZ)
 
     XYZ = luminance_to_retinal_illuminance(XYZ, Y_0)
     XYZ_0 = luminance_to_retinal_illuminance(XYZ_0, Y_0)
@@ -304,6 +313,7 @@ def luminance_to_retinal_illuminance(XYZ: ArrayLike, Y_c: ArrayLike) -> NDArrayF
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ = np.array([19.01, 20.00, 21.78])
     >>> Y_0 = 318.31
     >>> luminance_to_retinal_illuminance(XYZ, Y_0)  # doctest: +ELLIPSIS
@@ -312,6 +322,10 @@ def luminance_to_retinal_illuminance(XYZ: ArrayLike, Y_c: ArrayLike) -> NDArrayF
 
     XYZ = as_float_array(XYZ)
     Y_c = as_float_array(Y_c)
+
+    xp = array_namespace(XYZ)
+
+    Y_c = xp_asarray(Y_c, xp=xp, like=XYZ)
 
     return 18 * spow(Y_c[..., None] * XYZ / 100, 0.8)
 
@@ -333,10 +347,13 @@ def XYZ_to_LMS_ATD95(XYZ: ArrayLike) -> NDArrayFloat:
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ = np.array([19.01, 20.00, 21.78])
     >>> XYZ_to_LMS_ATD95(XYZ)  # doctest: +ELLIPSIS
     array([6.2283272..., 7.4780666..., 3.8859772...])
     """
+
+    xp = array_namespace(XYZ)
 
     LMS = vecmul(
         [
@@ -346,11 +363,11 @@ def XYZ_to_LMS_ATD95(XYZ: ArrayLike) -> NDArrayFloat:
         ],
         XYZ,
     )
-    LMS = LMS * np.array([0.66, 1.0, 0.43])
+    LMS = LMS * xp_asarray([0.66, 1.0, 0.43], xp=xp, like=XYZ)
 
     LMS_p = spow(LMS, 0.7)
 
-    return LMS_p + np.array([0.024, 0.036, 0.31])
+    return LMS_p + xp_asarray([0.024, 0.036, 0.31], xp=xp, like=XYZ)
 
 
 def opponent_colour_dimensions(LMS_g: ArrayLike) -> NDArrayFloat:
@@ -370,6 +387,7 @@ def opponent_colour_dimensions(LMS_g: ArrayLike) -> NDArrayFloat:
 
     Examples
     --------
+    >>> import numpy as np
     >>> LMS_g = np.array([6.95457922, 7.08945043, 6.44069316])
     >>> opponent_colour_dimensions(LMS_g)  # doctest: +ELLIPSIS
     array([0.1787931..., 0.0286942..., 0.0107584..., 0.0192182..., ...])
@@ -416,4 +434,6 @@ def final_response(value: ArrayLike) -> NDArrayFloat:
 
     value = as_float_array(value)
 
-    return as_float(value / (200 + np.abs(value)))
+    xp = array_namespace(value)
+
+    return as_float(value / (200 + xp.abs(value)))

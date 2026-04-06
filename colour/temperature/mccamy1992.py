@@ -22,15 +22,22 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import sdiv, sdiv_mode
 from colour.colorimetry import CCS_ILLUMINANTS
 
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, DTypeFloat, NDArrayFloat
 
-from colour.utilities import as_float, as_float_array, required, tsplit, usage_warning
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    required,
+    tsplit,
+    usage_warning,
+    xp_atleast_1d,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -136,13 +143,16 @@ def CCT_to_xy_McCamy1992(
     )
 
     CCT = as_float_array(CCT)
+
+    xp = array_namespace(CCT)
+
     shape = list(CCT.shape)
-    CCT = np.atleast_1d(np.reshape(CCT, (-1, 1)))
+    CCT = xp_atleast_1d(xp_reshape(CCT, (-1, 1), xp=xp), xp=xp)
 
     def objective_function(xy: NDArrayFloat, CCT: NDArrayFloat) -> DTypeFloat:
         """Objective function."""
 
-        objective = np.linalg.norm(xy_to_CCT_McCamy1992(xy) - CCT)
+        objective = xp.linalg.vector_norm(xy_to_CCT_McCamy1992(xy) - CCT)
 
         return as_float(objective)
 
@@ -167,4 +177,4 @@ def CCT_to_xy_McCamy1992(
         ]
     )
 
-    return np.reshape(xy, ([*shape, 2]))
+    return xp_reshape(xy, ([*shape, 2]), xp=xp)

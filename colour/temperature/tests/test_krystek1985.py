@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.temperature import CCT_to_uv_Krystek1985, uv_to_CCT_Krystek1985
-from colour.utilities import ignore_numpy_errors, is_scipy_installed
+from colour.utilities import (
+    ignore_numpy_errors,
+    is_scipy_installed,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -28,40 +39,40 @@ class TestUv_to_CCT_Krystek1985:
     definition unit tests methods.
     """
 
-    def test_uv_to_CCT_Krystek1985(self) -> None:
+    def test_uv_to_CCT_Krystek1985(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.krystek1985.uv_to_CCT_Krystek1985`
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             uv_to_CCT_Krystek1985(
-                np.array([0.448087794140145, 0.354731965027727]),
+                xp_asarray([0.448087794140145, 0.354731965027727], xp=xp),
                 {"method": "Nelder-Mead"},
             ),
             1000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             uv_to_CCT_Krystek1985(
-                np.array([0.198152565091092, 0.307023596915037]),
+                xp_asarray([0.198152565091092, 0.307023596915037], xp=xp),
                 {"method": "Nelder-Mead"},
             ),
             7000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             uv_to_CCT_Krystek1985(
-                np.array([0.185675876767054, 0.282233658593898]),
+                xp_asarray([0.185675876767054, 0.282233658593898], xp=xp),
                 {"method": "Nelder-Mead"},
             ),
             15000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_uv_to_CCT_Krystek1985(self) -> None:
+    def test_n_dimensional_uv_to_CCT_Krystek1985(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.krystek1985.uv_to_CCT_Krystek1985`
         definition n-dimensional arrays support.
@@ -70,20 +81,16 @@ class TestUv_to_CCT_Krystek1985:
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        uv = np.array([0.198152565091092, 0.307023596915037])
-        CCT = uv_to_CCT_Krystek1985(uv)
+        uv = xp_asarray([0.198152565091092, 0.307023596915037], xp=xp)
+        CCT = np.asarray(uv_to_CCT_Krystek1985(uv))
 
-        uv = np.tile(uv, (6, 1))
-        CCT = np.tile(CCT, 6)
-        np.testing.assert_allclose(
-            uv_to_CCT_Krystek1985(uv), CCT, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        uv = xp.tile(xp_asarray(uv, xp=xp), (6, 1))
+        CCT = xp.tile(xp_asarray(CCT, xp=xp), (6,))
+        xp_assert_close(uv_to_CCT_Krystek1985(uv), CCT, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        uv = np.reshape(uv, (2, 3, 2))
-        CCT = np.reshape(CCT, (2, 3))
-        np.testing.assert_allclose(
-            uv_to_CCT_Krystek1985(uv), CCT, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        uv = xp_reshape(xp_asarray(uv, xp=xp), (2, 3, 2), xp=xp)
+        CCT = xp_reshape(xp_asarray(CCT, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(uv_to_CCT_Krystek1985(uv), CCT, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_uv_to_CCT_Krystek1985(self) -> None:
@@ -106,50 +113,46 @@ class TestCCT_to_uv_Krystek1985:
     definition unit tests methods.
     """
 
-    def test_CCT_to_uv_Krystek1985(self) -> None:
+    def test_CCT_to_uv_Krystek1985(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.krystek1985.CCT_to_uv_Krystek1985`
         definition.
         """
 
-        np.testing.assert_allclose(
-            CCT_to_uv_Krystek1985(1000),
-            np.array([0.448087794140145, 0.354731965027727]),
+        xp_assert_close(
+            CCT_to_uv_Krystek1985(xp_asarray([1000], xp=xp)),
+            np.array([[0.448087794140145, 0.354731965027727]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            CCT_to_uv_Krystek1985(7000),
-            np.array([0.198152565091092, 0.307023596915037]),
+        xp_assert_close(
+            CCT_to_uv_Krystek1985(xp_asarray([7000], xp=xp)),
+            np.array([[0.198152565091092, 0.307023596915037]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            CCT_to_uv_Krystek1985(15000),
-            np.array([0.185675876767054, 0.282233658593898]),
+        xp_assert_close(
+            CCT_to_uv_Krystek1985(xp_asarray([15000], xp=xp)),
+            np.array([[0.185675876767054, 0.282233658593898]]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_CCT_to_uv_Krystek1985(self) -> None:
+    def test_n_dimensional_CCT_to_uv_Krystek1985(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.krystek1985.CCT_to_uv_Krystek1985`
         definition n-dimensional arrays support.
         """
 
         CCT = 7000
-        uv = CCT_to_uv_Krystek1985(CCT)
+        uv = np.asarray(CCT_to_uv_Krystek1985(CCT))
 
-        CCT = np.tile(CCT, 6)
-        uv = np.tile(uv, (6, 1))
-        np.testing.assert_allclose(
-            CCT_to_uv_Krystek1985(CCT), uv, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        CCT = xp.tile(xp_asarray(CCT, xp=xp), (6,))
+        uv = xp.tile(xp_asarray(uv, xp=xp), (6, 1))
+        xp_assert_close(CCT_to_uv_Krystek1985(CCT), uv, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        CCT = np.reshape(CCT, (2, 3))
-        uv = np.reshape(uv, (2, 3, 2))
-        np.testing.assert_allclose(
-            CCT_to_uv_Krystek1985(CCT), uv, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        CCT = xp_reshape(xp_asarray(CCT, xp=xp), (2, 3), xp=xp)
+        uv = xp_reshape(xp_asarray(uv, xp=xp), (2, 3, 2), xp=xp)
+        xp_assert_close(CCT_to_uv_Krystek1985(CCT), uv, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_CCT_to_uv_Krystek1985(self) -> None:

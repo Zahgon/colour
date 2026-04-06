@@ -29,8 +29,6 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import LinearInterpolator
 from colour.colorimetry import (
     SDS_BASIS_FUNCTIONS_CIE_ILLUMINANT_D_SERIES,
@@ -43,7 +41,14 @@ from colour.colorimetry import (
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, NDArrayFloat
 
-from colour.utilities import as_float, as_float_array, tsplit
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    tsplit,
+    xp_asarray,
+    xp_round,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -129,12 +134,16 @@ def sd_CIE_standard_illuminant_A(
                          {'method': 'Constant', 'left': None, 'right': None})
     """
 
+    wavelengths = as_float_array(shape.wavelengths)
+
+    xp = array_namespace(wavelengths)
+
     values = (
         100
-        * (560 / shape.wavelengths) ** 5
+        * (560 / wavelengths) ** 5
         * (
-            np.expm1((1.435 * 10**7) / (2848 * 560))
-            / np.expm1((1.435 * 10**7) / (2848 * shape.wavelengths))
+            xp.expm1(as_float_array((1.435 * 10**7) / (2848 * 560)))
+            / xp.expm1((1.435 * 10**7) / (2848 * wavelengths))
         )
     )
 
@@ -311,8 +320,10 @@ def sd_CIE_illuminant_D_series(
     M2 = (0.0300 - 31.4424 * x + 30.0717 * y) / M
 
     if M1_M2_rounding:
-        M1 = np.around(M1, 3)
-        M2 = np.around(M2, 3)
+        xp = array_namespace(M1)
+
+        M1 = xp_round(M1, decimals=3, xp=xp)
+        M2 = xp_round(M2, decimals=3, xp=xp)
 
     S0 = SDS_BASIS_FUNCTIONS_CIE_ILLUMINANT_D_SERIES["S0"]
     S1 = SDS_BASIS_FUNCTIONS_CIE_ILLUMINANT_D_SERIES["S1"]
@@ -323,7 +334,13 @@ def sd_CIE_illuminant_D_series(
         S1 = reshape_sd(S1, shape=shape, copy=False)
         S2 = reshape_sd(S2, shape=shape, copy=False)
 
-    distribution = S0.values + M1 * S1.values + M2 * S2.values
+    xp = array_namespace(M1)
+
+    distribution = (
+        xp_asarray(S0.values, xp=xp, like=M1)
+        + M1 * xp_asarray(S1.values, xp=xp, like=M1)
+        + M2 * xp_asarray(S2.values, xp=xp, like=M1)
+    )
 
     return SpectralDistribution(
         distribution,

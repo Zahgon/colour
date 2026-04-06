@@ -39,6 +39,7 @@ from colour.hints import (  # noqa: TC001
 )
 from colour.models import Iab_to_XYZ, XYZ_to_Iab
 from colour.utilities import (
+    array_namespace,
     as_float,
     domain_range_scale,
     from_range_1,
@@ -49,6 +50,8 @@ from colour.utilities import (
     to_domain_degrees,
     tsplit,
     tstack,
+    xp_degrees,
+    xp_radians,
 )
 
 __author__ = "UltraMo114(Molin Li), Colour Developers"
@@ -256,11 +259,14 @@ def sUCS_chroma(Iab: Domain100) -> Range100:
     >>> Iab = np.array([42.62923653, 36.97646831, 14.12301358])
     >>> sUCS_chroma(Iab)  # doctest: +ELLIPSIS
     np.float64(40.4205110...)
+
     """
+
+    xp = array_namespace(Iab)
 
     _I, a, b = tsplit(to_domain_100(Iab))
 
-    C = 1 / 0.0252 * np.log(1 + 0.0447 * np.hypot(a, b))
+    C = 1 / 0.0252 * xp.log(1 + 0.0447 * xp.hypot(a, b))
 
     return as_float(from_range_100(C))
 
@@ -302,11 +308,14 @@ def sUCS_hue_angle(Iab: Domain100) -> Range360:
     >>> Iab = np.array([42.62923653, 36.97646831, 14.12301358])
     >>> sUCS_hue_angle(Iab)  # doctest: +ELLIPSIS
     np.float64(20.9041560...)
+
     """
+
+    xp = array_namespace(Iab)
 
     _I, a, b = tsplit(to_domain_100(Iab))
 
-    h = np.degrees(np.arctan2(b, a)) % 360
+    h = xp_degrees(xp.atan2(b, a)) % 360
 
     return as_float(from_range_degrees(h))
 
@@ -359,9 +368,11 @@ def sUCS_Iab_to_sUCS_ICh(
 
     I, a, b = tsplit(to_domain_100(Iab))  # noqa: E741
 
-    C = 1 / 0.0252 * np.log(1 + 0.0447 * np.hypot(a, b))
+    xp = array_namespace(Iab)
 
-    h = np.degrees(np.arctan2(b, a)) % 360
+    C = 1 / 0.0252 * xp.log(1 + 0.0447 * xp.hypot(a, b))
+
+    h = xp_degrees(xp.atan2(b, a)) % 360
 
     return tstack([from_range_100(I), from_range_100(C), from_range_degrees(h)])
 
@@ -413,13 +424,19 @@ def sUCS_ICh_to_sUCS_Iab(
     """
 
     I, C, h = tsplit(ICh)  # noqa: E741
+
+    xp = array_namespace(ICh)
+
     I = to_domain_100(I)  # noqa: E741
+
     C = to_domain_100(C)
+
     h = to_domain_degrees(h)
 
-    C = (np.exp(0.0252 * C) - 1) / 0.0447
+    C = (xp.exp(0.0252 * C) - 1) / 0.0447
 
-    a = C * np.cos(np.radians(h))
-    b = C * np.sin(np.radians(h))
+    a = C * xp.cos(xp_radians(h))
+
+    b = C * xp.sin(xp_radians(h))
 
     return from_range_100(tstack([I, a, b]))

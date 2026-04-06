@@ -23,8 +23,6 @@ from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
 
-import numpy as np
-
 from colour.algebra import spow, vecmul
 from colour.appearance.cam16 import MATRIX_16, MATRIX_INVERSE_16
 from colour.appearance.ciecam02 import (
@@ -60,6 +58,7 @@ from colour.utilities import (
     CanonicalMapping,
     MixinDataclassArithmetic,
     MixinDataclassIterable,
+    array_namespace,
     as_float,
     as_float_array,
     from_range_100,
@@ -69,6 +68,8 @@ from colour.utilities import (
     to_domain_100,
     to_domain_degrees,
     tsplit,
+    xp_asarray,
+    xp_select,
 )
 
 __author__ = "Colour Developers"
@@ -249,6 +250,7 @@ def XYZ_to_CIECAM16(
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ = np.array([19.01, 20.00, 21.78])
     >>> XYZ_w = np.array([95.05, 100.00, 108.88])
     >>> L_A = 318.31
@@ -263,17 +265,22 @@ M=np.float64(0.1074367...), H=np.float64(275.5949861...), HC=None)
 
     XYZ = to_domain_100(XYZ)
     XYZ_w = to_domain_100(XYZ_w)
-    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
     L_A = as_float_array(L_A)
     Y_b = as_float_array(Y_b)
+
+    xp = array_namespace(XYZ)
+
+    XYZ_w = xp_asarray(XYZ_w, xp=xp, like=XYZ)
+    _X_w, Y_w, _Z_w = tsplit(XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ)
+    Y_b = xp_asarray(Y_b, xp=xp, like=XYZ)
 
     # Step 0
     # Converting *CIE XYZ* tristimulus values to sharpened *RGB* values.
     RGB_w = vecmul(MATRIX_16, XYZ_w)
 
-    # Computing degree of adaptation :math:`D`.
     D = (
-        np.clip(degree_of_adaptation(surround.F, L_A), 0, 1)
+        xp.clip(degree_of_adaptation(surround.F, L_A), 0, 1)
         if not discount_illuminant
         else ones(L_A.shape)
     )
@@ -312,7 +319,7 @@ M=np.float64(0.1074367...), H=np.float64(275.5949861...), HC=None)
     e_t = eccentricity_factor(h)
 
     # Computing hue :math:`h` quadrature :math:`H`.
-    H = hue_quadrature(h) if compute_H else np.full(h.shape, np.nan)
+    H = hue_quadrature(h) if compute_H else xp.full(h.shape, float("nan"))
     # TODO: Compute hue composition.
 
     # Step 6
@@ -434,6 +441,7 @@ def CIECAM16_to_XYZ(
 
     Examples
     --------
+    >>> import numpy as np
     >>> specification = CAM_Specification_CIECAM16(
     ...     J=41.731207905126638, C=0.103355738709070, h=217.067959767393010
     ... )
@@ -452,6 +460,15 @@ def CIECAM16_to_XYZ(
     M = to_domain_100(M)
     L_A = as_float_array(L_A)
     XYZ_w = to_domain_100(XYZ_w)
+
+    xp = array_namespace(XYZ_w, L_A)
+
+    J = xp_asarray(J, xp=xp, like=XYZ_w)
+    C = xp_asarray(C, xp=xp, like=XYZ_w)
+    h = xp_asarray(h, xp=xp, like=XYZ_w)
+    M = xp_asarray(M, xp=xp, like=XYZ_w)
+    L_A = xp_asarray(L_A, xp=xp, like=XYZ_w)
+
     _X_w, Y_w, _Z_w = tsplit(XYZ_w)
 
     # Step 0
@@ -460,9 +477,13 @@ def CIECAM16_to_XYZ(
 
     # Computing degree of adaptation :math:`D`.
     D = (
-        np.clip(degree_of_adaptation(surround.F, L_A), 0, 1)
+        xp.clip(
+            xp_asarray(degree_of_adaptation(surround.F, L_A), xp=xp, like=XYZ_w),
+            0,
+            1,
+        )
         if not discount_illuminant
-        else ones(L_A.shape)
+        else xp_asarray(ones(L_A.shape), xp=xp, like=XYZ_w)
     )
 
     n, F_L, N_bb, N_cb, z = viewing_conditions_dependent_parameters(Y_b, Y_w, L_A)
@@ -504,7 +525,7 @@ def CIECAM16_to_XYZ(
     # Step 3
     # Computing opponent colour dimensions :math:`a` and :math:`b`.
     ab = opponent_colour_dimensions_inverse(P_n, h)
-    a, b = tsplit(ab) * np.where(t == 0, 0, 1)
+    a, b = tsplit(ab) * xp.where(t == 0, 0, 1)
 
     # Step 4
     # Applying post-adaptation non-linear response compression matrix.
@@ -547,6 +568,7 @@ def f_e_forward(RGB_c: ArrayLike, F_L: ArrayLike) -> NDArrayFloat:
 
     Examples
     --------
+    >>> import numpy as np
     >>> RGB_c = np.array([19.99693975, 20.00186123, 20.01350530])
     >>> F_L = 1.16754446415
     >>> f_e_forward(RGB_c, F_L)
@@ -556,6 +578,11 @@ def f_e_forward(RGB_c: ArrayLike, F_L: ArrayLike) -> NDArrayFloat:
 
     RGB_c = as_float_array(RGB_c)
     F_L = as_float_array(F_L)
+
+    xp = array_namespace(RGB_c)
+
+    F_L = xp_asarray(F_L, xp=xp, like=RGB_c)
+
     q_L, q_U = 0.26, 150
 
     f_q_F_L_q_U = f_q(F_L, q_U)[..., None]
@@ -563,10 +590,10 @@ def f_e_forward(RGB_c: ArrayLike, F_L: ArrayLike) -> NDArrayFloat:
     f_q_F_L_RGB_c = f_q(F_L[..., None], RGB_c)
     d_f_q_F_L_q_U = d_f_q(F_L, q_U)[..., None]
 
-    return np.select(
+    return xp_select(
         [
             RGB_c > q_U,
-            np.logical_and(q_L <= RGB_c, RGB_c <= q_U),
+            xp.logical_and(q_L <= RGB_c, RGB_c <= q_U),
             RGB_c < q_L,
         ],
         [
@@ -574,6 +601,7 @@ def f_e_forward(RGB_c: ArrayLike, F_L: ArrayLike) -> NDArrayFloat:
             f_q_F_L_RGB_c,
             f_q_F_L_q_L * RGB_c / q_L,
         ],
+        xp=xp,
     )
 
 
@@ -602,6 +630,7 @@ def f_e_inverse(RGB_a: ArrayLike, F_L: ArrayLike) -> NDArrayFloat:
 
     Examples
     --------
+    >>> import numpy as np
     >>> RGB_a = np.array([7.8463202, 7.84711528, 7.84899595])
     >>> F_L = 1.16754446415
     >>> f_e_inverse(RGB_a, F_L)
@@ -611,16 +640,19 @@ def f_e_inverse(RGB_a: ArrayLike, F_L: ArrayLike) -> NDArrayFloat:
 
     RGB_a = as_float_array(RGB_a)
     F_L = as_float_array(F_L)
+
+    xp = array_namespace(RGB_a)
+
     q_L, q_U = 0.26, 150
 
     f_q_F_L_q_U = f_q(F_L, q_U)[..., None]
     f_q_F_L_q_L = f_q(F_L, q_L)[..., None]
     d_f_q_F_L_q_U = d_f_q(F_L, q_U)[..., None]
 
-    return np.select(
+    return xp_select(
         [
             RGB_a > f_q_F_L_q_U,
-            np.logical_and(f_q_F_L_q_L <= RGB_a, RGB_a <= f_q_F_L_q_U),
+            xp.logical_and(f_q_F_L_q_L <= RGB_a, RGB_a <= f_q_F_L_q_U),
             RGB_a < f_q_F_L_q_L,
         ],
         [
@@ -628,6 +660,7 @@ def f_e_inverse(RGB_a: ArrayLike, F_L: ArrayLike) -> NDArrayFloat:
             100 / F_L[..., None] * spow((27.13 * RGB_a) / (400 - RGB_a), 1 / 0.42),
             q_L * RGB_a / f_q_F_L_q_L,
         ],
+        xp=xp,
     )
 
 
@@ -655,6 +688,11 @@ def f_q(F_L: ArrayLike, q: ArrayLike) -> NDArrayFloat:
 
     F_L = as_float_array(F_L)
     q = as_float_array(q)
+
+    xp = array_namespace(F_L, q)
+
+    F_L = xp_asarray(F_L, xp=xp, like=q)
+    q = xp_asarray(q, xp=xp, like=F_L)
 
     F_L_q_100 = spow((F_L * q) / 100, 0.42)
 
@@ -685,6 +723,11 @@ def d_f_q(F_L: ArrayLike, q: ArrayLike) -> NDArrayFloat:
 
     F_L = as_float_array(F_L)
     q = as_float_array(q)
+
+    xp = array_namespace(F_L, q)
+
+    F_L = xp_asarray(F_L, xp=xp, like=q)
+    q = xp_asarray(q, xp=xp, like=F_L)
 
     F_L_q_100 = (F_L * q) / 100
 

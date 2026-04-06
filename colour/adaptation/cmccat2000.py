@@ -43,10 +43,12 @@ from colour.hints import (  # noqa: TC001
 from colour.utilities import (
     CanonicalMapping,
     MixinDataclassIterable,
+    array_namespace,
     as_float_array,
     from_range_100,
     to_domain_100,
     validate_method,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -196,17 +198,22 @@ def chromatic_adaptation_forward_CMCCAT2000(
     L_A1 = as_float_array(L_A1)
     L_A2 = as_float_array(L_A2)
 
+    xp = array_namespace(XYZ, L_A1)
+
+    L_A1 = xp_asarray(L_A1, xp=xp, like=XYZ)
+    L_A2 = xp_asarray(L_A2, xp=xp, like=XYZ)
+
     RGB = vecmul(CAT_CMCCAT2000, XYZ)
     RGB_w = vecmul(CAT_CMCCAT2000, XYZ_w)
     RGB_wr = vecmul(CAT_CMCCAT2000, XYZ_wr)
 
     D = surround.F * (
-        0.08 * np.log10(0.5 * (L_A1 + L_A2))
+        0.08 * xp.log10(0.5 * (L_A1 + L_A2))
         + 0.76
         - 0.45 * (L_A1 - L_A2) / (L_A1 + L_A2)
     )
 
-    D = np.clip(D, 0, 1)
+    D = xp.clip(D, 0, 1)
     a = D * XYZ_w[..., 1] / XYZ_wr[..., 1]
 
     RGB_c = RGB * (a[..., None] * (RGB_wr / RGB_w) + 1 - D[..., None])
@@ -291,17 +298,22 @@ def chromatic_adaptation_inverse_CMCCAT2000(
     L_A1 = as_float_array(L_A1)
     L_A2 = as_float_array(L_A2)
 
+    xp = array_namespace(XYZ_c, L_A1)
+
+    L_A1 = xp_asarray(L_A1, xp=xp, like=XYZ_c)
+    L_A2 = xp_asarray(L_A2, xp=xp, like=XYZ_c)
+
     RGB_c = vecmul(CAT_CMCCAT2000, XYZ_c)
     RGB_w = vecmul(CAT_CMCCAT2000, XYZ_w)
     RGB_wr = vecmul(CAT_CMCCAT2000, XYZ_wr)
 
     D = surround.F * (
-        0.08 * np.log10(0.5 * (L_A1 + L_A2))
+        0.08 * xp.log10(0.5 * (L_A1 + L_A2))
         + 0.76
         - 0.45 * (L_A1 - L_A2) / (L_A1 + L_A2)
     )
 
-    D = np.clip(D, 0, 1)
+    D = xp.clip(D, 0, 1)
     a = D * XYZ_w[..., 1] / XYZ_wr[..., 1]
 
     RGB = RGB_c / (a[..., None] * (RGB_wr / RGB_w) + 1 - D[..., None])

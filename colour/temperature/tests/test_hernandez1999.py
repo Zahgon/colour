@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.temperature import CCT_to_xy_Hernandez1999, xy_to_CCT_Hernandez1999
-from colour.utilities import ignore_numpy_errors, is_scipy_installed
+from colour.utilities import (
+    ignore_numpy_errors,
+    is_scipy_installed,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -29,31 +40,33 @@ class Testxy_to_CCT_Hernandez1999:
     definition unit tests methods.
     """
 
-    def test_xy_to_CCT_Hernandez1999(self) -> None:
+    def test_xy_to_CCT_Hernandez1999(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.hernandez1999.xy_to_CCT_McCamy1992`
         definition.
         """
 
-        np.testing.assert_allclose(
-            xy_to_CCT_Hernandez1999(np.array([0.31270, 0.32900])),
+        xp_assert_close(
+            xy_to_CCT_Hernandez1999(xp_asarray([0.31270, 0.32900], xp=xp)),
             6500.74204318,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            xy_to_CCT_Hernandez1999(np.array([0.44757, 0.40745])),
+        xp_assert_close(
+            xy_to_CCT_Hernandez1999(xp_asarray([0.44757, 0.40745], xp=xp)),
             2790.64222533,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            xy_to_CCT_Hernandez1999(np.array([0.244162248213914, 0.240333674758318])),
+        xp_assert_close(
+            xy_to_CCT_Hernandez1999(
+                xp_asarray([0.244162248213914, 0.240333674758318], xp=xp)
+            ),
             64448.11092565,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_xy_to_CCT_Hernandez1999(self) -> None:
+    def test_n_dimensional_xy_to_CCT_Hernandez1999(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.hernandez1999.xy_to_CCT_Hernandez1999`
         definition n-dimensional arrays support.
@@ -62,20 +75,16 @@ class Testxy_to_CCT_Hernandez1999:
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        xy = np.array([0.31270, 0.32900])
-        CCT = xy_to_CCT_Hernandez1999(xy)
+        xy = xp_asarray([0.31270, 0.32900], xp=xp)
+        CCT = np.asarray(xy_to_CCT_Hernandez1999(xy))
 
-        xy = np.tile(xy, (6, 1))
-        CCT = np.tile(CCT, 6)
-        np.testing.assert_allclose(
-            xy_to_CCT_Hernandez1999(xy), CCT, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xy = xp.tile(xp_asarray(xy, xp=xp), (6, 1))
+        CCT = xp.tile(xp_asarray(CCT, xp=xp), (6,))
+        xp_assert_close(xy_to_CCT_Hernandez1999(xy), CCT, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        xy = np.reshape(xy, (2, 3, 2))
-        CCT = np.reshape(CCT, (2, 3))
-        np.testing.assert_allclose(
-            xy_to_CCT_Hernandez1999(xy), CCT, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        xy = xp_reshape(xp_asarray(xy, xp=xp), (2, 3, 2), xp=xp)
+        CCT = xp_reshape(xp_asarray(CCT, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(xy_to_CCT_Hernandez1999(xy), CCT, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_xy_to_CCT_Hernandez1999(self) -> None:
@@ -107,25 +116,25 @@ class TestCCT_to_xy_Hernandez1999:
         if not is_scipy_installed():  # pragma: no cover
             return
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             CCT_to_xy_Hernandez1999(6500.74204318, {"method": "Nelder-Mead"}),
             np.array([0.31269943, 0.32900373]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             CCT_to_xy_Hernandez1999(2790.64222533, {"method": "Nelder-Mead"}),
             np.array([0.42864308, 0.36754776]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             CCT_to_xy_Hernandez1999(64448.11092565, {"method": "Nelder-Mead"}),
             np.array([0.08269106, 0.36612620]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_CCT_to_xy_Hernandez1999(self) -> None:
+    def test_n_dimensional_CCT_to_xy_Hernandez1999(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.hernandez1999.CCT_to_xy_Hernandez1999`
         definition n-dimensional arrays support.
@@ -135,19 +144,15 @@ class TestCCT_to_xy_Hernandez1999:
             return
 
         CCT = 6500.74204318
-        xy = CCT_to_xy_Hernandez1999(CCT)
+        xy = np.asarray(CCT_to_xy_Hernandez1999(CCT))
 
-        CCT = np.tile(CCT, 6)
-        xy = np.tile(xy, (6, 1))
-        np.testing.assert_allclose(
-            CCT_to_xy_Hernandez1999(CCT), xy, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        CCT = xp.tile(xp_asarray(CCT, xp=xp), (6,))
+        xy = xp.tile(xp_asarray(xy, xp=xp), (6, 1))
+        xp_assert_close(CCT_to_xy_Hernandez1999(CCT), xy, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        CCT = np.reshape(CCT, (2, 3))
-        xy = np.reshape(xy, (2, 3, 2))
-        np.testing.assert_allclose(
-            CCT_to_xy_Hernandez1999(CCT), xy, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        CCT = xp_reshape(xp_asarray(CCT, xp=xp), (2, 3), xp=xp)
+        xy = xp_reshape(xp_asarray(xy, xp=xp), (2, 3, 2), xp=xp)
+        xp_assert_close(CCT_to_xy_Hernandez1999(CCT), xy, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_CCT_to_xy_Hernandez1999(self) -> None:

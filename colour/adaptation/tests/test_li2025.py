@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
 
 from colour.adaptation import chromatic_adaptation_Li2025
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
-from colour.utilities import domain_range_scale, ignore_numpy_errors
+from colour.utilities import (
+    domain_range_scale,
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -28,17 +39,17 @@ class TestChromaticAdaptationLi2025:
     definition unit tests methods.
     """
 
-    def test_chromatic_adaptation_Li2025(self) -> None:
+    def test_chromatic_adaptation_Li2025(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.adaptation.li2025.chromatic_adaptation_Li2025`
         definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_Li2025(
-                XYZ_s=np.array([48.900, 43.620, 6.250]),
-                XYZ_ws=np.array([109.850, 100, 35.585]),
-                XYZ_wd=np.array([95.047, 100, 108.883]),
+                XYZ_s=xp_asarray([48.900, 43.620, 6.250], xp=xp),
+                XYZ_ws=xp_asarray([109.850, 100, 35.585], xp=xp),
+                XYZ_wd=xp_asarray([95.047, 100, 108.883], xp=xp),
                 L_A=318.31,
                 F_surround=1.0,
             ),
@@ -46,11 +57,11 @@ class TestChromaticAdaptationLi2025:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_Li2025(
-                XYZ_s=np.array([52.034, 58.824, 23.703]),
-                XYZ_ws=np.array([92.288, 100, 38.775]),
-                XYZ_wd=np.array([105.432, 100, 137.392]),
+                XYZ_s=xp_asarray([52.034, 58.824, 23.703], xp=xp),
+                XYZ_ws=xp_asarray([92.288, 100, 38.775], xp=xp),
+                XYZ_wd=xp_asarray([105.432, 100, 137.392], xp=xp),
                 L_A=318.31,
                 F_surround=1.0,
             ),
@@ -58,11 +69,11 @@ class TestChromaticAdaptationLi2025:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_Li2025(
-                XYZ_s=np.array([48.900, 43.620, 6.250]),
-                XYZ_ws=np.array([109.850, 100, 35.585]),
-                XYZ_wd=np.array([95.047, 100, 108.883]),
+                XYZ_s=xp_asarray([48.900, 43.620, 6.250], xp=xp),
+                XYZ_ws=xp_asarray([109.850, 100, 35.585], xp=xp),
+                XYZ_wd=xp_asarray([95.047, 100, 108.883], xp=xp),
                 L_A=20.0,
                 F_surround=1.0,
             ),
@@ -70,11 +81,11 @@ class TestChromaticAdaptationLi2025:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             chromatic_adaptation_Li2025(
-                XYZ_s=np.array([48.900, 43.620, 6.250]),
-                XYZ_ws=np.array([109.850, 100, 35.585]),
-                XYZ_wd=np.array([95.047, 100, 108.883]),
+                XYZ_s=xp_asarray([48.900, 43.620, 6.250], xp=xp),
+                XYZ_ws=xp_asarray([109.850, 100, 35.585], xp=xp),
+                XYZ_wd=xp_asarray([95.047, 100, 108.883], xp=xp),
                 L_A=318.31,
                 F_surround=1.0,
                 discount_illuminant=True,
@@ -83,66 +94,72 @@ class TestChromaticAdaptationLi2025:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_chromatic_adaptation_Li2025(self) -> None:
+    def test_n_dimensional_chromatic_adaptation_Li2025(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.adaptation.li2025.chromatic_adaptation_Li2025`
         definition n-dimensional arrays support.
         """
 
-        XYZ_s = np.array([48.900, 43.620, 6.250])
-        XYZ_ws = np.array([109.850, 100, 35.585])
-        XYZ_wd = np.array([95.047, 100, 108.883])
+        XYZ_s = xp_asarray([48.900, 43.620, 6.250], xp=xp)
+        XYZ_ws = xp_asarray([109.850, 100, 35.585], xp=xp)
+        XYZ_wd = xp_asarray([95.047, 100, 108.883], xp=xp)
         L_A = 318.31
         F_surround = 1.0
-        XYZ_d = chromatic_adaptation_Li2025(XYZ_s, XYZ_ws, XYZ_wd, L_A, F_surround)
+        XYZ_d = np.asarray(
+            chromatic_adaptation_Li2025(XYZ_s, XYZ_ws, XYZ_wd, L_A, F_surround)
+        )
 
-        XYZ_s = np.tile(XYZ_s, (6, 1))
-        XYZ_d = np.tile(XYZ_d, (6, 1))
-        np.testing.assert_allclose(
+        XYZ_s = xp.tile(xp_asarray(XYZ_s, xp=xp), (6, 1))
+        XYZ_d = xp.tile(xp_asarray(XYZ_d, xp=xp), (6, 1))
+        xp_assert_close(
             chromatic_adaptation_Li2025(XYZ_s, XYZ_ws, XYZ_wd, L_A, F_surround),
             XYZ_d,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_ws = np.tile(XYZ_ws, (6, 1))
-        XYZ_wd = np.tile(XYZ_wd, (6, 1))
-        L_A = np.tile(L_A, 6)
-        F_surround = np.tile(F_surround, 6)
-        np.testing.assert_allclose(
+        XYZ_ws = xp.tile(xp_asarray(XYZ_ws, xp=xp), (6, 1))
+        XYZ_wd = xp.tile(xp_asarray(XYZ_wd, xp=xp), (6, 1))
+        L_A = xp.tile(xp_asarray(L_A, xp=xp), (6,))
+        F_surround = xp.tile(xp_asarray(F_surround, xp=xp), (6,))
+        xp_assert_close(
             chromatic_adaptation_Li2025(XYZ_s, XYZ_ws, XYZ_wd, L_A, F_surround),
             XYZ_d,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ_s = np.reshape(XYZ_s, (2, 3, 3))
-        XYZ_ws = np.reshape(XYZ_ws, (2, 3, 3))
-        XYZ_wd = np.reshape(XYZ_wd, (2, 3, 3))
-        L_A = np.reshape(L_A, (2, 3))
-        F_surround = np.reshape(F_surround, (2, 3))
-        XYZ_d = np.reshape(XYZ_d, (2, 3, 3))
-        np.testing.assert_allclose(
+        XYZ_s = xp_reshape(xp_asarray(XYZ_s, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_ws = xp_reshape(xp_asarray(XYZ_ws, xp=xp), (2, 3, 3), xp=xp)
+        XYZ_wd = xp_reshape(xp_asarray(XYZ_wd, xp=xp), (2, 3, 3), xp=xp)
+        L_A = xp_reshape(xp_asarray(L_A, xp=xp), (2, 3), xp=xp)
+        F_surround = xp_reshape(xp_asarray(F_surround, xp=xp), (2, 3), xp=xp)
+        XYZ_d = xp_reshape(xp_asarray(XYZ_d, xp=xp), (2, 3, 3), xp=xp)
+        xp_assert_close(
             chromatic_adaptation_Li2025(XYZ_s, XYZ_ws, XYZ_wd, L_A, F_surround),
             XYZ_d,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_range_scale_chromatic_adaptation_Li2025(self) -> None:
+    def test_domain_range_scale_chromatic_adaptation_Li2025(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.adaptation.li2025.chromatic_adaptation_Li2025`
         definition domain and range scale support.
         """
 
-        XYZ_s = np.array([48.900, 43.620, 6.250])
-        XYZ_ws = np.array([109.850, 100, 35.585])
-        XYZ_wd = np.array([95.047, 100, 108.883])
+        XYZ_s = xp_asarray([48.900, 43.620, 6.250], xp=xp)
+        XYZ_ws = xp_asarray([109.850, 100, 35.585], xp=xp)
+        XYZ_wd = xp_asarray([95.047, 100, 108.883], xp=xp)
         L_A = 318.31
         F_surround = 1.0
-        XYZ_d = chromatic_adaptation_Li2025(XYZ_s, XYZ_ws, XYZ_wd, L_A, F_surround)
+        XYZ_d = np.asarray(
+            chromatic_adaptation_Li2025(XYZ_s, XYZ_ws, XYZ_wd, L_A, F_surround)
+        )
 
         d_r = (("reference", 1), ("1", 0.01), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     chromatic_adaptation_Li2025(
                         XYZ_s * factor,
                         XYZ_ws * factor,

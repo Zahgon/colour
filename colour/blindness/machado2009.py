@@ -44,11 +44,14 @@ if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, Literal, NDArrayFloat
 
 from colour.utilities import (
+    array_namespace,
     as_float_array,
+    as_float_scalar,
     as_int_scalar,
     tsplit,
     tstack,
     usage_warning,
+    xp_trapezoid,
 )
 
 __author__ = "Colour Developers"
@@ -125,17 +128,19 @@ def matrix_RGB_to_WSYBRG(
 
     R, G, B = tsplit(primaries.values)
 
-    WS_R = np.trapezoid(R * WS, wavelengths)
-    WS_G = np.trapezoid(G * WS, wavelengths)
-    WS_B = np.trapezoid(B * WS, wavelengths)
+    xp = array_namespace(R)
 
-    YB_R = np.trapezoid(R * YB, wavelengths)
-    YB_G = np.trapezoid(G * YB, wavelengths)
-    YB_B = np.trapezoid(B * YB, wavelengths)
+    WS_R = xp_trapezoid(R * WS, x=wavelengths, xp=xp)
+    WS_G = xp_trapezoid(G * WS, x=wavelengths, xp=xp)
+    WS_B = xp_trapezoid(B * WS, x=wavelengths, xp=xp)
 
-    RG_R = np.trapezoid(R * RG, wavelengths)
-    RG_G = np.trapezoid(G * RG, wavelengths)
-    RG_B = np.trapezoid(B * RG, wavelengths)
+    YB_R = xp_trapezoid(R * YB, x=wavelengths, xp=xp)
+    YB_G = xp_trapezoid(G * YB, x=wavelengths, xp=xp)
+    YB_B = xp_trapezoid(B * YB, x=wavelengths, xp=xp)
+
+    RG_R = xp_trapezoid(R * RG, x=wavelengths, xp=xp)
+    RG_G = xp_trapezoid(G * RG, x=wavelengths, xp=xp)
+    RG_B = xp_trapezoid(B * RG, x=wavelengths, xp=xp)
 
     M_G = as_float_array(
         [
@@ -145,7 +150,7 @@ def matrix_RGB_to_WSYBRG(
         ]
     )
 
-    return M_G / np.sum(M_G, axis=-1)[:, None]
+    return M_G / xp.sum(M_G, axis=-1)[:, None]
 
 
 def msds_cmfs_anomalous_trichromacy_Machado2009(
@@ -211,7 +216,9 @@ def msds_cmfs_anomalous_trichromacy_Machado2009(
     cmfs.extrapolator_kwargs = {"method": "Constant", "left": 0, "right": 0}
 
     L, M, _S = tsplit(cmfs.values)
-    d_L, d_M, d_S = tsplit(d_LMS)
+    d_L, d_M, d_S = tsplit(np.asarray(d_LMS))
+
+    xp = array_namespace(L)
 
     if d_S != 0:
         usage_warning(
@@ -223,8 +230,8 @@ def msds_cmfs_anomalous_trichromacy_Machado2009(
             "deuteranomaly simulation."
         )
 
-    area_L = np.trapezoid(L, cmfs.wavelengths)
-    area_M = np.trapezoid(M, cmfs.wavelengths)
+    area_L = xp_trapezoid(L, x=cmfs.wavelengths, xp=xp)
+    area_M = xp_trapezoid(M, x=cmfs.wavelengths, xp=xp)
 
     def alpha(x: NDArrayFloat) -> NDArrayFloat:
         """Compute :math:`alpha` factor."""
@@ -313,7 +320,9 @@ def matrix_anomalous_trichromacy_Machado2009(
     cmfs_a = msds_cmfs_anomalous_trichromacy_Machado2009(cmfs, d_LMS)
     M_a = matrix_RGB_to_WSYBRG(cmfs_a, primaries)
 
-    return np.matmul(np.linalg.inv(M_n), M_a)
+    xp = array_namespace(M_n, M_a)
+
+    return xp.matmul(xp.linalg.inv(M_n), M_a)
 
 
 def matrix_cvd_Machado2009(
@@ -369,10 +378,15 @@ def matrix_cvd_Machado2009(
             "deuteranomaly simulation."
         )
 
+    severity = as_float_scalar(severity)
+
     matrices = CVD_MATRICES_MACHADO2010[deficiency]
-    samples = np.array(sorted(matrices.keys()))
+    samples = as_float_array(sorted(matrices.keys()))
+
+    xp = array_namespace(samples)
+
     index = as_int_scalar(
-        np.clip(np.searchsorted(samples, severity), 0, len(samples) - 1)
+        xp.clip(xp.searchsorted(samples, severity), 0, len(samples) - 1)
     )
 
     a = samples[index]
@@ -381,7 +395,6 @@ def matrix_cvd_Machado2009(
     m1, m2 = matrices[a], matrices[b]
 
     if a == b:
-        # 1.0 severity colour vision deficiency matrix, returning directly.
         return m1
 
-    return m1 + (severity - a) * ((m2 - m1) / (b - a))
+    return m1 + (float(severity) - a) * ((m2 - m1) / (b - a))

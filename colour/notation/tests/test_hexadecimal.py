@@ -2,13 +2,23 @@
 
 from __future__ import annotations
 
+import typing
 from itertools import product
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
 
 import numpy as np
 
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
 from colour.notation.hexadecimal import HEX_to_RGB, RGB_to_HEX
-from colour.utilities import domain_range_scale, ignore_numpy_errors
+from colour.utilities import (
+    domain_range_scale,
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_assert_equal,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -29,23 +39,33 @@ class TestRGB_to_HEX:
     tests methods.
     """
 
-    def test_RGB_to_HEX(self) -> None:
+    def test_RGB_to_HEX(self, xp: ModuleType) -> None:
         """Test :func:`colour.notation.hexadecimal.RGB_to_HEX` definition."""
 
-        assert RGB_to_HEX(np.array([0.45620519, 0.03081071, 0.04091952])) == "#74070a"
+        assert (
+            RGB_to_HEX(xp_asarray([0.45620519, 0.03081071, 0.04091952], xp=xp))
+            == "#74070a"
+        )
 
-        assert RGB_to_HEX(np.array([0.00000000, 0.00000000, 0.00000000])) == "#000000"
+        assert (
+            RGB_to_HEX(xp_asarray([0.00000000, 0.00000000, 0.00000000], xp=xp))
+            == "#000000"
+        )
 
-        assert RGB_to_HEX(np.array([1.00000000, 1.00000000, 1.00000000])) == "#ffffff"
+        assert (
+            RGB_to_HEX(xp_asarray([1.00000000, 1.00000000, 1.00000000], xp=xp))
+            == "#ffffff"
+        )
 
         np.testing.assert_equal(
             RGB_to_HEX(
-                np.array(
+                xp_asarray(
                     [
                         [10.00000000, 1.00000000, 1.00000000],
                         [1.00000000, 1.00000000, 1.00000000],
                         [0.00000000, 1.00000000, 0.00000000],
-                    ]
+                    ],
+                    xp=xp,
                 )
             ),
             ["#fe0e0e", "#0e0e0e", "#000e00"],
@@ -103,19 +123,19 @@ class TestHEX_to_RGB:
     def test_HEX_to_RGB(self) -> None:
         """Test :func:`colour.notation.hexadecimal.HEX_to_RGB` definition."""
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HEX_to_RGB("#74070a"),
             np.array([0.45620519, 0.03081071, 0.04091952]),
-            atol=1e-1,
+            atol=TOLERANCE_ABSOLUTE_TESTS * 1e06,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HEX_to_RGB("#000000"),
             np.array([0.00000000, 0.00000000, 0.00000000]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             HEX_to_RGB("#ffffff"),
             np.array([1.00000000, 1.00000000, 1.00000000]),
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -132,11 +152,11 @@ class TestHEX_to_RGB:
 
         HEX = np.tile(HEX, 6)
         RGB = np.tile(RGB, (6, 1))
-        np.testing.assert_allclose(HEX_to_RGB(HEX), RGB, atol=TOLERANCE_ABSOLUTE_TESTS)
+        xp_assert_close(HEX_to_RGB(HEX), RGB, atol=TOLERANCE_ABSOLUTE_TESTS)
 
         HEX = np.reshape(HEX, (2, 3))
         RGB = np.reshape(RGB, (2, 3, 3))
-        np.testing.assert_allclose(HEX_to_RGB(HEX), RGB, atol=TOLERANCE_ABSOLUTE_TESTS)
+        xp_assert_close(HEX_to_RGB(HEX), RGB, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     def test_domain_range_scale_HEX_to_RGB(self) -> None:
         """
@@ -150,4 +170,4 @@ class TestHEX_to_RGB:
         d_r = (("reference", 1), ("1", 1), ("100", 100))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_array_equal(HEX_to_RGB(HEX), RGB * factor)
+                xp_assert_equal(HEX_to_RGB(HEX), RGB * factor)

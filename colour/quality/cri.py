@@ -42,7 +42,13 @@ from colour.hints import cast
 from colour.models import UCS_to_uv, XYZ_to_UCS, XYZ_to_xyY
 from colour.quality.datasets.tcs import INDEXES_TO_NAMES_TCS, SDS_TCS
 from colour.temperature import CCT_to_xy_CIE_D, uv_to_CCT_Robertson1968
-from colour.utilities import domain_range_scale, validate_method
+from colour.utilities import (
+    array_namespace,
+    as_float_array,
+    domain_range_scale,
+    validate_method,
+    xp_average,
+)
 from colour.utilities.documentation import DocstringTuple, is_documentation_building
 
 __author__ = "Colour Developers"
@@ -256,9 +262,15 @@ def colour_rendering_index(
         test_tcs_colorimetry_data, reference_tcs_colorimetry_data
     )
 
+    Q_a_arr = as_float_array(
+        [v.Q_a for k, v in Q_as.items() if k in (1, 2, 3, 4, 5, 6, 7, 8)]
+    )
+
+    xp = array_namespace(Q_a_arr)
+
     Q_a = cast(
         "float",
-        np.average([v.Q_a for k, v in Q_as.items() if k in (1, 2, 3, 4, 5, 6, 7, 8)]),
+        xp_average(Q_a_arr, xp=xp),
     )
 
     if additional_data:

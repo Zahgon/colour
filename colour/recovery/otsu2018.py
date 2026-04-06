@@ -57,6 +57,7 @@ from colour.recovery import (
 )
 from colour.utilities import (
     TreeNode,
+    array_namespace,
     as_float_array,
     as_float_scalar,
     domain_range_scale,
@@ -64,6 +65,7 @@ from colour.utilities import (
     message_box,
     optional,
     to_domain_1,
+    xp_asarray,
     zeros,
 )
 
@@ -557,6 +559,8 @@ def XYZ_to_sd_Otsu2018(
     if shape is not None:
         XYZ = to_domain_1(XYZ)
 
+        xp = array_namespace(XYZ)
+
         cmfs, illuminant = handle_spectral_arguments(
             cmfs, illuminant, shape_default=SPECTRAL_SHAPE_OTSU2018
         )
@@ -564,31 +568,29 @@ def XYZ_to_sd_Otsu2018(
         xy = XYZ_to_xy(XYZ)
 
         basis_functions, mean = dataset.cluster(xy)
-
         with domain_range_scale("ignore"):
-            M = np.column_stack(
-                [
-                    sd_to_XYZ(
-                        SpectralDistribution(basis_functions[i, :], shape.wavelengths),
-                        cmfs,
-                        illuminant,
-                    )
-                    / 100
-                    for i in range(3)
-                ]
-            )
+            M_cols = [
+                sd_to_XYZ(
+                    SpectralDistribution(basis_functions[i, :], shape.wavelengths),
+                    cmfs,
+                    illuminant,
+                )
+                / 100
+                for i in range(3)
+            ]
+            M = xp.concat([c[:, None] for c in M_cols], axis=1)
 
-        M_inverse = np.linalg.inv(M)
+        M_inverse = xp.linalg.inv(M)
 
         sd = SpectralDistribution(mean, shape.wavelengths)
 
         with domain_range_scale("ignore"):
             XYZ_mu = sd_to_XYZ(sd, cmfs, illuminant) / 100
 
-        weights = np.dot(M_inverse, XYZ - XYZ_mu)
-        recovered_sd = np.dot(weights, basis_functions) + mean
+        weights = xp.matmul(M_inverse, XYZ - XYZ_mu)
+        recovered_sd = xp.matmul(weights, basis_functions) + mean
 
-        recovered_sd = np.clip(recovered_sd, 0, 1) if clip else recovered_sd
+        recovered_sd = xp.clip(recovered_sd, 0, 1) if clip else recovered_sd
 
         return SpectralDistribution(recovered_sd, shape.wavelengths)
 
@@ -900,7 +902,9 @@ class Data_Otsu2018:
                 "shape": self._cmfs.shape,
             }
 
-            self._mean = np.mean(self._reflectances, axis=0)
+            xp = array_namespace(self._reflectances)
+
+            self._mean = xp.mean(self._reflectances, axis=0)
             self._XYZ_mu = (
                 msds_to_XYZ_integration(cast("NDArrayFloat", self._mean), **settings)
                 / 100
@@ -911,10 +915,13 @@ class Data_Otsu2018:
                 descending_order=False,
                 covariance_matrix=True,
             )
-            self._basis_functions = np.transpose(w[:, -3:])
 
-            self._M = np.transpose(
-                msds_to_XYZ_integration(self._basis_functions, **settings) / 100
+            xp = array_namespace(w)
+
+            self._basis_functions = xp.transpose(w[:, -3:])
+
+            self._M = xp.transpose(
+                msds_to_XYZ_integration(self._basis_functions, **settings) / 100  # pyright: ignore
             )
 
     def reconstruct(self, XYZ: ArrayLike) -> SpectralDistribution:
@@ -947,9 +954,16 @@ class Data_Otsu2018:
         ):
             XYZ = as_float_array(XYZ)
 
-            weights = np.dot(np.linalg.inv(self._M), XYZ - self._XYZ_mu)
-            reflectance = np.dot(weights, self._basis_functions) + self._mean
-            reflectance = np.clip(reflectance, 0, 1)
+            xp = array_namespace(XYZ)
+
+            weights = xp.matmul(
+                xp.linalg.inv(xp_asarray(self._M, xp=xp)),
+                XYZ - xp_asarray(self._XYZ_mu, xp=xp),
+            )
+            reflectance = xp.matmul(
+                weights, xp_asarray(self._basis_functions, xp=xp)
+            ) + xp_asarray(self._mean, xp=xp)  # pyright: ignore
+            reflectance = xp.clip(reflectance, 0, 1)
 
             return SpectralDistribution(reflectance, self._cmfs.wavelengths)
 
@@ -995,9 +1009,9 @@ class Data_Otsu2018:
                 sd = self._reflectances[i, :]
                 XYZ = self._XYZ[i, :]
                 recovered_sd = self.reconstruct(XYZ)
-                reconstruction_error += cast(
-                    "float", np.sum((sd - recovered_sd.values) ** 2)
-                )
+                diff = as_float_array(sd - recovered_sd.values)
+                xp_r = array_namespace(diff)
+                reconstruction_error += cast("float", xp_r.sum(diff**2))
 
             self._reconstruction_error = reconstruction_error
 
@@ -1146,15 +1160,14 @@ class Node_Otsu2018(TreeNode):
                     axis = PartitionAxis(self.data.origin(i, direction), direction)
                     data_lesser, data_greater = self.data.partition(axis)
 
-                    if np.any(
-                        np.array(
-                            [
-                                len(data_lesser),
-                                len(data_greater),
-                            ]
-                        )
-                        < minimum_cluster_size
-                    ):
+                    sizes = as_float_array(
+                        [
+                            len(data_lesser),
+                            len(data_greater),
+                        ]
+                    )
+                    xp_p = array_namespace(sizes)
+                    if xp_p.any(sizes < minimum_cluster_size):
                         continue
 
                     lesser = Node_Otsu2018(data=data_lesser)
@@ -1221,9 +1234,11 @@ class Node_Otsu2018(TreeNode):
         if self.is_leaf():
             return self.leaf_reconstruction_error()
 
-        return as_float_scalar(
-            np.sum([child.branch_reconstruction_error() for child in self.children])
+        errors = as_float_array(
+            [child.branch_reconstruction_error() for child in self.children]
         )
+        xp_b = array_namespace(errors)
+        return as_float_scalar(xp_b.sum(errors))
 
 
 class Tree_Otsu2018(Node_Otsu2018):
@@ -1362,9 +1377,13 @@ class Tree_Otsu2018(Node_Otsu2018):
         self._cmfs: MultiSpectralDistributions = cmfs
         self._illuminant: SpectralDistribution = illuminant
 
-        self._reflectances: NDArrayFloat = np.transpose(
+        values = as_float_array(
             reshape_msds(reflectances, self._cmfs.shape, copy=False).values
         )
+
+        xp = array_namespace(values)
+
+        self._reflectances: NDArrayFloat = xp.transpose(values)
 
         self.data: Data_Otsu2018 = Data_Otsu2018(
             self._reflectances, self._cmfs, self._illuminant

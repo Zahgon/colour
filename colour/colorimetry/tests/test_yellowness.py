@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
@@ -13,7 +18,13 @@ from colour.colorimetry import (
 )
 from colour.colorimetry.yellowness import YELLOWNESS_COEFFICIENTS_ASTME313, yellowness
 from colour.constants import TOLERANCE_ABSOLUTE_TESTS
-from colour.utilities import domain_range_scale, ignore_numpy_errors
+from colour.utilities import (
+    domain_range_scale,
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -36,64 +47,74 @@ class TestYellownessASTMD1925:
     definition unit tests methods.
     """
 
-    def test_yellowness_ASTMD1925(self) -> None:
+    def test_yellowness_ASTMD1925(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.yellowness_ASTMD1925`
         definition.
         """
 
-        np.testing.assert_allclose(
-            yellowness_ASTMD1925(np.array([95.00000000, 100.00000000, 105.00000000])),
+        xp_assert_close(
+            yellowness_ASTMD1925(
+                xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
+            ),
             10.299999999999997,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            yellowness_ASTMD1925(np.array([105.00000000, 100.00000000, 95.00000000])),
+        xp_assert_close(
+            yellowness_ASTMD1925(
+                xp_asarray([105.00000000, 100.00000000, 95.00000000], xp=xp)
+            ),
             33.700000000000003,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            yellowness_ASTMD1925(np.array([100.00000000, 100.00000000, 100.00000000])),
+        xp_assert_close(
+            yellowness_ASTMD1925(
+                xp_asarray([100.00000000, 100.00000000, 100.00000000], xp=xp)
+            ),
             22.0,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_yellowness_ASTMD1925(self) -> None:
+    def test_n_dimensional_yellowness_ASTMD1925(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.yellowness_ASTMD1925`
         definition n_dimensional arrays support.
         """
 
-        XYZ = np.array([95.00000000, 100.00000000, 105.00000000])
-        YI = yellowness_ASTMD1925(XYZ)
+        XYZ = xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
+        YI = np.asarray(yellowness_ASTMD1925(XYZ))
 
-        XYZ = np.tile(XYZ, (6, 1))
-        YI = np.tile(YI, 6)
-        np.testing.assert_allclose(
-            yellowness_ASTMD1925(XYZ), YI, atol=TOLERANCE_ABSOLUTE_TESTS
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        YI = xp.tile(xp_asarray(YI, xp=xp), (6,))
+        xp_assert_close(
+            yellowness_ASTMD1925(XYZ),
+            YI,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        YI = np.reshape(YI, (2, 3))
-        np.testing.assert_allclose(
-            yellowness_ASTMD1925(XYZ), YI, atol=TOLERANCE_ABSOLUTE_TESTS
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        YI = xp_reshape(xp_asarray(YI, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(
+            yellowness_ASTMD1925(XYZ),
+            YI,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_range_scale_yellowness_ASTMD1925(self) -> None:
+    def test_domain_range_scale_yellowness_ASTMD1925(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.yellowness_ASTMD1925`
         definition domain and range scale support.
         """
 
-        XYZ = np.array([95.00000000, 100.00000000, 105.00000000])
-        YI = 10.299999999999997
+        XYZ = xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
+        YI = np.asarray(yellowness_ASTMD1925(XYZ))
 
         d_r = (("reference", 1), ("1", 0.01), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     yellowness_ASTMD1925(XYZ * factor),
                     YI * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -117,74 +138,78 @@ class TestYellownessASTM313Alternative:
 yellowness_ASTME313_alternative` definition unit tests methods.
     """
 
-    def test_yellowness_ASTME313_alternative(self) -> None:
+    def test_yellowness_ASTME313_alternative(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.\
 yellowness_ASTME313_alternative` definition.
         """
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             yellowness_ASTME313_alternative(
-                np.array([95.00000000, 100.00000000, 105.00000000])
+                xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
             ),
             11.065000000000003,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             yellowness_ASTME313_alternative(
-                np.array([105.00000000, 100.00000000, 95.00000000])
+                xp_asarray([105.00000000, 100.00000000, 95.00000000], xp=xp)
             ),
             19.534999999999989,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             yellowness_ASTME313_alternative(
-                np.array([100.00000000, 100.00000000, 100.00000000])
+                xp_asarray([100.00000000, 100.00000000, 100.00000000], xp=xp)
             ),
             15.300000000000002,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_yellowness_ASTME313_alternative(self) -> None:
+    def test_n_dimensional_yellowness_ASTME313_alternative(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.\
 yellowness_ASTME313_alternative` definition n_dimensional arrays support.
         """
 
-        XYZ = np.array([95.00000000, 100.00000000, 105.00000000])
-        YI = yellowness_ASTME313_alternative(XYZ)
+        XYZ = xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
+        YI = np.asarray(yellowness_ASTME313_alternative(XYZ))
 
-        XYZ = np.tile(XYZ, (6, 1))
-        YI = np.tile(YI, 6)
-        np.testing.assert_allclose(
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        YI = xp.tile(xp_asarray(YI, xp=xp), (6,))
+        xp_assert_close(
             yellowness_ASTME313_alternative(XYZ),
             YI,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        YI = np.reshape(YI, (2, 3))
-        np.testing.assert_allclose(
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        YI = xp_reshape(xp_asarray(YI, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(
             yellowness_ASTME313_alternative(XYZ),
             YI,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_range_scale_yellowness_ASTME313_alternative(self) -> None:
+    def test_domain_range_scale_yellowness_ASTME313_alternative(
+        self, xp: ModuleType
+    ) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.\
 yellowness_ASTME313_alternative` definition domain and range scale support.
         """
 
-        XYZ = np.array([95.00000000, 100.00000000, 105.00000000])
-        YI = 11.065000000000003
+        XYZ = xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
+        YI = np.asarray(yellowness_ASTME313_alternative(XYZ))
 
         d_r = (("reference", 1), ("1", 0.01), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     yellowness_ASTME313_alternative(XYZ * factor),
                     YI * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -208,33 +233,39 @@ class TestYellownessASTM313:
     definition unit tests methods.
     """
 
-    def test_yellowness_ASTME313(self) -> None:
+    def test_yellowness_ASTME313(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.yellowness_ASTME313`
         definition.
         """
 
-        np.testing.assert_allclose(
-            yellowness_ASTME313(np.array([95.00000000, 100.00000000, 105.00000000])),
+        xp_assert_close(
+            yellowness_ASTME313(
+                xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
+            ),
             4.340000000000003,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            yellowness_ASTME313(np.array([105.00000000, 100.00000000, 95.00000000])),
+        xp_assert_close(
+            yellowness_ASTME313(
+                xp_asarray([105.00000000, 100.00000000, 95.00000000], xp=xp)
+            ),
             28.660000000000011,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            yellowness_ASTME313(np.array([100.00000000, 100.00000000, 100.00000000])),
+        xp_assert_close(
+            yellowness_ASTME313(
+                xp_asarray([100.00000000, 100.00000000, 100.00000000], xp=xp)
+            ),
             16.500000000000000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
+        xp_assert_close(
             yellowness_ASTME313(
-                np.array([95.00000000, 100.00000000, 105.00000000]),
+                xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp),
                 YELLOWNESS_COEFFICIENTS_ASTME313["CIE 1931 2 Degree Standard Observer"][
                     "C"
                 ],
@@ -243,40 +274,44 @@ class TestYellownessASTM313:
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_yellowness_ASTME313(self) -> None:
+    def test_n_dimensional_yellowness_ASTME313(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.yellowness_ASTME313`
         definition n_dimensional arrays support.
         """
 
-        XYZ = np.array([95.00000000, 100.00000000, 105.00000000])
-        YI = yellowness_ASTME313(XYZ)
+        XYZ = xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
+        YI = np.asarray(yellowness_ASTME313(XYZ))
 
-        XYZ = np.tile(XYZ, (6, 1))
-        YI = np.tile(YI, 6)
-        np.testing.assert_allclose(
-            yellowness_ASTME313(XYZ), YI, atol=TOLERANCE_ABSOLUTE_TESTS
+        XYZ = xp.tile(xp_asarray(XYZ, xp=xp), (6, 1))
+        YI = xp.tile(xp_asarray(YI, xp=xp), (6,))
+        xp_assert_close(
+            yellowness_ASTME313(XYZ),
+            YI,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        XYZ = np.reshape(XYZ, (2, 3, 3))
-        YI = np.reshape(YI, (2, 3))
-        np.testing.assert_allclose(
-            yellowness_ASTME313(XYZ), YI, atol=TOLERANCE_ABSOLUTE_TESTS
+        XYZ = xp_reshape(xp_asarray(XYZ, xp=xp), (2, 3, 3), xp=xp)
+        YI = xp_reshape(xp_asarray(YI, xp=xp), (2, 3), xp=xp)
+        xp_assert_close(
+            yellowness_ASTME313(XYZ),
+            YI,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_domain_range_scale_yellowness_ASTME313(self) -> None:
+    def test_domain_range_scale_yellowness_ASTME313(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.yellowness_ASTME313`
         definition domain and range scale support.
         """
 
-        XYZ = np.array([95.00000000, 100.00000000, 105.00000000])
-        YI = 4.340000000000003
+        XYZ = xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
+        YI = np.asarray(yellowness_ASTME313(XYZ))
 
         d_r = (("reference", 1), ("1", 0.01), ("100", 1))
         for scale, factor in d_r:
             with domain_range_scale(scale):
-                np.testing.assert_allclose(
+                xp_assert_close(
                     yellowness_ASTME313(XYZ * factor),
                     YI * factor,
                     atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -300,22 +335,22 @@ class TestYellowness:
     tests methods.
     """
 
-    def test_domain_range_scale_yellowness(self) -> None:
+    def test_domain_range_scale_yellowness(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.colorimetry.yellowness.yellowness` definition
         domain and range scale support.
         """
 
-        XYZ = np.array([95.00000000, 100.00000000, 105.00000000])
+        XYZ = xp_asarray([95.00000000, 100.00000000, 105.00000000], xp=xp)
 
         m = ("ASTM D1925", "ASTM E313")
-        v = [yellowness(XYZ, method) for method in m]
+        v = [np.asarray(yellowness(XYZ, method)) for method in m]
 
         d_r = (("reference", 1), ("1", 0.01), ("100", 1))
         for method, value in zip(m, v, strict=True):
             for scale, factor in d_r:
                 with domain_range_scale(scale):
-                    np.testing.assert_allclose(
+                    xp_assert_close(
                         yellowness(XYZ * factor, method),
                         value * factor,
                         atol=TOLERANCE_ABSOLUTE_TESTS,

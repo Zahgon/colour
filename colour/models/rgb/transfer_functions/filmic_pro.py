@@ -15,14 +15,13 @@ References
 
 from __future__ import annotations
 
-import numpy as np
-
 from colour.algebra import Extrapolator, LinearInterpolator
+from colour.constants import EPSILON
 from colour.hints import (  # noqa: TC001
     Domain1,
     Range1,
 )
-from colour.utilities import as_float, from_range_1, to_domain_1
+from colour.utilities import array_namespace, as_float, from_range_1, to_domain_1
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -88,7 +87,9 @@ def log_encoding_FilmicPro6(t: Domain1) -> Range1:
 
     t = to_domain_1(t)
 
-    y = 0.371 * (np.sqrt(t) + 0.28257 * np.log(t) + 1.69542)
+    xp = array_namespace(t)
+
+    y = 0.371 * (xp.sqrt(t) + 0.28257 * xp.log(t) + 1.69542)
 
     return as_float(from_range_1(y))
 
@@ -110,10 +111,13 @@ def _log_decoding_FilmicPro6_interpolator() -> Extrapolator:
 
     global _CACHE_LOG_DECODING_FILMICPRO_INTERPOLATOR  # noqa: PLW0603
 
-    t = np.arange(0, 1, 0.0001)
+    xp = array_namespace()
+
+    t = xp.arange(EPSILON, 1, 0.0001)
     if _CACHE_LOG_DECODING_FILMICPRO_INTERPOLATOR is None:
         _CACHE_LOG_DECODING_FILMICPRO_INTERPOLATOR = Extrapolator(
-            LinearInterpolator(log_encoding_FilmicPro6(t), t)
+            LinearInterpolator(log_encoding_FilmicPro6(t), t),
+            left=0,
         )
 
     return _CACHE_LOG_DECODING_FILMICPRO_INTERPOLATOR
@@ -164,7 +168,7 @@ def log_decoding_FilmicPro6(y: Domain1) -> Range1:
     Examples
     --------
     >>> log_decoding_FilmicPro6(0.6066345199247033)  # doctest: +ELLIPSIS
-    np.float64(0.1800000...)
+    np.float64(0.179999...)
     """
 
     y = to_domain_1(y)

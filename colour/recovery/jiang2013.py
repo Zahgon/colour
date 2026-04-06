@@ -21,8 +21,6 @@ from __future__ import annotations
 
 import typing
 
-import numpy as np
-
 from colour.algebra import eigen_decomposition
 from colour.characterisation import RGB_CameraSensitivities
 from colour.colorimetry import (
@@ -45,7 +43,16 @@ if typing.TYPE_CHECKING:
 
 from colour.hints import cast
 from colour.recovery import BASIS_FUNCTIONS_DYER2017
-from colour.utilities import as_float_array, optional, runtime_warning, tsplit
+from colour.utilities import (
+    array_namespace,
+    as_float_array,
+    optional,
+    runtime_warning,
+    tsplit,
+    xp_create_diagonal,
+    xp_lstsq,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -123,6 +130,7 @@ def PCA_Jiang2013(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour.colorimetry import SpectralShape
     >>> from colour.characterisation import MSDS_CAMERA_SENSITIVITIES
     >>> shape = SpectralShape(400, 700, 10)
@@ -150,14 +158,22 @@ def PCA_Jiang2013(
         G_sensitivities.append(normalised_sensitivity(msds, msds.labels[1]))
         B_sensitivities.append(normalised_sensitivity(msds, msds.labels[2]))
 
+    xp = array_namespace(as_float_array(R_sensitivities[0]))
+
     R_w_v = eigen_decomposition(
-        np.vstack(R_sensitivities), eigen_w_v_count, covariance_matrix=True
+        xp.concat([xp_reshape(s, (1, -1), xp=xp) for s in R_sensitivities], axis=0),
+        eigen_w_v_count,
+        covariance_matrix=True,
     )
     G_w_v = eigen_decomposition(
-        np.vstack(G_sensitivities), eigen_w_v_count, covariance_matrix=True
+        xp.concat([xp_reshape(s, (1, -1), xp=xp) for s in G_sensitivities], axis=0),
+        eigen_w_v_count,
+        covariance_matrix=True,
     )
     B_w_v = eigen_decomposition(
-        np.vstack(B_sensitivities), eigen_w_v_count, covariance_matrix=True
+        xp.concat([xp_reshape(s, (1, -1), xp=xp) for s in B_sensitivities], axis=0),
+        eigen_w_v_count,
+        covariance_matrix=True,
     )
 
     if additional_data:
@@ -213,6 +229,7 @@ def RGB_to_sd_camera_sensitivity_Jiang2013(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from colour.colorimetry import (
     ...     SDS_ILLUMINANTS,
     ...     msds_to_XYZ,
@@ -289,6 +306,9 @@ def RGB_to_sd_camera_sensitivity_Jiang2013(
     """
 
     RGB = as_float_array(RGB)
+
+    xp = array_namespace(RGB)
+
     shape = optional(shape, illuminant.shape)
 
     if illuminant.shape != shape:
@@ -301,13 +321,13 @@ def RGB_to_sd_camera_sensitivity_Jiang2013(
         )
         reflectances = reshape_msds(reflectances, shape, copy=False)
 
-    S = np.diag(illuminant.values)
-    R = np.transpose(reflectances.values)
+    S = xp_create_diagonal(illuminant.values, xp=xp)
+    R = xp.transpose(reflectances.values)
 
-    A = np.dot(np.dot(R, S), eigen_w)
+    A = xp.matmul(xp.matmul(R, S), eigen_w)
 
-    X = np.linalg.lstsq(A, RGB, rcond=None)[0]
-    X = np.dot(eigen_w, X)
+    X = xp_lstsq(A, RGB, xp=xp)
+    X = xp.matmul(eigen_w, X)
 
     return SpectralDistribution(X, shape.wavelengths)
 
@@ -425,11 +445,15 @@ def RGB_to_msds_camera_sensitivities_Jiang2013(
            [-6.00395414e-03,  1.54678227e-03,  5.40394352e-04]])
     """
 
-    R, G, B = tsplit(np.reshape(RGB, [-1, 3]))
+    RGB = as_float_array(RGB)
+
+    xp = array_namespace(RGB)
+
+    R, G, B = tsplit(xp_reshape(RGB, [-1, 3], xp=xp))
     basis_functions = as_float_array(basis_functions)
     shape = optional(shape, illuminant.shape)
 
-    R_w, G_w, B_w = tsplit(np.moveaxis(basis_functions, 0, 1))
+    R_w, G_w, B_w = tsplit(xp.moveaxis(basis_functions, 0, 1))
 
     if illuminant.shape != shape:
         runtime_warning(f'Aligning "{illuminant.name}" illuminant shape to "{shape}".')
@@ -453,6 +477,6 @@ def RGB_to_msds_camera_sensitivities_Jiang2013(
 
     msds_camera_sensitivities = RGB_CameraSensitivities([S_R, S_G, S_B])
 
-    msds_camera_sensitivities /= np.max(msds_camera_sensitivities.values)
+    msds_camera_sensitivities /= xp.max(msds_camera_sensitivities.values)
 
     return msds_camera_sensitivities

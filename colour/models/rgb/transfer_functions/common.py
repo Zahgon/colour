@@ -14,7 +14,13 @@ import numpy as np
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, NDArrayReal
 
-from colour.utilities import as_float, as_float_array, as_int, as_int_array
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    as_int,
+    as_int_array,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -127,16 +133,18 @@ def legal_to_full(
 
     CV = as_float_array(CV)
 
+    xp = array_namespace(CV)
+
     MV = 2**bit_depth - 1
 
-    CV_full = as_int_array(np.round(CV)) if in_int else CV * MV
+    CV_full = as_int_array(xp.round(CV)) if in_int else CV * MV
 
     B, W = CV_range(bit_depth, True, True)
 
     CV_full = (CV_full - B) / (W - B)
 
     if out_int:
-        return as_int(np.round(CV_full * MV))
+        return as_int(xp.round(CV_full * MV))
 
     return as_float(CV_full)
 
@@ -194,15 +202,17 @@ def full_to_legal(
 
     CV = as_float_array(CV)
 
+    xp = array_namespace(CV)
+
     MV = 2**bit_depth - 1
 
-    CV_legal = as_int_array(np.round(CV / MV)) if in_int else CV
+    CV_legal = as_int_array(xp.round(CV / MV)) if in_int else CV
 
     B, W = CV_range(bit_depth, True, True)
 
     CV_legal = (W - B) * CV_legal + B
 
     if out_int:
-        return as_int(np.round(CV_legal))
+        return as_int(xp.round(CV_legal))
 
     return as_float(CV_legal / MV)

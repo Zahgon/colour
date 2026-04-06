@@ -29,7 +29,18 @@ import numpy as np
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, DTypeFloat, NDArrayFloat
 
-from colour.utilities import as_float, as_float_array, required, tstack, usage_warning
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    as_float_array,
+    required,
+    tstack,
+    usage_warning,
+    xp_asarray,
+    xp_atleast_1d,
+    xp_reshape,
+    xp_select,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -88,13 +99,16 @@ def xy_to_CCT_Kang2002(
     from scipy.optimize import minimize  # noqa: PLC0415
 
     xy = as_float_array(xy)
+
+    xp = array_namespace(xy)
+
     shape = xy.shape
-    xy = np.atleast_1d(np.reshape(xy, (-1, 2)))
+    xy = xp_atleast_1d(xp_reshape(xy, (-1, 2), xp=xp), xp=xp)
 
     def objective_function(CCT: NDArrayFloat, xy: NDArrayFloat) -> DTypeFloat:
         """Objective function."""
 
-        objective = np.linalg.norm(CCT_to_xy_Kang2002(CCT) - xy)
+        objective = np.linalg.norm(CCT_to_xy_Kang2002(CCT) - np.asarray(xy))
 
         return as_float(objective)
 
@@ -119,7 +133,8 @@ def xy_to_CCT_Kang2002(
         ]
     )
 
-    return as_float(np.reshape(CCT, shape[:-1]))
+    CCT = xp_asarray(CCT, xp=xp, like=xy)
+    return as_float(xp_reshape(CCT, shape[:-1], xp=xp))
 
 
 def CCT_to_xy_Kang2002(CCT: ArrayLike) -> NDArrayFloat:
@@ -155,7 +170,9 @@ def CCT_to_xy_Kang2002(CCT: ArrayLike) -> NDArrayFloat:
 
     CCT = as_float_array(CCT)
 
-    if np.any(CCT[np.asarray(np.logical_or(CCT < 1667, CCT > 25000))]):
+    xp = array_namespace(CCT)
+
+    if xp.any(CCT[xp.logical_or(CCT < 1667, CCT > 25000)]):
         usage_warning(
             "Correlated colour temperature must be in domain "
             "[1667, 25000], unpredictable results may occur!"
@@ -164,7 +181,7 @@ def CCT_to_xy_Kang2002(CCT: ArrayLike) -> NDArrayFloat:
     CCT_3 = CCT**3
     CCT_2 = CCT**2
 
-    x = np.where(
+    x = xp.where(
         CCT <= 4000,
         -0.2661239 * 10**9 / CCT_3
         - 0.2343589 * 10**6 / CCT_2
@@ -179,10 +196,10 @@ def CCT_to_xy_Kang2002(CCT: ArrayLike) -> NDArrayFloat:
     x_3 = x**3
     x_2 = x**2
 
-    cnd_l = [CCT <= 2222, np.logical_and(CCT > 2222, CCT <= 4000), CCT > 4000]
+    cnd_l = [CCT <= 2222, xp.logical_and(CCT > 2222, CCT <= 4000), CCT > 4000]
     i = -1.1063814 * x_3 - 1.34811020 * x_2 + 2.18555832 * x - 0.20219683
     j = -0.9549476 * x_3 - 1.37418593 * x_2 + 2.09137015 * x - 0.16748867
     k = 3.0817580 * x_3 - 5.8733867 * x_2 + 3.75112997 * x - 0.37001483
-    y = np.select(cnd_l, [i, j, k])
+    y = xp_select(cnd_l, [i, j, k], xp=xp)
 
     return tstack([x, y])

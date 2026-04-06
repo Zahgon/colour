@@ -40,12 +40,17 @@ if typing.TYPE_CHECKING:
     )
 
 from colour.utilities import (
+    array_namespace,
     as_float,
     as_float_array,
     attest,
     is_numeric,
+    is_numpy_namespace,
     optional,
     validate_method,
+    xp_asarray,
+    xp_atleast_1d,
+    xp_reshape,
 )
 
 __author__ = "Colour Developers"
@@ -353,47 +358,59 @@ class Extrapolator:
         xi = self._interpolator.x
         yi = self._interpolator.y
 
+        xp = array_namespace(x, yi)
+
+        x = xp_asarray(x, xp=xp)
+        xi = xp_asarray(xi, xp=xp)
+
         below = x < xi[0]
         above = x > xi[-1]
-        in_range = np.logical_and(x >= xi[0], x <= xi[-1])
+        in_range = xp.logical_and(x >= xi[0], x <= xi[-1])
 
-        y = np.zeros_like(x)
+        y = xp.zeros_like(x)
 
         if self._method == "linear":
             with sdiv_mode():
-                y = np.where(
+                y = xp.where(
                     below,
                     yi[0] + (x - xi[0]) * sdiv(yi[1] - yi[0], xi[1] - xi[0]),
                     y,
                 )
-                y = np.where(
+                y = xp.where(
                     above,
                     yi[-1] + (x - xi[-1]) * sdiv(yi[-1] - yi[-2], xi[-1] - xi[-2]),
                     y,
                 )
         elif self._method == "constant":
-            y = np.where(below, yi[0], y)
-            y = np.where(above, yi[-1], y)
+            y = xp.where(below, yi[0], y)
+            y = xp.where(above, yi[-1], y)
 
         if self._left is not None:
-            y = np.where(below, self._left, y)
+            y = xp.where(below, self._left, y)
         if self._right is not None:
-            y = np.where(above, self._right, y)
+            y = xp.where(above, self._right, y)
 
-        if np.any(in_range):
+        if xp.any(in_range):
             # Flatten for multi-dimensional array support
             shape = x.shape
-            x_ravel = np.ravel(x)
-            in_range_ravel = np.ravel(in_range)
-            y_ravel = np.ravel(y)
+            x_ravel = xp_reshape(x, (-1,), xp=xp)
+            in_range_ravel = xp_reshape(in_range, (-1,), xp=xp)
+            y_ravel = xp_reshape(y, (-1,), xp=xp)
 
-            interpolated_values = np.atleast_1d(
-                self._interpolator(x_ravel[in_range_ravel])
+            interpolated_values = xp_atleast_1d(
+                self._interpolator(x_ravel[in_range_ravel]), xp=xp
             )
             # Scatter interpolated values back to full array positions
-            dense_idx = np.cumsum(in_range_ravel.astype(np.int64)) - 1
-            safe_idx = np.clip(dense_idx, 0, len(interpolated_values) - 1)
-            y_ravel = np.where(in_range_ravel, interpolated_values[safe_idx], y_ravel)
-            y = np.reshape(y_ravel, shape)
+            dense_idx = (
+                xp.cumulative_sum(
+                    in_range_ravel.astype(np.int64)
+                    if is_numpy_namespace(xp)
+                    else xp.asarray(in_range_ravel, dtype=xp.int64)
+                )
+                - 1
+            )
+            safe_idx = xp.clip(dense_idx, 0, len(interpolated_values) - 1)
+            y_ravel = xp.where(in_range_ravel, interpolated_values[safe_idx], y_ravel)
+            y = xp_reshape(y_ravel, shape, xp=xp)
 
         return y

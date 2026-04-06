@@ -20,8 +20,6 @@ an02_02.pdf
 
 from __future__ import annotations
 
-import numpy as np
-
 from colour.colorimetry import TVS_ILLUMINANTS_HUNTERLAB
 from colour.hints import (  # noqa: TC001
     ArrayLike,
@@ -30,12 +28,14 @@ from colour.hints import (  # noqa: TC001
     Range100,
 )
 from colour.utilities import (
+    array_namespace,
     from_range_100,
     get_domain_range_scale,
     optional,
     to_domain_100,
     tsplit,
     tstack,
+    xp_asarray,
 )
 
 __author__ = "Colour Developers"
@@ -75,15 +75,20 @@ def XYZ_to_K_ab_HunterLab1966(XYZ: ArrayLike) -> NDArrayFloat:
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ = np.array([109.850, 100.000, 35.585])
     >>> XYZ_to_K_ab_HunterLab1966(XYZ)  # doctest: +ELLIPSIS
     array([185.2378721...,  38.4219142...])
+
     """
+
+    xp = array_namespace(XYZ)
 
     X, _Y, Z = tsplit(XYZ)
 
-    K_a = 175 * np.sqrt(X / 98.043)
-    K_b = 70 * np.sqrt(Z / 118.115)
+    K_a = 175 * xp.sqrt(X / 98.043)
+
+    K_b = 70 * xp.sqrt(Z / 118.115)
 
     return tstack([K_a, K_b])
 
@@ -135,6 +140,7 @@ def XYZ_to_Hunter_Lab(
 
     Examples
     --------
+    >>> import numpy as np
     >>> XYZ = np.array([0.20654008, 0.12197225, 0.05136952]) * 100
     >>> D65 = TVS_ILLUMINANTS_HUNTERLAB["CIE 1931 2 Degree Standard Observer"]["D65"]
     >>> XYZ_to_Hunter_Lab(XYZ, D65.XYZ_n, D65.K_ab)  # doctest: +ELLIPSIS
@@ -142,8 +148,13 @@ def XYZ_to_Hunter_Lab(
     """
 
     X, Y, Z = tsplit(to_domain_100(XYZ))
+
+    xp = array_namespace(XYZ)
+
     TVS_D65 = TVS_ILLUMINANTS_HUNTERLAB["CIE 1931 2 Degree Standard Observer"]["D65"]
+
     XYZ_n_default = XYZ_n is None
+
     XYZ_n = to_domain_100(
         optional(
             XYZ_n,
@@ -152,15 +163,27 @@ def XYZ_to_Hunter_Lab(
             else TVS_D65.XYZ_n / 100,
         )
     )
+
     X_n, Y_n, Z_n = tsplit(XYZ_n)
+
     K_ab = TVS_D65.K_ab if K_ab is None and XYZ_n_default else K_ab
+
     K_a, K_b = tsplit(XYZ_to_K_ab_HunterLab1966(XYZ_n) if K_ab is None else K_ab)
 
+    X_n = xp_asarray(X_n, xp=xp, like=XYZ)
+    Y_n = xp_asarray(Y_n, xp=xp, like=XYZ)
+    Z_n = xp_asarray(Z_n, xp=xp, like=XYZ)
+    K_a = xp_asarray(K_a, xp=xp, like=XYZ)
+    K_b = xp_asarray(K_b, xp=xp, like=XYZ)
+
     Y_Y_n = Y / Y_n
-    sqrt_Y_Y_n = np.sqrt(Y_Y_n)
+
+    sqrt_Y_Y_n = xp.sqrt(Y_Y_n)
 
     L = 100 * sqrt_Y_Y_n
+
     a = K_a * ((X / X_n - Y_Y_n) / sqrt_Y_Y_n)
+
     b = K_b * ((Y_Y_n - Z / Z_n) / sqrt_Y_Y_n)
 
     Lab = tstack([L, a, b])
@@ -215,6 +238,7 @@ def Hunter_Lab_to_XYZ(
 
     Examples
     --------
+    >>> import numpy as np
     >>> Lab = np.array([34.92452577, 47.06189858, 14.38615107])
     >>> D65 = TVS_ILLUMINANTS_HUNTERLAB["CIE 1931 2 Degree Standard Observer"]["D65"]
     >>> Hunter_Lab_to_XYZ(Lab, D65.XYZ_n, D65.K_ab)

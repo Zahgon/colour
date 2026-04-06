@@ -30,8 +30,6 @@ References
 
 from __future__ import annotations
 
-import numpy as np
-
 from colour.algebra import sdiv, sdiv_mode
 from colour.colorimetry import CCS_ILLUMINANTS, lightness_CIE1976, luminance_CIE1976
 from colour.hints import (  # noqa: TC001
@@ -45,6 +43,7 @@ from colour.hints import (  # noqa: TC001
 )
 from colour.models import xy_to_xyY, xyY_to_XYZ
 from colour.utilities import (
+    array_namespace,
     domain_range_scale,
     from_range_1,
     from_range_100,
@@ -54,6 +53,8 @@ from colour.utilities import (
     to_domain_100,
     tsplit,
     tstack,
+    xp_asarray,
+    xp_resize,
 )
 
 __author__ = "Colour Developers"
@@ -334,7 +335,11 @@ def uv_to_Luv(
         optional(L, 100 if get_domain_range_scale() == "reference" else 1)
     )
 
+    xp = array_namespace(u)
+
     _X_r, Y_r, _Z_r = tsplit(xyY_to_XYZ(xy_to_xyY(illuminant)))
+    L = xp_asarray(L, xp=xp, like=u)
+    Y_r = xp_asarray(Y_r, xp=xp, like=u)
 
     with domain_range_scale("ignore"):
         Y = luminance_CIE1976(L, Y_r)
@@ -343,7 +348,7 @@ def uv_to_Luv(
         X = sdiv(9 * Y * u, 4 * v)
         Z = sdiv(Y * (-3 * u - 20 * v + 12), 4 * v)
 
-    XYZ = tstack([X, np.resize(Y, u.shape), Z])
+    XYZ = tstack([X, xp_resize(Y, u.shape, xp=xp), Z])
 
     return XYZ_to_Luv(from_range_1(XYZ), illuminant)
 

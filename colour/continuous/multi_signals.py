@@ -39,11 +39,14 @@ if typing.TYPE_CHECKING:
 
 from colour.hints import ArrayLike, Callable, Sequence, cast
 from colour.utilities import (
+    array_namespace,
     as_float_array,
+    as_ndarray,
     attest,
     first_item,
     int_digest,
     is_iterable,
+    is_non_ndarray,
     is_pandas_installed,
     multiline_repr,
     optional,
@@ -659,7 +662,9 @@ class MultiSignals(AbstractContinuousFunction):
          [  9. 100. 110. 120.]]
         """
 
-        return str(np.hstack([self.domain[:, None], self.range]))
+        xp = array_namespace(self.domain, self.range)
+
+        return str(xp.concat([self.domain[:, None], self.range], axis=1))
 
     def __repr__(self) -> str:
         """
@@ -701,7 +706,9 @@ class MultiSignals(AbstractContinuousFunction):
             [
                 {
                     "formatter": lambda x: repr(  # noqa: ARG005
-                        np.hstack([self.domain[:, None], self.range])
+                        array_namespace(self.domain, self.range).concat(
+                            [self.domain[:, None], self.range], axis=1
+                        )
                     ),
                 },
                 {"name": "labels"},
@@ -734,7 +741,7 @@ class MultiSignals(AbstractContinuousFunction):
 
         return hash(
             (
-                int_digest(self.domain.tobytes()),
+                int_digest(as_ndarray(self.domain).tobytes()),
                 *[hash(signal) for signal in self._signals.values()],
                 self.interpolator.__name__,
                 repr(self.interpolator_kwargs),
@@ -916,6 +923,8 @@ class MultiSignals(AbstractContinuousFunction):
 
         y = as_float_array(y)
 
+        xp = array_namespace(y)
+
         x_r, x_c = (x[0], x[1]) if isinstance(x, tuple) else (x, slice(None))
 
         attest(
@@ -925,12 +934,12 @@ class MultiSignals(AbstractContinuousFunction):
         )
 
         if y.ndim == 0:
-            y = np.tile(y, len(self._signals))
+            y = xp.tile(y, len(self._signals))
         elif y.ndim == 1:
             y = y[None, :]
 
         attest(
-            y.shape[-1] == len(self._signals),
+            y.shape[-1] == len(self._signals),  # pyright: ignore
             'Corresponding "y" variable columns must have same count than '
             'underlying "Signal" components!',
         )
@@ -1006,10 +1015,15 @@ class MultiSignals(AbstractContinuousFunction):
         # NOTE: Comparing "interpolator_kwargs" and "extrapolator_kwargs" using
         # their string representation because of presence of NaNs.
         if isinstance(other, MultiSignals):
+            xp_r = array_namespace(self.range)
             return all(
                 [
-                    np.array_equal(self.domain, other.domain),
-                    np.array_equal(self.range, other.range),
+                    self.domain.shape == other.domain.shape
+                    and bool(
+                        np.all(as_ndarray(self.domain) == as_ndarray(other.domain))
+                    ),
+                    self.range.shape == other.range.shape
+                    and bool(xp_r.all(self.range == other.range)),
                     self.interpolator is other.interpolator,
                     str(self.interpolator_kwargs) == str(other.interpolator_kwargs),
                     self.extrapolator is other.extrapolator,
@@ -1441,6 +1455,22 @@ class MultiSignals(AbstractContinuousFunction):
             signals[data.name] = data
         elif isinstance(data, MultiSignals):
             signals = data.signals
+        elif is_non_ndarray(data):
+            # Non-NumPy array backend (JAX, PyTorch, CuPy, etc.)
+            data_array = as_float_array(data)  # pyright: ignore
+
+            attest(
+                data_array.ndim in (1, 2),
+                'User "data" must be 1-dimensional or 2-dimensional!',
+            )
+
+            if data_array.ndim == 1:
+                data_array = data_array[None, :]
+            else:
+                data_array = tsplit(data_array)
+
+            for i, range_unpacked in enumerate(data_array):
+                signals[str(i)] = signal_type(range_unpacked, domain, **settings)
         elif issubclass(type(data), Sequence) or isinstance(
             data, (tuple, list, np.ndarray, Iterator, ValuesView)
         ):

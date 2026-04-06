@@ -26,7 +26,13 @@ import numpy as np
 if typing.TYPE_CHECKING:
     from colour.hints import ArrayLike, NDArrayFloat
 
-from colour.utilities import MixinDataclassIterable, as_float, as_float_array
+from colour.utilities import (
+    MixinDataclassIterable,
+    array_namespace,
+    as_float,
+    as_float_array,
+    xp_asarray,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -286,12 +292,15 @@ def sky_luminance_gradation_CIE2003(
     """
 
     Z = as_float_array(Z)
-    a = as_float_array(a)
-    b = as_float_array(b)
 
-    phi = np.where(
+    xp = array_namespace(Z)
+
+    a = xp_asarray(as_float_array(a), xp=xp, like=Z)
+    b = xp_asarray(as_float_array(b), xp=xp, like=Z)
+
+    phi = xp.where(
         np.pi / 2 > Z,
-        1 + a * np.exp(b / np.cos(Z)),
+        1 + a * xp.exp(b / xp.cos(Z)),
         1.0,
     )
 
@@ -339,11 +348,14 @@ def sky_scattering_indicatrix_CIE2003(
     """
 
     chi = as_float_array(chi)
-    c = as_float_array(c)
-    d = as_float_array(d)
-    e = as_float_array(e)
 
-    f = 1 + c * (np.exp(d * chi) - np.exp(d * np.pi / 2)) + e * np.cos(chi) ** 2
+    xp = array_namespace(chi)
+
+    c = xp_asarray(as_float_array(c), xp=xp, like=chi)
+    d = xp_asarray(as_float_array(d), xp=xp, like=chi)
+    e = xp_asarray(as_float_array(e), xp=xp, like=chi)
+
+    f = 1 + c * (xp.exp(d * chi) - xp.exp(d * np.pi / 2)) + e * xp.cos(chi) ** 2
 
     return as_float(f)
 
@@ -411,9 +423,12 @@ def sky_luminance_distribution_CIE2003(
         raise ValueError(error)
 
     Z = as_float_array(Z)
-    alpha = as_float_array(alpha)
-    Z_s = as_float_array(Z_s)
-    alpha_s = as_float_array(alpha_s)
+
+    xp = array_namespace(Z)
+
+    alpha = xp_asarray(as_float_array(alpha), xp=xp, like=Z)
+    Z_s = xp_asarray(as_float_array(Z_s), xp=xp, like=Z)
+    alpha_s = xp_asarray(as_float_array(alpha_s), xp=xp, like=Z)
 
     parameters = CIE_STANDARD_SKY_PARAMETERS[sky_type]
     a = parameters.a
@@ -423,9 +438,9 @@ def sky_luminance_distribution_CIE2003(
     e = parameters.e
 
     # Angular distance between sky element and the sun (Equation 1).
-    chi = np.arccos(
-        np.cos(Z_s) * np.cos(Z)
-        + np.sin(Z_s) * np.sin(Z) * np.cos(np.abs(alpha - alpha_s))
+    chi = xp.acos(
+        xp.cos(Z_s) * xp.cos(Z)
+        + xp.sin(Z_s) * xp.sin(Z) * xp.cos(xp.abs(alpha - alpha_s))
     )
 
     # Relative luminance (Equations 3-7).
@@ -478,6 +493,8 @@ def sky_luminance_distribution_overcast_CIE2003(
 
     Z = as_float_array(Z)
 
+    xp = array_namespace(Z)
+
     gamma = np.pi / 2 - Z
 
-    return as_float((1 + 2 * np.sin(gamma)) / 3)
+    return as_float((1 + 2 * xp.sin(gamma)) / 3)

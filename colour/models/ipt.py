@@ -28,7 +28,14 @@ from colour.hints import (  # noqa: TC001
     Range360,
 )
 from colour.models import Iab_to_XYZ, XYZ_to_Iab
-from colour.utilities import as_float, from_range_degrees, to_domain_1, tsplit
+from colour.utilities import (
+    array_namespace,
+    as_float,
+    from_range_degrees,
+    to_domain_1,
+    tsplit,
+    xp_degrees,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -213,6 +220,8 @@ def IPT_hue_angle(IPT: Domain1) -> Range360:
 
     _I, P, T = tsplit(to_domain_1(IPT))
 
-    hue = np.degrees(np.arctan2(T, P)) % 360
+    xp = array_namespace(IPT)
+
+    hue = xp_degrees(xp.atan2(T, P)) % 360
 
     return as_float(from_range_degrees(hue))

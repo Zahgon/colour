@@ -2130,7 +2130,7 @@ class LUT3D(AbstractLUT):
             weights = weights / np.sum(weights, axis=1, keepdims=True)
 
             # Weighted average: sum over neighbors dimension
-            weighted_table = np.sum(table[indices] * weights[..., np.newaxis], axis=1)
+            weighted_table = np.sum(table[indices] * weights[..., None], axis=1)
 
             LUT_q.table = np.reshape(
                 weighted_table,

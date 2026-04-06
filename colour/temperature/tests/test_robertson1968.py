@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import typing
+
+if typing.TYPE_CHECKING:
+    from colour.hints import ModuleType
+
 from itertools import product
 
 import numpy as np
@@ -13,7 +18,12 @@ from colour.temperature import (
     mired_to_CCT,
     uv_to_CCT_Robertson1968,
 )
-from colour.utilities import ignore_numpy_errors
+from colour.utilities import (
+    ignore_numpy_errors,
+    xp_asarray,
+    xp_assert_close,
+    xp_reshape,
+)
 
 __author__ = "Colour Developers"
 __copyright__ = "Copyright 2013 Colour Developers"
@@ -139,46 +149,46 @@ class TestMired_to_CCT:
     definition unit tests methods.
     """
 
-    def test_mired_to_CCT(self) -> None:
+    def test_mired_to_CCT(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.robertson1968.mired_to_CCT`
         definition.
         """
 
-        np.testing.assert_allclose(
-            CCT_to_mired(312.5), 3200, atol=TOLERANCE_ABSOLUTE_TESTS
+        xp_assert_close(
+            CCT_to_mired(xp_asarray([312.5], xp=xp)),
+            3200,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            CCT_to_mired(153.846153846154), 6500, atol=TOLERANCE_ABSOLUTE_TESTS
+        xp_assert_close(
+            CCT_to_mired(xp_asarray([153.846153846154], xp=xp)),
+            6500,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            CCT_to_mired(66.666666666666667),
+        xp_assert_close(
+            CCT_to_mired(xp_asarray([66.666666666666667], xp=xp)),
             15000,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_mired_to_CCT(self) -> None:
+    def test_n_dimensional_mired_to_CCT(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.robertson1968.mired_to_CCT`
         definition n-dimensional arrays support.
         """
 
         mired = 312.5
-        CCT = mired_to_CCT(mired)
+        CCT = np.asarray(mired_to_CCT(mired))
 
-        mired = np.tile(mired, (6, 1))
-        CCT = np.tile(CCT, (6, 1))
-        np.testing.assert_allclose(
-            mired_to_CCT(mired), CCT, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        mired = xp.tile(xp_asarray(mired, xp=xp), (6, 1))
+        CCT = xp.tile(xp_asarray(CCT, xp=xp), (6, 1))
+        xp_assert_close(mired_to_CCT(mired), CCT, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        mired = np.reshape(mired, (2, 3, 1))
-        CCT = np.reshape(CCT, (2, 3, 1))
-        np.testing.assert_allclose(
-            mired_to_CCT(mired), CCT, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        mired = xp_reshape(xp_asarray(mired, xp=xp), (2, 3, 1), xp=xp)
+        CCT = xp_reshape(xp_asarray(CCT, xp=xp), (2, 3, 1), xp=xp)
+        xp_assert_close(mired_to_CCT(mired), CCT, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_mired_to_CCT(self) -> None:
@@ -198,46 +208,46 @@ class TestCCT_to_mired:
     definition unit tests methods.
     """
 
-    def test_CCT_to_mired(self) -> None:
+    def test_CCT_to_mired(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.robertson1968.CCT_to_mired`
         definition.
         """
 
-        np.testing.assert_allclose(
-            CCT_to_mired(3200), 312.5, atol=TOLERANCE_ABSOLUTE_TESTS
+        xp_assert_close(
+            CCT_to_mired(xp_asarray([3200.0], xp=xp)),
+            312.5,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            CCT_to_mired(6500), 153.846153846154, atol=TOLERANCE_ABSOLUTE_TESTS
+        xp_assert_close(
+            CCT_to_mired(xp_asarray([6500.0], xp=xp)),
+            153.846153846154,
+            atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        np.testing.assert_allclose(
-            CCT_to_mired(15000),
+        xp_assert_close(
+            CCT_to_mired(xp_asarray([15000.0], xp=xp)),
             66.666666666666667,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-    def test_n_dimensional_CCT_to_mired(self) -> None:
+    def test_n_dimensional_CCT_to_mired(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.robertson1968.CCT_to_mired`
         definition n-dimensional arrays support.
         """
 
         CCT = 3200
-        mired = CCT_to_mired(CCT)
+        mired = np.asarray(CCT_to_mired(CCT))
 
-        CCT = np.tile(CCT, (6, 1))
-        mired = np.tile(mired, (6, 1))
-        np.testing.assert_allclose(
-            CCT_to_mired(CCT), mired, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        CCT = xp.tile(xp_asarray(CCT, xp=xp), (6, 1))
+        mired = xp.tile(xp_asarray(mired, xp=xp), (6, 1))
+        xp_assert_close(CCT_to_mired(CCT), mired, atol=TOLERANCE_ABSOLUTE_TESTS)
 
-        CCT = np.reshape(CCT, (2, 3, 1))
-        mired = np.reshape(mired, (2, 3, 1))
-        np.testing.assert_allclose(
-            CCT_to_mired(CCT), mired, atol=TOLERANCE_ABSOLUTE_TESTS
-        )
+        CCT = xp_reshape(xp_asarray(CCT, xp=xp), (2, 3, 1), xp=xp)
+        mired = xp_reshape(xp_asarray(mired, xp=xp), (2, 3, 1), xp=xp)
+        xp_assert_close(CCT_to_mired(CCT), mired, atol=TOLERANCE_ABSOLUTE_TESTS)
 
     @ignore_numpy_errors
     def test_nan_CCT_to_mired(self) -> None:
@@ -257,35 +267,39 @@ class TestUv_to_CCT_Robertson1968:
     definition unit tests methods.
     """
 
-    def test_uv_to_CCT_Robertson1968(self) -> None:
+    def test_uv_to_CCT_Robertson1968(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.robertson1968.uv_to_CCT_Robertson1968`
         definition.
         """
 
         for key, value in TEMPERATURE_DUV_TO_UV.items():
-            np.testing.assert_allclose(uv_to_CCT_Robertson1968(value), key, atol=0.25)
+            xp_assert_close(
+                uv_to_CCT_Robertson1968(xp_asarray(value, xp=xp)),
+                key,
+                atol=TOLERANCE_ABSOLUTE_TESTS * 2500000,
+            )
 
-    def test_n_dimensional_uv_to_CCT_Robertson1968(self) -> None:
+    def test_n_dimensional_uv_to_CCT_Robertson1968(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.robertson1968.uv_to_CCT_Robertson1968`
         definition n-dimensional arrays support.
         """
 
-        uv = np.array([0.1978, 0.3122])
-        CCT_D_uv = uv_to_CCT_Robertson1968(uv)
+        uv = xp_asarray([0.1978, 0.3122], xp=xp)
+        CCT_D_uv = np.asarray(uv_to_CCT_Robertson1968(uv))
 
-        uv = np.tile(uv, (6, 1))
-        CCT_D_uv = np.tile(CCT_D_uv, (6, 1))
-        np.testing.assert_allclose(
+        uv = xp.tile(xp_asarray(uv, xp=xp), (6, 1))
+        CCT_D_uv = xp.tile(xp_asarray(CCT_D_uv, xp=xp), (6, 1))
+        xp_assert_close(
             uv_to_CCT_Robertson1968(uv),
             CCT_D_uv,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        uv = np.reshape(uv, (2, 3, 2))
-        CCT_D_uv = np.reshape(CCT_D_uv, (2, 3, 2))
-        np.testing.assert_allclose(
+        uv = xp_reshape(xp_asarray(uv, xp=xp), (2, 3, 2), xp=xp)
+        CCT_D_uv = xp_reshape(xp_asarray(CCT_D_uv, xp=xp), (2, 3, 2), xp=xp)
+        xp_assert_close(
             uv_to_CCT_Robertson1968(uv),
             CCT_D_uv,
             atol=TOLERANCE_ABSOLUTE_TESTS,
@@ -309,39 +323,39 @@ class TestCCT_to_uv_Robertson1968:
     definition unit tests methods.
     """
 
-    def test_CCT_to_uv_Robertson1968(self) -> None:
+    def test_CCT_to_uv_Robertson1968(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.robertson1968.CCT_to_uv_Robertson1968`
         definition.
         """
 
         for key, value in TEMPERATURE_DUV_TO_UV.items():
-            np.testing.assert_allclose(
-                CCT_to_uv_Robertson1968(key),
+            xp_assert_close(
+                CCT_to_uv_Robertson1968(xp_asarray(key, xp=xp)),
                 value,
                 atol=TOLERANCE_ABSOLUTE_TESTS,
             )
 
-    def test_n_dimensional_CCT_to_uv_Robertson1968(self) -> None:
+    def test_n_dimensional_CCT_to_uv_Robertson1968(self, xp: ModuleType) -> None:
         """
         Test :func:`colour.temperature.robertson1968.CCT_to_uv_Robertson1968`
         definition n-dimensional arrays support.
         """
 
-        CCT_D_uv = np.array([4500, 0.0250])
-        uv = CCT_to_uv_Robertson1968(CCT_D_uv)
+        CCT_D_uv = xp_asarray([4500, 0.0250], xp=xp)
+        uv = np.asarray(CCT_to_uv_Robertson1968(CCT_D_uv))
 
-        CCT_D_uv = np.tile(CCT_D_uv, (6, 1))
-        uv = np.tile(uv, (6, 1))
-        np.testing.assert_allclose(
+        CCT_D_uv = xp.tile(xp_asarray(CCT_D_uv, xp=xp), (6, 1))
+        uv = xp.tile(xp_asarray(uv, xp=xp), (6, 1))
+        xp_assert_close(
             CCT_to_uv_Robertson1968(CCT_D_uv),
             uv,
             atol=TOLERANCE_ABSOLUTE_TESTS,
         )
 
-        CCT_D_uv = np.reshape(CCT_D_uv, (2, 3, 2))
-        uv = np.reshape(uv, (2, 3, 2))
-        np.testing.assert_allclose(
+        CCT_D_uv = xp_reshape(xp_asarray(CCT_D_uv, xp=xp), (2, 3, 2), xp=xp)
+        uv = xp_reshape(xp_asarray(uv, xp=xp), (2, 3, 2), xp=xp)
+        xp_assert_close(
             CCT_to_uv_Robertson1968(CCT_D_uv),
             uv,
             atol=TOLERANCE_ABSOLUTE_TESTS,
