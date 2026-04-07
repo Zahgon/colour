@@ -281,35 +281,7 @@ def show_warning(
         definition, providing complete traceback from the point where
         the warning occurred.
     """
-
-    frame_range = (1, None)
-
-    file = sys.stderr if file is None else file
-
-    if file is None:
-        return
-
-    try:
-        # Generating a traceback to print useful warning origin.
-        frame_in, frame_out = frame_range
-
-        try:
-            raise ZeroDivisionError  # noqa: TRY301
-        except ZeroDivisionError:
-            exception_traceback = sys.exc_info()[2]
-            frame = (
-                exception_traceback.tb_frame.f_back
-                if exception_traceback is not None
-                else None
-            )
-            while frame_in and frame is not None:
-                frame = frame.f_back
-                frame_in -= 1
-
-        traceback.print_stack(frame, frame_out, file)
-        file.write(formatwarning(message, category, filename, lineno, line))
-    except (OSError, UnicodeError):
-        pass
+    pass
 
 
 if os.environ.get(  # pragma: no cover
@@ -629,10 +601,6 @@ class suppress_stdout:
     def __call__(self, function: Callable) -> Callable:  # pragma: no cover
         """Call the wrapped definition with suppressed output."""
 
-        @functools.wraps(function)
-        def wrapper(*args: Any, **kwargs: Any) -> Callable:
-            with self:
-                return function(*args, **kwargs)
 
         return wrapper
 
@@ -658,13 +626,7 @@ def numpy_print_options(*args: Any, **kwargs: Any) -> Generator:
     ...     np.array([np.pi])
     array([3.1])
     """
-
-    options = np.get_printoptions()
-    np.set_printoptions(*args, **kwargs)
-    try:
-        yield
-    finally:
-        np.set_printoptions(**options)
+    pass
 
 
 ANCILLARY_COLOUR_SCIENCE_PACKAGES: Dict[str, str] = {}
@@ -1153,43 +1115,4 @@ def multiline_repr(
          1,
          ('John', 'Doe'))
     """
-
-    attribute_defaults = {"name": None, "formatter": repr}
-
-    justify = len(f"{object_.__class__.__name__}") + 1
-
-    def _format(attribute: dict) -> str:
-        """Format specified attribute and its value."""
-
-        if attribute["name"] is not None:
-            value = attribute["formatter"](getattr(object_, attribute["name"]))
-        else:
-            value = attribute["formatter"](None)
-
-        if value is None:
-            return str(None)
-
-        if reduce_array_representation and value.startswith("array("):
-            lines = value.splitlines()
-            for i, line in enumerate(lines):
-                lines[i] = line[6:]
-            value = "\n".join(lines)[:-1]
-
-        lines = value.splitlines()
-
-        if len(lines) > 1:
-            for i, line in enumerate(lines[1:]):
-                lines[i + 1] = f"{'':{justify}}{line}"
-
-        return "\n".join(lines)
-
-    attribute = dict(attribute_defaults, **attributes.pop(0))
-
-    representation = [f"{object_.__class__.__name__}({_format(attribute)}"]
-
-    for attribute in attributes:
-        attribute = dict(attribute_defaults, **attribute)  # noqa: PLW2901
-
-        representation.append(f"{'':{justify}}{_format(attribute)}")
-
-    return "{})".format(",\n".join(representation))
+    pass

@@ -116,17 +116,7 @@ def HelmholtzKohlrausch_effect_object_Nayatani1997(
     ... )
     array([2.2468383..., 1.4619799..., 1.1801658..., 0.9031318..., 1.7999376...])
     """
-
-    u, v = tsplit(uv)
-    u_c, v_c = tsplit(uv_c)
-
-    method = validate_method(method, tuple(HKE_NAYATANI1997_METHODS))
-
-    K_Br = coefficient_K_Br_Nayatani1997(L_a)
-    q = coefficient_q_Nayatani1997(np.arctan2(v - v_c, u - u_c))
-    S_uv = 13 * np.sqrt((u - u_c) ** 2 + (v - v_c) ** 2)
-
-    return 1 + (HKE_NAYATANI1997_METHODS[method] * q + 0.0872 * K_Br) * S_uv
+    pass
 
 
 def HelmholtzKohlrausch_effect_luminous_Nayatani1997(
@@ -176,15 +166,7 @@ def HelmholtzKohlrausch_effect_luminous_Nayatani1997(
     ... )
     array([7.4460471..., 2.4767159..., 1.4723422..., 0.7938695..., 4.1828629...])
     """
-
-    return (
-        0.4462
-        * (
-            HelmholtzKohlrausch_effect_object_Nayatani1997(uv, uv_c, L_a, method)
-            + 0.3086
-        )
-        ** 3
-    )
+    pass
 
 
 def coefficient_q_Nayatani1997(
@@ -230,22 +212,7 @@ def coefficient_q_Nayatani1997(
     [<matplotlib.lines.Line2D object at 0x...>]
     >>> plt.show()  # doctest: +SKIP
     """
-
-    theta = as_float_array(theta)
-
-    theta_2, theta_3, theta_4 = 2 * theta, 3 * theta, 4 * theta
-
-    return (
-        -0.01585
-        - 0.03017 * np.cos(theta)
-        - 0.04556 * np.cos(theta_2)
-        - 0.02667 * np.cos(theta_3)
-        - 0.00295 * np.cos(theta_4)
-        + 0.14592 * np.sin(theta)
-        + 0.05084 * np.sin(theta_2)
-        - 0.01900 * np.sin(theta_3)
-        - 0.00764 * np.sin(theta_4)
-    )
+    pass
 
 
 @typing.overload
@@ -286,7 +253,4 @@ def coefficient_K_Br_Nayatani1997(L_a: ArrayLike) -> DTypeFloat | NDArrayFloat:
     >>> coefficient_K_Br_Nayatani1997(63.66)  # doctest: +ELLIPSIS
     np.float64(1.0001284...)
     """
-
-    L_a_4495 = spow(L_a, 0.4495)
-
-    return (L_a_4495 * 6.362 + 6.469) * 0.2717 / (L_a_4495 + 6.469)
+    pass

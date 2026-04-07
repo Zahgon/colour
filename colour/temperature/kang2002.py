@@ -84,42 +84,7 @@ def xy_to_CCT_Kang2002(
     ... # doctest: +ELLIPSIS
     np.float64(6504.3893128...)
     """
-
-    from scipy.optimize import minimize  # noqa: PLC0415
-
-    xy = as_float_array(xy)
-    shape = xy.shape
-    xy = np.atleast_1d(np.reshape(xy, (-1, 2)))
-
-    def objective_function(CCT: NDArrayFloat, xy: NDArrayFloat) -> DTypeFloat:
-        """Objective function."""
-
-        objective = np.linalg.norm(CCT_to_xy_Kang2002(CCT) - xy)
-
-        return as_float(objective)
-
-    optimisation_settings = {
-        "method": "Nelder-Mead",
-        "options": {
-            "fatol": 1e-10,
-        },
-    }
-    if optimisation_kwargs is not None:
-        optimisation_settings.update(optimisation_kwargs)
-
-    CCT = as_float_array(
-        [
-            minimize(
-                objective_function,
-                x0=[6500],
-                args=(xy_i,),
-                **optimisation_settings,
-            ).x
-            for xy_i in xy
-        ]
-    )
-
-    return as_float(np.reshape(CCT, shape[:-1]))
+    pass
 
 
 def CCT_to_xy_Kang2002(CCT: ArrayLike) -> NDArrayFloat:

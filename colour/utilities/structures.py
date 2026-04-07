@@ -335,8 +335,7 @@ class CanonicalMapping(MutableMapping):
         :class:`dict`
             Internal data storage.
         """
-
-        return self._data
+        pass
 
     def __repr__(self) -> str:
         """
@@ -642,8 +641,7 @@ class CanonicalMapping(MutableMapping):
         Generator
             Item generator.
         """
-
-        yield from ((str(key).lower(), value) for (key, value) in self._data.items())
+        pass
 
     def slugified_keys(self) -> Generator:
         """
@@ -674,8 +672,7 @@ class CanonicalMapping(MutableMapping):
         Generator
             Item generator.
         """
-
-        yield from zip(self.slugified_keys(), self.values(), strict=True)
+        pass
 
     def canonical_keys(self) -> Generator:
         """
@@ -704,8 +701,7 @@ class CanonicalMapping(MutableMapping):
         Generator
             Item generator.
         """
-
-        yield from zip(self.canonical_keys(), self.values(), strict=True)
+        pass
 
 
 class LazyCanonicalMapping(CanonicalMapping):

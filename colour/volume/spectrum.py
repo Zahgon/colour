@@ -350,41 +350,7 @@ def XYZ_outer_surface(
            [1.0913224...e+00, 9.9603645...e-01, 1.3568301...e+00],
            [1.1022943...e+00, 1.0000000...e+00, 1.3568301...e+00]])
     """
-
-    cmfs, illuminant = handle_spectral_arguments(
-        cmfs,
-        illuminant,
-        "CIE 1931 2 Degree Standard Observer",
-        "E",
-        SPECTRAL_SHAPE_OUTER_SURFACE_XYZ,
-    )
-
-    settings = dict(kwargs)
-    settings.update({"shape": cmfs.shape})
-
-    key = (
-        hash(cmfs),
-        hash(illuminant),
-        point_order,
-        filter_jagged_points,
-        str(settings),
-    )
-    XYZ = _CACHE_OUTER_SURFACE_XYZ.get(key)
-
-    if is_caching_enabled() and XYZ is not None:  # pragma: no cover
-        return XYZ
-
-    pulse_waves = generate_pulse_waves(
-        len(cmfs.wavelengths), point_order, filter_jagged_points
-    )
-    XYZ = (
-        msds_to_XYZ(pulse_waves, cmfs, illuminant, method="Integration", **settings)
-        / 100
-    )
-
-    _CACHE_OUTER_SURFACE_XYZ[key] = XYZ
-
-    return XYZ
+    pass
 
 
 solid_RoschMacAdam = XYZ_outer_surface
@@ -443,21 +409,4 @@ def is_within_visible_spectrum(
     >>> is_within_visible_spectrum(a)
     array([ True, False])
     """
-
-    cmfs, illuminant = handle_spectral_arguments(
-        cmfs,
-        illuminant,
-        "CIE 1931 2 Degree Standard Observer",
-        "E",
-        SPECTRAL_SHAPE_OUTER_SURFACE_XYZ,
-    )
-
-    key = (hash(cmfs), hash(illuminant), str(kwargs))
-    vertices = _CACHE_OUTER_SURFACE_XYZ_POINTS.get(key)
-
-    if vertices is None:
-        _CACHE_OUTER_SURFACE_XYZ_POINTS[key] = vertices = solid_RoschMacAdam(
-            cmfs, illuminant, **kwargs
-        )
-
-    return is_within_mesh_volume(XYZ, vertices, tolerance)
+    pass

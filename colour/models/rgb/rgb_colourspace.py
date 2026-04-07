@@ -296,19 +296,12 @@ class RGB_Colourspace:
         :class:`str`
             *RGB* colourspace name.
         """
-
-        return self._name
+        pass
 
     @name.setter
     def name(self, value: str) -> None:
         """Setter for the **self.name** property."""
-
-        attest(
-            isinstance(value, str),
-            f'"name" property: "{value}" type is not "str"!',
-        )
-
-        self._name = value
+        pass
 
     @property
     def primaries(self) -> NDArrayFloat:
@@ -325,27 +318,12 @@ class RGB_Colourspace:
         :class:`numpy.ndarray`
             *RGB* colourspace primaries.
         """
-
-        return self._primaries
+        pass
 
     @primaries.setter
     def primaries(self, value: ArrayLike) -> None:
         """Setter for the **self.primaries** property."""
-
-        attest(
-            isinstance(value, (tuple, list, np.ndarray, np.matrix)),
-            f'"primaries" property: "{value!r}" is not a "tuple", '
-            f'"list", "ndarray" or "matrix" instance!',
-        )
-
-        value = as_float_array(value)
-
-        value = np.reshape(value, (3, 2))
-
-        self._primaries = value
-
-        self._derived_matrix_XYZ_to_RGB = np.array([])
-        self._derived_matrix_RGB_to_XYZ = np.array([])
+        pass
 
     @property
     def whitepoint(self) -> NDArrayFloat:
@@ -362,24 +340,12 @@ class RGB_Colourspace:
         :class:`numpy.ndarray`
             *RGB* colourspace whitepoint.
         """
-
-        return self._whitepoint
+        pass
 
     @whitepoint.setter
     def whitepoint(self, value: ArrayLike) -> None:
         """Setter for the **self.whitepoint** property."""
-
-        attest(
-            isinstance(value, (tuple, list, np.ndarray, np.matrix)),
-            f'"whitepoint" property: "{value!r}" is not a "tuple", '
-            f'"list", "ndarray" or "matrix" instance!',
-        )
-
-        value = as_float_array(value)
-
-        self._whitepoint = value
-        self._derived_matrix_XYZ_to_RGB = np.array([])
-        self._derived_matrix_RGB_to_XYZ = np.array([])
+        pass
 
     @property
     def whitepoint_name(self) -> str | None:
@@ -403,20 +369,12 @@ class RGB_Colourspace:
             *RGB* colourspace whitepoint name identifier. Returns
             :py:data:`None` if no name has been specified.
         """
-
-        return self._whitepoint_name
+        pass
 
     @whitepoint_name.setter
     def whitepoint_name(self, value: str | None) -> None:
         """Setter for the **self.whitepoint_name** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"whitepoint_name" property: "{value}" type is not "str"!',
-            )
-
-        self._whitepoint_name = value
+        pass
 
     @property
     def matrix_RGB_to_XYZ(self) -> NDArrayFloat:
@@ -436,29 +394,12 @@ class RGB_Colourspace:
             Transformation matrix from RGB colourspace to *CIE XYZ*
             tristimulus values.
         """
-
-        if self._matrix_RGB_to_XYZ is None or self._use_derived_matrix_RGB_to_XYZ:
-            if self._derived_matrix_RGB_to_XYZ.size == 0:
-                self._derive_transformation_matrices()
-
-            return self._derived_matrix_RGB_to_XYZ
-
-        return self._matrix_RGB_to_XYZ
+        pass
 
     @matrix_RGB_to_XYZ.setter
     def matrix_RGB_to_XYZ(self, value: ArrayLike | None) -> None:
         """Setter for the **self.matrix_RGB_to_XYZ** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, (tuple, list, np.ndarray, np.matrix)),
-                f'"matrix_RGB_to_XYZ" property: "{value!r}" is not a "tuple", '
-                f'"list", "ndarray" or "matrix" instance!',
-            )
-
-            value = as_float_array(value)
-
-        self._matrix_RGB_to_XYZ = value
+        pass
 
     @property
     def matrix_XYZ_to_RGB(self) -> NDArrayFloat:
@@ -478,29 +419,12 @@ class RGB_Colourspace:
             Transformation matrix from *CIE XYZ* tristimulus values to the
             colourspace.
         """
-
-        if self._matrix_XYZ_to_RGB is None or self._use_derived_matrix_XYZ_to_RGB:
-            if self._derived_matrix_XYZ_to_RGB.size == 0:
-                self._derive_transformation_matrices()
-
-            return self._derived_matrix_XYZ_to_RGB
-
-        return self._matrix_XYZ_to_RGB
+        pass
 
     @matrix_XYZ_to_RGB.setter
     def matrix_XYZ_to_RGB(self, value: ArrayLike | None) -> None:
         """Setter for the **self.matrix_XYZ_to_RGB** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, (tuple, list, np.ndarray, np.matrix)),
-                f'"matrix_XYZ_to_RGB" property: "{value!r}" is not a "tuple", '
-                f'"list", "ndarray" or "matrix" instance!',
-            )
-
-            value = as_float_array(value)
-
-        self._matrix_XYZ_to_RGB = value
+        pass
 
     @property
     def cctf_encoding(self) -> Callable | None:
@@ -591,19 +515,12 @@ class RGB_Colourspace:
             Whether to use the instantiation time normalised primary matrix or
             to use a computed derived normalised primary matrix.
         """
-
-        return self._use_derived_matrix_RGB_to_XYZ
+        pass
 
     @use_derived_matrix_RGB_to_XYZ.setter
     def use_derived_matrix_RGB_to_XYZ(self, value: bool) -> None:
         """Setter for the **self.use_derived_matrix_RGB_to_XYZ** property."""
-
-        attest(
-            isinstance(value, (bool, np.bool_)),
-            f'"use_derived_matrix_RGB_to_XYZ" property: "{value}" is not a "bool"!',
-        )
-
-        self._use_derived_matrix_RGB_to_XYZ = value
+        pass
 
     @property
     def use_derived_matrix_XYZ_to_RGB(self) -> bool:
@@ -628,19 +545,12 @@ class RGB_Colourspace:
             Whether to use the instantiation time inverse normalised primary
             matrix or to compute a derived inverse normalised primary matrix.
         """
-
-        return self._use_derived_matrix_XYZ_to_RGB
+        pass
 
     @use_derived_matrix_XYZ_to_RGB.setter
     def use_derived_matrix_XYZ_to_RGB(self, value: bool) -> None:
         """Setter for the **self.use_derived_matrix_XYZ_to_RGB** property."""
-
-        attest(
-            isinstance(value, (bool, np.bool_)),
-            f'"use_derived_matrix_XYZ_to_RGB" property: "{value}" is not a "bool"!',
-        )
-
-        self._use_derived_matrix_XYZ_to_RGB = value
+        pass
 
     def __str__(self) -> str:
         """

@@ -128,43 +128,7 @@ def lines_daylight_locus(
     dtype([('position', '<f8', (2,)), ('normal', '<f8', (2,)), \
 ('colour', '<f8', (3,))])
     """
-
-    method = validate_method(method, ("CIE 1931", "CIE 1960 UCS", "CIE 1976 UCS"))
-
-    xy_to_ij = METHODS_CHROMATICITY_DIAGRAM[method]["xy_to_ij"]
-
-    def CCT_to_plotting_colourspace(CCT: ArrayLike) -> NDArrayFloat:
-        """
-        Convert specified correlated colour temperature :math:`T_{cp}` to the
-        default plotting colourspace.
-        """
-
-        return normalise_maximum(
-            XYZ_to_plotting_colourspace(xy_to_XYZ(CCT_to_xy_CIE_D(CCT))),
-            axis=-1,
-        )
-
-    start, end = (0, 1000) if mireds else (1e6 / 600, 1e6 / 10)
-
-    CCT = np.arange(start, end + 100, 10) * 1.4388 / 1.4380
-    CCT = mired_to_CCT(CCT) if mireds else CCT
-
-    ij_sl = np.reshape(xy_to_ij(CCT_to_xy_CIE_D(CCT)), (-1, 2))
-    colour_sl = np.reshape(CCT_to_plotting_colourspace(CCT), (-1, 3))
-
-    lines_sl = zeros(
-        ij_sl.shape[0],
-        [
-            ("position", DTYPE_FLOAT_DEFAULT, 2),
-            ("normal", DTYPE_FLOAT_DEFAULT, 2),
-            ("colour", DTYPE_FLOAT_DEFAULT, 3),
-        ],  # pyright: ignore
-    )
-
-    lines_sl["position"] = ij_sl
-    lines_sl["colour"] = colour_sl
-
-    return (lines_sl,)
+    pass
 
 
 @override_style()
@@ -213,43 +177,7 @@ def plot_daylight_locus(
         :align: center
         :alt: plot_daylight_locus
     """
-
-    method = validate_method(method, ("CIE 1931", "CIE 1960 UCS", "CIE 1976 UCS"))
-
-    use_RGB_daylight_locus_colours = str(daylight_locus_colours).upper() == "RGB"
-
-    daylight_locus_colours = optional(
-        daylight_locus_colours, CONSTANTS_COLOUR_STYLE.colour.dark
-    )
-
-    settings: Dict[str, Any] = {"uniform": True}
-    settings.update(kwargs)
-
-    _figure, axes = artist(**settings)
-
-    lines_sl, *_ = lines_daylight_locus(daylight_locus_mireds, method)
-
-    line_collection = LineCollection(
-        np.reshape(
-            np.concatenate(
-                [lines_sl["position"][:-1], lines_sl["position"][1:]], axis=1
-            ),
-            (-1, 2, 2),
-        ),  # pyright: ignore
-        colors=(
-            lines_sl["colour"]
-            if use_RGB_daylight_locus_colours
-            else daylight_locus_colours
-        ),
-        alpha=daylight_locus_opacity,
-        zorder=CONSTANTS_COLOUR_STYLE.zorder.foreground_line,
-    )
-    axes.add_collection(line_collection)
-
-    settings = {"axes": axes}
-    settings.update(kwargs)
-
-    return render(**settings)
+    pass
 
 
 LABELS_PLANCKIAN_LOCUS_DEFAULT: CanonicalMapping = CanonicalMapping(
@@ -957,14 +885,4 @@ Plot_Planckian_Locus_In_Chromaticity_Diagram_CIE1976UCS.png
         :align: center
         :alt: plot_planckian_locus_in_chromaticity_diagram_CIE1976UCS
     """
-
-    settings = dict(kwargs)
-    settings.update({"method": "CIE 1976 UCS"})
-
-    return plot_planckian_locus_in_chromaticity_diagram(
-        illuminants,
-        chromaticity_diagram_callable_CIE1976UCS,
-        annotate_kwargs=annotate_kwargs,
-        plot_kwargs=plot_kwargs,
-        **settings,
-    )
+    pass

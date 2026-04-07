@@ -73,38 +73,4 @@ def read_sds_from_xrite_file(
     >>> pprint(list(sds_data.keys()))  # doctest: +SKIP
     ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9', 'X10']
     """
-
-    path = str(path)
-
-    with codecs.open(path, encoding=XRITE_FILE_ENCODING) as xrite_file:
-        lines = xrite_file.read().strip().split("\n")
-
-        index = 0
-        xrite_sds = {}
-        is_spectral_data_format, is_spectral_data = False, False
-        for line in lines:
-            line = line.strip()  # noqa: PLW2901
-
-            if line == "END_DATA_FORMAT":
-                is_spectral_data_format = False
-
-            if line == "END_DATA":
-                is_spectral_data = False
-
-            if is_spectral_data_format:
-                wavelengths = list(re.findall("nm(\\d+)", line))
-                index = len(wavelengths)
-
-            if is_spectral_data:
-                tokens = line.split()
-                xrite_sds[tokens[1]] = SpectralDistribution(
-                    tokens[-index:], wavelengths, name=tokens[1]
-                )
-
-            if line == "BEGIN_DATA_FORMAT":
-                is_spectral_data_format = True
-
-            if line == "BEGIN_DATA":
-                is_spectral_data = True
-
-        return xrite_sds
+    pass

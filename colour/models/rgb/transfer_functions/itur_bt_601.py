@@ -126,14 +126,4 @@ def oetf_inverse_BT601(E: Domain1) -> Range1:
     >>> oetf_inverse_BT601(0.409007728864150)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    E = to_domain_1(E)
-
-    with domain_range_scale("ignore"):
-        L = np.where(
-            oetf_BT601(0.018) > E,
-            E / 4.5,
-            spow((E + 0.099) / 1.099, 1 / 0.45),
-        )
-
-    return as_float(from_range_1(L))
+    pass

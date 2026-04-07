@@ -130,13 +130,7 @@ def log_encoding_REDLog(
     >>> log_encoding_REDLog(0.18)  # doctest: +ELLIPSIS
     np.float64(0.6376218...)
     """
-
-    x = to_domain_1(x)
-    black_offset = as_float_array(black_offset)
-
-    y = (1023 + 511 * np.log10(x * (1 - black_offset) + black_offset)) / 1023
-
-    return as_float(from_range_1(y))
+    pass
 
 
 def log_decoding_REDLog(
@@ -181,13 +175,7 @@ def log_decoding_REDLog(
     >>> log_decoding_REDLog(0.637621845988175)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    y = to_domain_1(y)
-    black_offset = as_float_array(black_offset)
-
-    x = ((10 ** ((1023 * y - 1023) / 511)) - black_offset) / (1 - black_offset)
-
-    return as_float(from_range_1(x))
+    pass
 
 
 def log_encoding_REDLogFilm(
@@ -232,8 +220,7 @@ def log_encoding_REDLogFilm(
     >>> log_encoding_REDLogFilm(0.18)  # doctest: +ELLIPSIS
     np.float64(0.4573196...)
     """
-
-    return log_encoding_Cineon(x, black_offset)
+    pass
 
 
 def log_decoding_REDLogFilm(
@@ -279,8 +266,7 @@ def log_decoding_REDLogFilm(
     >>> log_decoding_REDLogFilm(0.457319613085418)  # doctest: +ELLIPSIS
     np.float64(0.1799999...)
     """
-
-    return log_decoding_Cineon(y, black_offset)
+    pass
 
 
 def log_encoding_Log3G10_v1(x: Domain1) -> Range1:
@@ -322,12 +308,7 @@ def log_encoding_Log3G10_v1(x: Domain1) -> Range1:
     >>> log_encoding_Log3G10_v1(0.18)  # doctest: +ELLIPSIS
     np.float64(0.3333336...)
     """
-
-    x = to_domain_1(x)
-
-    y = np.sign(x) * 0.222497 * np.log10((np.abs(x) * 169.379333) + 1)
-
-    return as_float(from_range_1(y))
+    pass
 
 
 def log_decoding_Log3G10_v1(y: Domain1) -> Range1:
@@ -370,12 +351,7 @@ def log_decoding_Log3G10_v1(y: Domain1) -> Range1:
     >>> log_decoding_Log3G10_v1(1.0 / 3)  # doctest: +ELLIPSIS
     np.float64(0.1799994...)
     """
-
-    y = to_domain_1(y)
-
-    x = np.sign(y) * (10.0 ** (np.abs(y) / 0.222497) - 1) / 169.379333
-
-    return as_float(from_range_1(x))
+    pass
 
 
 def log_encoding_Log3G10_v2(x: Domain1) -> Range1:
@@ -417,12 +393,7 @@ def log_encoding_Log3G10_v2(x: Domain1) -> Range1:
     >>> log_encoding_Log3G10_v2(0.0)  # doctest: +ELLIPSIS
     np.float64(0.0915514...)
     """
-
-    x = to_domain_1(x)
-
-    y = np.sign(x + 0.01) * 0.224282 * np.log10((np.abs(x + 0.01) * 155.975327) + 1)
-
-    return as_float(from_range_1(y))
+    pass
 
 
 def log_decoding_Log3G10_v2(y: Domain1) -> Range1:
@@ -465,12 +436,7 @@ def log_decoding_Log3G10_v2(y: Domain1) -> Range1:
     >>> log_decoding_Log3G10_v2(1.0)  # doctest: +ELLIPSIS
     np.float64(184.3223476...)
     """
-
-    y = to_domain_1(y)
-
-    x = (np.sign(y) * (10.0 ** (np.abs(y) / 0.224282) - 1) / 155.975327) - 0.01
-
-    return as_float(from_range_1(x))
+    pass
 
 
 def log_encoding_Log3G10_v3(x: Domain1) -> Range1:
@@ -512,19 +478,7 @@ def log_encoding_Log3G10_v3(x: Domain1) -> Range1:
     >>> log_encoding_Log3G10_v3(0.0)  # doctest: +ELLIPSIS
     np.float64(0.09155148...)
     """
-
-    a = 0.224282
-    b = 155.975327
-    c = 0.01
-    g = 15.1927
-
-    x = to_domain_1(x)
-
-    x = x + c
-
-    y = np.where(x < 0.0, x * g, np.sign(x) * a * np.log10((np.abs(x) * b) + 1.0))
-
-    return as_float(from_range_1(y))
+    pass
 
 
 def log_decoding_Log3G10_v3(y: Domain1) -> Range1:
@@ -567,21 +521,7 @@ def log_decoding_Log3G10_v3(y: Domain1) -> Range1:
     >>> log_decoding_Log3G10_v3(1.0)  # doctest: +ELLIPSIS
     np.float64(184.32234764...)
     """
-
-    a = 0.224282
-    b = 155.975327
-    c = 0.01
-    g = 15.1927
-
-    y = to_domain_1(y)
-
-    x = np.where(
-        y < 0.0,
-        (y / g) - c,
-        np.sign(y) * (10 ** (np.abs(y) / a) - 1.0) / b - c,
-    )
-
-    return as_float(from_range_1(x))
+    pass
 
 
 LOG3G10_ENCODING_METHODS: CanonicalMapping = CanonicalMapping(
@@ -675,10 +615,7 @@ def log_encoding_Log3G10(
     >>> log_encoding_Log3G10(0.18, method="v1")  # doctest: +ELLIPSIS
     np.float64(0.3333336...)
     """
-
-    method = validate_method(method, tuple(LOG3G10_ENCODING_METHODS))
-
-    return LOG3G10_ENCODING_METHODS[method](x)
+    pass
 
 
 LOG3G10_DECODING_METHODS = CanonicalMapping(
@@ -741,10 +678,7 @@ def log_decoding_Log3G10(
     >>> log_decoding_Log3G10(1.0 / 3, method="v1")  # doctest: +ELLIPSIS
     np.float64(0.1799994...)
     """
-
-    method = validate_method(method, tuple(LOG3G10_DECODING_METHODS))
-
-    return LOG3G10_DECODING_METHODS[method](y)
+    pass
 
 
 def log_encoding_Log3G12(x: Domain1) -> Range1:
@@ -784,12 +718,7 @@ def log_encoding_Log3G12(x: Domain1) -> Range1:
     >>> log_encoding_Log3G12(0.18)  # doctest: +ELLIPSIS
     np.float64(0.3333326...)
     """
-
-    x = to_domain_1(x)
-
-    y = np.sign(x) * 0.184904 * np.log10((np.abs(x) * 347.189667) + 1)
-
-    return as_float(from_range_1(y))
+    pass
 
 
 def log_decoding_Log3G12(y: Domain1) -> Range1:
@@ -829,9 +758,4 @@ def log_decoding_Log3G12(y: Domain1) -> Range1:
     >>> log_decoding_Log3G12(1.0 / 3)  # doctest: +ELLIPSIS
     np.float64(0.1800015...)
     """
-
-    y = to_domain_1(y)
-
-    x = np.sign(y) * (10.0 ** (np.abs(y) / 0.184904) - 1) / 347.189667
-
-    return as_float(from_range_1(x))
+    pass

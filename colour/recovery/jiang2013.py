@@ -133,40 +133,7 @@ def PCA_Jiang2013(
     >>> np.array(PCA_Jiang2013(camera_sensitivities)).shape
     (3, 31, 31)
     """
-
-    R_sensitivities, G_sensitivities, B_sensitivities = [], [], []
-
-    def normalised_sensitivity(
-        msds: MultiSpectralDistributions, channel: str
-    ) -> NDArrayFloat:
-        """Generate a normalised camera *RGB* sensitivity."""
-
-        sensitivity = cast("SpectralDistribution", msds.signals[channel].copy())
-
-        return sensitivity.normalise().values
-
-    for msds in msds_camera_sensitivities.values():
-        R_sensitivities.append(normalised_sensitivity(msds, msds.labels[0]))
-        G_sensitivities.append(normalised_sensitivity(msds, msds.labels[1]))
-        B_sensitivities.append(normalised_sensitivity(msds, msds.labels[2]))
-
-    R_w_v = eigen_decomposition(
-        np.vstack(R_sensitivities), eigen_w_v_count, covariance_matrix=True
-    )
-    G_w_v = eigen_decomposition(
-        np.vstack(G_sensitivities), eigen_w_v_count, covariance_matrix=True
-    )
-    B_w_v = eigen_decomposition(
-        np.vstack(B_sensitivities), eigen_w_v_count, covariance_matrix=True
-    )
-
-    if additional_data:
-        return (
-            (R_w_v[1], G_w_v[1], B_w_v[1]),
-            (R_w_v[0], G_w_v[0], B_w_v[0]),
-        )
-
-    return R_w_v[1], G_w_v[1], B_w_v[1]
+    pass
 
 
 def RGB_to_sd_camera_sensitivity_Jiang2013(

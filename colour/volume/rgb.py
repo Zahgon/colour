@@ -73,8 +73,7 @@ def _wrapper_RGB_colourspace_volume_MonteCarlo(arguments: tuple) -> int:
     :class:`int`
         Inside *RGB* colourspace volume sample count.
     """
-
-    return sample_RGB_colourspace_volume_MonteCarlo(*arguments)
+    pass
 
 
 def sample_RGB_colourspace_volume_MonteCarlo(
@@ -137,18 +136,7 @@ reproducibility-of-python-pseudo-random-numbers-across-systems-and-versions
     ... # doctest: +ELLIPSIS
     9...
     """
-
-    random_state = random_state if random_state is not None else np.random.RandomState()
-
-    Lab = random_generator(DTYPE_INT_DEFAULT(samples), limits, random_state)
-    RGB = XYZ_to_RGB(
-        Lab_to_XYZ(Lab, illuminant_Lab),
-        colourspace,
-        illuminant_Lab,
-        chromatic_adaptation_transform,
-    )
-    RGB_w = RGB[np.logical_and(np.min(RGB, axis=-1) >= 0, np.max(RGB, axis=-1) <= 1)]
-    return len(RGB_w)
+    pass
 
 
 def RGB_colourspace_limits(colourspace: RGB_Colourspace) -> NDArrayFloat:
@@ -426,11 +414,4 @@ def RGB_colourspace_visible_spectrum_coverage_MonteCarlo(
     ... )  # doctest: +ELLIPSIS
     46...
     """
-
-    return RGB_colourspace_volume_coverage_MonteCarlo(
-        colourspace,
-        is_within_visible_spectrum,
-        samples,
-        random_generator,
-        random_state,
-    )
+    pass

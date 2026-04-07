@@ -437,10 +437,4 @@ def delta_E_CAM02UCS(
 dJ=np.float64(0.1008038...), da=np.float64(3.8848968...), \
 db=np.float64(13.5073618...))
     """
-
-    return delta_E_Luo2006(
-        Jpapbp_1,
-        Jpapbp_2,
-        COEFFICIENTS_UCS_LUO2006["CAM02-UCS"],
-        additional_data=additional_data,
-    )
+    pass

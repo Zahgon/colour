@@ -182,14 +182,12 @@ class AbstractLUT(ABC):
         :class:`numpy.ndarray`
             Underlying *LUT* table.
         """
-
-        return self._table
+        pass
 
     @table.setter
     def table(self, value: ArrayLike) -> None:
         """Setter for the **self.table** property."""
-
-        self._table = self._validate_table(value)
+        pass
 
     @property
     def name(self) -> str:
@@ -206,19 +204,12 @@ class AbstractLUT(ABC):
         :class:`str`
             *LUT* name.
         """
-
-        return self._name
+        pass
 
     @name.setter
     def name(self, value: str) -> None:
         """Setter for the **self.name** property."""
-
-        attest(
-            isinstance(value, str),
-            f'"name" property: "{value}" type is not "str"!',
-        )
-
-        self._name = value
+        pass
 
     @property
     def domain(self) -> NDArrayFloat:
@@ -238,14 +229,12 @@ class AbstractLUT(ABC):
         :class:`numpy.ndarray`
             *LUT* domain.
         """
-
-        return self._domain
+        pass
 
     @domain.setter
     def domain(self, value: ArrayLike) -> None:
         """Setter for the **self.domain** property."""
-
-        self._domain = self._validate_domain(value)
+        pass
 
     @property
     def dimensions(self) -> int:
@@ -257,8 +246,7 @@ class AbstractLUT(ABC):
         :class:`int`
             *LUT* dimensions.
         """
-
-        return self._dimensions
+        pass
 
     @property
     def size(self) -> int:
@@ -270,8 +258,7 @@ class AbstractLUT(ABC):
         :class:`int`
             *LUT* size.
         """
-
-        return self._table.shape[0]
+        pass
 
     @property
     def comments(self) -> list:
@@ -288,19 +275,12 @@ class AbstractLUT(ABC):
         :class:`list`
             *LUT* comments.
         """
-
-        return self._comments
+        pass
 
     @comments.setter
     def comments(self, value: Sequence) -> None:
         """Setter for the **self.comments** property."""
-
-        attest(
-            is_iterable(value),
-            f'"comments" property: "{value}" must be a sequence!',
-        )
-
-        self._comments = list(value)
+        pass
 
     def __str__(self) -> str:
         """
@@ -623,23 +603,7 @@ class AbstractLUT(ABC):
             the current instance after modification. If ``False``, returns
             a new modified copy.
         """
-
-        operator, ioperator = {
-            "+": (add, iadd),
-            "-": (sub, isub),
-            "*": (mul, imul),
-            "/": (truediv, itruediv),
-            "**": (pow, ipow),
-        }[operation]
-
-        if in_place:
-            operand = a.table if isinstance(a, AbstractLUT) else as_float_array(a)
-
-            self.table = operator(self.table, operand)
-
-            return self
-
-        return ioperator(self.copy(), a)
+        pass
 
     @abstractmethod
     def _validate_table(self, table: ArrayLike) -> NDArrayFloat:
@@ -938,12 +902,7 @@ class LUT1D(AbstractLUT):
         :class:`numpy.ndarray`
             Validated table as a :class:`numpy.ndarray` instance.
         """
-
-        table = as_float_array(table)
-
-        attest(len(table.shape) == 1, "The table must be a 1D array!")
-
-        return table
+        pass
 
     def _validate_domain(self, domain: ArrayLike) -> NDArrayFloat:
         """
@@ -959,17 +918,7 @@ class LUT1D(AbstractLUT):
         :class:`numpy.ndarray`
             Validated domain as a :class:`ndarray` instance.
         """
-
-        domain = as_float_array(domain)
-
-        attest(len(domain.shape) == 1, "The domain must be a 1D array!")
-
-        attest(
-            domain.shape[0] >= 2,
-            "The domain column count must be equal or greater than 2!",
-        )
-
-        return domain
+        pass
 
     def is_domain_explicit(self) -> bool:
         """
@@ -1275,12 +1224,7 @@ class LUT3x1D(AbstractLUT):
         :class:`numpy.ndarray`
             Validated table as a :class:`ndarray` instance.
         """
-
-        table = as_float_array(table)
-
-        attest(len(table.shape) == 2, "The table must be a 2D array!")
-
-        return table
+        pass
 
     def _validate_domain(self, domain: ArrayLike) -> NDArrayFloat:
         """
@@ -1296,19 +1240,7 @@ class LUT3x1D(AbstractLUT):
         :class:`numpy.ndarray`
             Validated domain as a :class:`ndarray` instance.
         """
-
-        domain = as_float_array(domain)
-
-        attest(len(domain.shape) == 2, "The domain must be a 2D array!")
-
-        attest(
-            domain.shape[0] >= 2,
-            "The domain row count must be equal or greater than 2!",
-        )
-
-        attest(domain.shape[1] == 3, "The domain column count must be equal to 3!")
-
-        return domain
+        pass
 
     def is_domain_explicit(self) -> bool:
         """
@@ -1729,12 +1661,7 @@ class LUT3D(AbstractLUT):
         :class:`numpy.ndarray`
             Validated table as a :class:`numpy.ndarray` instance.
         """
-
-        table = as_float_array(table)
-
-        attest(len(table.shape) == 4, "The table must be a 4D array!")
-
-        return table
+        pass
 
     def _validate_domain(self, domain: ArrayLike) -> NDArrayFloat:
         """
@@ -1755,19 +1682,7 @@ class LUT3D(AbstractLUT):
         -----
         -   A :class:`LUT3D` class instance must use an implicit domain.
         """
-
-        domain = as_float_array(domain)
-
-        attest(len(domain.shape) == 2, "The domain must be a 2D array!")
-
-        attest(
-            domain.shape[0] >= 2,
-            "The domain row count must be equal or greater than 2!",
-        )
-
-        attest(domain.shape[1] == 3, "The domain column count must be equal to 3!")
-
-        return domain
+        pass
 
     def is_domain_explicit(self) -> bool:
         """

@@ -253,33 +253,7 @@ def XYZ_to_UCS_Li2017(
     ... # doctest: +ELLIPSIS
     array([46.0658603..., 41.0758649..., 14.5102582...])
     """
-
-    from colour.appearance import (  # noqa: PLC0415
-        CAM_KWARGS_CIECAM02_sRGB,
-        XYZ_to_CAM16,
-    )
-
-    domain_range_reference = get_domain_range_scale() == "reference"
-
-    settings = CAM_KWARGS_CIECAM02_sRGB.copy()
-    settings.update(**kwargs)
-    XYZ_w = kwargs.get("XYZ_w")
-    if XYZ_w is not None and domain_range_reference:
-        settings["XYZ_w"] = XYZ_w * 100
-
-    if domain_range_reference:
-        XYZ = as_float_array(XYZ) * 100
-
-    specification = XYZ_to_CAM16(XYZ, **settings)
-    JMh = tstack(
-        [
-            cast("NDArrayFloat", specification.J),
-            cast("NDArrayFloat", specification.M),
-            cast("NDArrayFloat", specification.h),
-        ]
-    )
-
-    return JMh_CAM16_to_UCS_Li2017(JMh, coefficients)
+    pass
 
 
 def UCS_Li2017_to_XYZ(
@@ -351,32 +325,7 @@ def UCS_Li2017_to_XYZ(
     ... # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
     """
-
-    from colour.appearance import (  # noqa: PLC0415
-        CAM16_to_XYZ,
-        CAM_KWARGS_CIECAM02_sRGB,
-        CAM_Specification_CAM16,
-    )
-
-    domain_range_reference = get_domain_range_scale() == "reference"
-
-    settings = CAM_KWARGS_CIECAM02_sRGB.copy()
-    settings.update(**kwargs)
-    XYZ_w = kwargs.get("XYZ_w")
-
-    if XYZ_w is not None and domain_range_reference:
-        settings["XYZ_w"] = XYZ_w * 100
-
-    J, M, h = tsplit(UCS_Li2017_to_JMh_CAM16(Jpapbp, coefficients))
-
-    specification = CAM_Specification_CAM16(J=J, M=M, h=h)
-
-    XYZ = CAM16_to_XYZ(specification, **settings)
-
-    if domain_range_reference:
-        XYZ /= 100
-
-    return XYZ
+    pass
 
 
 XYZ_to_CAM16LCD = partial(

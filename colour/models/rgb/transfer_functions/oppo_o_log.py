@@ -93,17 +93,7 @@ def log_encoding_OPPOOLog(
     >>> log_encoding_OPPOOLog(0.18)  # doctest: +ELLIPSIS
     np.float64(0.3895913...)
     """
-
-    R = to_domain_1(R)
-    constants = optional(constants, CONSTANTS_OPPO_O_LOG)
-
-    gamma = constants.gamma
-    beta = constants.beta
-    delta = constants.delta
-
-    P = gamma * np.log(R + beta) + delta
-
-    return as_float(from_range_1(P))
+    pass
 
 
 def log_decoding_OPPOOLog(
@@ -152,14 +142,4 @@ def log_decoding_OPPOOLog(
     >>> log_decoding_OPPOOLog(0.38959139)  # doctest: +ELLIPSIS
     np.float64(0.1800000...)
     """
-
-    P = to_domain_1(P)
-    constants = optional(constants, CONSTANTS_OPPO_O_LOG)
-
-    gamma = constants.gamma
-    beta = constants.beta
-    delta = constants.delta
-
-    R = np.exp((P - delta) / gamma) - beta
-
-    return as_float(from_range_1(R))
+    pass

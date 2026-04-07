@@ -124,17 +124,4 @@ def write_LUT_SonySPImtx(
     >>> M = LUTOperatorMatrix(matrix)
     >>> write_LUT_SonySPImtx(M, "My_LUT.spimtx")  # doctest: +SKIP
     """
-
-    matrix, offset = LUT.matrix, LUT.offset
-    offset = offset * 65535
-
-    array = np.hstack(
-        [
-            np.reshape(matrix, (4, 4))[:3, :3],
-            np.transpose(np.array([offset[:3]])),
-        ]
-    )
-
-    np.savetxt(path, array, fmt=f"%.{decimals}f")
-
-    return True
+    pass

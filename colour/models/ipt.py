@@ -210,9 +210,4 @@ def IPT_hue_angle(IPT: Domain1) -> Range360:
     >>> IPT_hue_angle(IPT)  # doctest: +ELLIPSIS
     np.float64(48.2852074...)
     """
-
-    _I, P, T = tsplit(to_domain_1(IPT))
-
-    hue = np.degrees(np.arctan2(T, P)) % 360
-
-    return as_float(from_range_degrees(hue))
+    pass

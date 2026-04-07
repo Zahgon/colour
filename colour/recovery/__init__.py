@@ -698,19 +698,7 @@ def XYZ_to_msds(
     >>> float(XYZ_to_msds(XYZ, method="Smits 1999")[0, 6])  # doctest: +ELLIPSIS
     0.3207...
     """
-
-    method = validate_method(method, tuple(XYZ_TO_MSDS_METHODS))
-
-    function = XYZ_TO_MSDS_METHODS[method]
-
-    if function is RGB_to_msds_Gaussian:
-        a = XYZ_to_RGB_Gaussian(XYZ)
-    else:  # RGB_to_msds_Smits1999
-        from colour.recovery.smits1999 import XYZ_to_RGB_Smits1999  # noqa: PLC0415
-
-        a = XYZ_to_RGB_Smits1999(XYZ)
-
-    return function(a)
+    pass
 
 
 __all__ += [

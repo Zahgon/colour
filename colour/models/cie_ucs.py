@@ -237,14 +237,7 @@ def uv_to_UCS(uv: ArrayLike, V: Domain1 = 1) -> Range1:
     >>> uv_to_UCS(uv)  # doctest: +ELLIPSIS
     array([1.1288911..., 1.        , 0.8639104...])
     """
-
-    u, v = tsplit(uv)
-    V = to_domain_1(V)
-
-    with sdiv_mode():
-        UVW = tstack([V * sdiv(u, v), np.resize(V, u.shape), -V * sdiv(u + v - 1, v)])
-
-    return from_range_1(UVW)
+    pass
 
 
 def UCS_uv_to_xy(uv: ArrayLike) -> NDArrayFloat:
@@ -362,14 +355,7 @@ def XYZ_to_CIE1960UCS(
     >>> XYZ_to_CIE1960UCS(XYZ)  # doctest: +ELLIPSIS
     array([0.3772021..., 0.3341350..., 0.12197225])
     """
-
-    UVW = XYZ_to_UCS(XYZ)
-
-    _U, V, _W = tsplit(UVW)
-
-    u, v = tsplit(UCS_to_uv(UVW))
-
-    return tstack([u, v, V])
+    pass
 
 
 def CIE1960UCS_to_XYZ(
@@ -417,9 +403,4 @@ def CIE1960UCS_to_XYZ(
     >>> CIE1960UCS_to_XYZ(uvV)  # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
     """
-
-    u, v, V = tsplit(uvV)
-
-    U, _V, W = tsplit(uv_to_UCS(tstack([u, v]), V))
-
-    return UCS_to_XYZ(tstack([U, V, W]))
+    pass

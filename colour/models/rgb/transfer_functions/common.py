@@ -124,21 +124,7 @@ def legal_to_full(
     >>> legal_to_full(940, in_int=True, out_int=True)
     np.int64(1023)
     """
-
-    CV = as_float_array(CV)
-
-    MV = 2**bit_depth - 1
-
-    CV_full = as_int_array(np.round(CV)) if in_int else CV * MV
-
-    B, W = CV_range(bit_depth, True, True)
-
-    CV_full = (CV_full - B) / (W - B)
-
-    if out_int:
-        return as_int(np.round(CV_full * MV))
-
-    return as_float(CV_full)
+    pass
 
 
 def full_to_legal(
@@ -191,18 +177,4 @@ def full_to_legal(
     >>> full_to_legal(1023, in_int=True, out_int=True)
     np.int64(940)
     """
-
-    CV = as_float_array(CV)
-
-    MV = 2**bit_depth - 1
-
-    CV_legal = as_int_array(np.round(CV / MV)) if in_int else CV
-
-    B, W = CV_range(bit_depth, True, True)
-
-    CV_legal = (W - B) * CV_legal + B
-
-    if out_int:
-        return as_int(np.round(CV_legal))
-
-    return as_float(CV_legal / MV)
+    pass

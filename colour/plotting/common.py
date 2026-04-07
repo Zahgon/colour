@@ -351,21 +351,7 @@ def override_style(**kwargs: Any) -> Callable:
 
     def wrapper(function: Callable) -> Callable:
         """Wrap specified function wrapper."""
-
-        @functools.wraps(function)
-        def wrapped(*args: Any, **kwargs: Any) -> Any:
-            """Wrap specified function."""
-
-            keywords.update(kwargs)
-
-            style_overrides = {
-                key: value for key, value in keywords.items() if key in plt.rcParams
-            }
-
-            with plt.style.context(style_overrides):
-                return function(*args, **kwargs)
-
-        return wrapped
+        pass
 
     return wrapper
 
@@ -394,14 +380,7 @@ def font_scaling(scaling: LiteralFontScaling, value: float) -> Generator:
     >>> print(matplotlib.font_manager.font_scalings["medium-colour-science"])
     1
     """
-
-    current_value = matplotlib.font_manager.font_scalings[scaling]
-
-    matplotlib.font_manager.font_scalings[scaling] = value
-
-    yield
-
-    matplotlib.font_manager.font_scalings[scaling] = current_value
+    pass
 
 
 def XYZ_to_plotting_colourspace(
@@ -607,19 +586,7 @@ def camera(**kwargs: KwargsCamera | Any) -> Tuple[Figure, Axes3D]:
     :class:`tuple`
         Current figure and axes.
     """
-
-    figure = cast("Figure", kwargs.get("figure", plt.gcf()))
-    axes = cast("Axes3D", kwargs.get("axes", plt.gca()))
-
-    settings = Structure(camera_aspect="equal", elevation=None, azimuth=None)
-    settings.update(kwargs)
-
-    if settings.camera_aspect == "equal":
-        uniform_axes3d(axes=axes)
-
-    axes.view_init(elev=settings.elevation, azim=settings.azimuth)
-
-    return figure, axes
+    pass
 
 
 class KwargsRender(TypedDict):
@@ -869,24 +836,7 @@ def uniform_axes3d(**kwargs: Any) -> Tuple[Figure, Axes3D]:
     :class:`tuple`
         Current figure and axes.
     """
-
-    figure = kwargs.get("figure", plt.gcf())
-    axes = kwargs.get("axes", plt.gca())
-
-    with contextlib.suppress(NotImplementedError):  # pragma: no cover
-        # TODO: Reassess according to
-        # https://github.com/matplotlib/matplotlib/issues/1077
-        axes.set_aspect("equal")
-
-    extents = np.array([getattr(axes, f"get_{axis}lim")() for axis in "xyz"])
-
-    centers = np.mean(extents, axis=1)
-    extent = np.max(np.abs(extents[..., 1] - extents[..., 0]))
-
-    for center, axis in zip(centers, "xyz", strict=True):
-        getattr(axes, f"set_{axis}lim")(center - extent / 2, center + extent / 2)
-
-    return figure, axes
+    pass
 
 
 def filter_passthrough(

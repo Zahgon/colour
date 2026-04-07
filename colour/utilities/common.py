@@ -147,10 +147,7 @@ def set_caching_enable(enable: bool) -> None:
     True
     False
     """
-
-    global _CACHING_ENABLED  # noqa: PLW0603
-
-    _CACHING_ENABLED = enable
+    pass
 
 
 class caching_enable:
@@ -190,10 +187,6 @@ class caching_enable:
         Decorate and call the specified function with caching control.
         """
 
-        @functools.wraps(function)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            with self:
-                return function(*args, **kwargs)
 
         return wrapper
 
@@ -252,8 +245,7 @@ class CacheRegistry:
         :class:`dict`
             Cache registry containing cached computation results.
         """
-
-        return self._registry
+        pass
 
     def __str__(self) -> str:
         """
@@ -331,10 +323,7 @@ class CacheRegistry:
         >>> print(cache_b)
         {}
         """
-
-        self.clear_cache(name)
-
-        del self._registry[name]
+        pass
 
     def clear_cache(self, name: str) -> None:
         """
@@ -356,8 +345,7 @@ class CacheRegistry:
         >>> print(cache_registry)
         {'Cache A': '0 item(s)'}
         """
-
-        self._registry[name].clear()
+        pass
 
     def clear_all_caches(self) -> None:
         """
@@ -377,9 +365,7 @@ class CacheRegistry:
         >>> print(cache_registry)
         {'Cache A': '0 item(s)', 'Cache B': '0 item(s)'}
         """
-
-        for key in self._registry:
-            self.clear_cache(key)
+        pass
 
 
 CACHE_REGISTRY: CacheRegistry = CacheRegistry()
@@ -421,15 +407,7 @@ def handle_numpy_errors(**kwargs: Any) -> Callable:
 
     def wrapper(function: Callable) -> Callable:
         """Wrap specified function wrapper."""
-
-        @functools.wraps(function)
-        def wrapped(*args: Any, **kwargs: Any) -> Any:
-            """Wrap specified function."""
-
-            with np.errstate(**keyword_arguments):
-                return function(*args, **kwargs)
-
-        return wrapped
+        pass
 
     return wrapper
 
@@ -462,17 +440,7 @@ def ignore_python_warnings(function: Callable) -> Callable:
     ...     warnings.warn("This is an ignored warning!")
     >>> f()
     """
-
-    @functools.wraps(function)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        """Wrap specified function."""
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-
-            return function(*args, **kwargs)
-
-    return wrapper
+    pass
 
 
 def attest(condition: bool | DTypeBoolean, message: str = "") -> None:
@@ -513,9 +481,7 @@ def batch(sequence: Sequence, k: int | Literal[3] = 3) -> Generator:
     >>> batch(tuple(range(10)), 3)  # doctest: +ELLIPSIS
     <generator object batch at 0x...>
     """
-
-    for i in range(0, len(sequence), k):
-        yield sequence[i : i + k]
+    pass
 
 
 _MULTIPROCESSING_ENABLED: bool = True
@@ -558,9 +524,7 @@ class disable_multiprocessing:
         @functools.wraps(function)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             """Wrap specified function."""
-
-            with self:
-                return function(*args, **kwargs)
+            pass
 
         return wrapper
 
@@ -577,24 +541,7 @@ def _initializer(kwargs: Any) -> None:
     kwargs
         Initialization arguments for configuring the worker process state.
     """
-
-    # NOTE: No coverage information is available as this code is executed in
-    # sub-processes.
-
-    import colour.utilities.array  # pragma: no cover  # noqa: PLC0415
-
-    colour.utilities.array._DOMAIN_RANGE_SCALE = kwargs.get(  # noqa: SLF001
-        "scale", "reference"
-    )  # pragma: no cover
-
-    import colour.algebra.common  # pragma: no cover  # noqa: PLC0415
-
-    colour.algebra.common._SDIV_MODE = kwargs.get(  # noqa: SLF001
-        "sdiv_mode", "Ignore Zero Conversion"
-    )  # pragma: no cover
-    colour.algebra.common._SPOW_ENABLED = kwargs.get(  # noqa: SLF001
-        "spow_enabled", True
-    )  # pragma: no cover
+    pass
 
 
 @contextmanager
@@ -651,8 +598,7 @@ def multiprocessing_pool(*args: Any, **kwargs: Any) -> Generator:
             chunksize: int | None = None,  # noqa: ARG002
         ) -> list[Any]:
             """Apply specified function to each element of the specified iterable."""
-
-            return [func(a) for a in iterable]
+            pass
 
         def terminate(self) -> None:
             """Terminate the process."""
@@ -703,8 +649,7 @@ def is_iterable(a: Any) -> bool:
     >>> is_iterable(1)
     False
     """
-
-    return isinstance(a, str) or (bool(getattr(a, "__iter__", False)))
+    pass
 
 
 def is_numeric(a: Any) -> bool:
@@ -784,8 +729,7 @@ def is_integer(a: Any) -> bool:
     >>> is_integer(1.01)
     np.False_
     """
-
-    return abs(a - np.around(a)) <= THRESHOLD_INTEGER
+    pass
 
 
 def is_sibling(element: Any, mapping: Mapping) -> bool:
@@ -1152,18 +1096,7 @@ def hash_sha256(filename: str, chunk_size: int = 2**16) -> str:
     :class:`str`
         *SHA-256* hash of the file.
     """
-
-    sha256 = hashlib.sha256()
-
-    with open(filename, "rb") as file_object:
-        while True:
-            chunk = file_object.read(chunk_size)
-            if not chunk:
-                break
-
-            sha256.update(chunk)
-
-    return sha256.hexdigest()
+    pass
 
 
 def url_download(
@@ -1193,73 +1126,4 @@ def url_download(
     :class:`str`
         Absolute path to the cached file.
     """
-
-    if filename is not None:
-        local_path = filename
-    else:
-        import colour  # noqa: PLC0415
-
-        root = colour.ROOT_COLOUR_SCIENCE
-
-        parsed = urlparse(url)
-        relative = parsed.path.lstrip("/")
-
-        # Strip the HuggingFace URL prefix to get a clean local path,
-        # e.g., ``colour-science/learning-munsell/resolve/main/models/...``
-        # becomes ``learning-munsell/models/...``.
-        prefix = "colour-science/"
-        relative = relative.removeprefix(prefix)
-
-        resolve_main = "/resolve/main/"
-        if resolve_main in relative:
-            parts = relative.split(resolve_main, 1)
-            relative = f"{parts[0]}/{parts[1]}"
-
-        local_path = os.path.join(root, relative)
-
-    if os.path.isfile(local_path):
-        if sha256 is not None and hash_sha256(local_path) != sha256.lower():
-            os.remove(local_path)
-        else:
-            return local_path
-
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
-
-    attempt = 0
-    while attempt < retries:
-        try:
-            with (
-                urllib.request.urlopen(url) as response,  # noqa: S310
-                open(local_path, "wb") as out_file,
-            ):
-                while True:
-                    chunk = response.read(2**16)
-                    if not chunk:
-                        break
-                    out_file.write(chunk)
-
-            if sha256 is not None:
-                actual_hash = hash_sha256(local_path)
-                if actual_hash != sha256.lower():
-                    file_size = os.path.getsize(local_path)
-                    os.remove(local_path)
-
-                    message = (
-                        f'"SHA-256" hash of "{local_path}" file '
-                        f"({file_size} bytes) does not match the "
-                        f"expected hash: "
-                        f"{actual_hash} != {sha256.lower()}"
-                    )
-                    raise ValueError(message)  # noqa: TRY301
-        except (urllib.error.URLError, OSError, ValueError):
-            attempt += 1
-            if attempt == retries:
-                raise
-
-            import time  # noqa: PLC0415
-
-            time.sleep(min(2**attempt, 2**8))
-        else:
-            return local_path
-
-    return local_path
+    pass

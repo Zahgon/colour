@@ -249,12 +249,7 @@ def Jab_to_JCh(Jab: Domain1) -> Annotated[NDArrayFloat, (1, 1, 360)]:
     >>> Jab_to_JCh(Jab)  # doctest: +ELLIPSIS
     array([41.5278752..., 59.1242590..., 27.0884878...])
     """
-
-    L, a, b = tsplit(Jab)
-
-    C, h = tsplit(cartesian_to_polar(tstack([a, b])))
-
-    return tstack([L, C, from_range_degrees(np.degrees(h) % 360)])
+    pass
 
 
 def JCh_to_Jab(
@@ -307,12 +302,7 @@ def JCh_to_Jab(
     >>> JCh_to_Jab(JCh)  # doctest: +ELLIPSIS
     array([41.5278752..., 52.6385830..., 26.9231792...])
     """
-
-    L, C, h = tsplit(JCh)
-
-    a, b = tsplit(polar_to_cartesian(tstack([C, np.radians(to_domain_degrees(h))])))
-
-    return tstack([L, a, b])
+    pass
 
 
 def XYZ_to_Iab(

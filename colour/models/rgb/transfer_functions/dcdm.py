@@ -98,15 +98,7 @@ def eotf_inverse_DCDM(XYZ: ArrayLike, out_int: bool = False) -> NDArrayReal:
     >>> eotf_inverse_DCDM(0.18, out_int=True)
     np.int64(462)
     """
-
-    XYZ = as_float_array(XYZ)
-
-    XYZ_p = spow(XYZ / 52.37, 1 / 2.6)
-
-    if out_int:
-        return as_int(np.round(4095 * XYZ_p))
-
-    return as_float(XYZ_p)
+    pass
 
 
 def eotf_DCDM(
@@ -165,12 +157,4 @@ def eotf_DCDM(
     >>> eotf_DCDM(462, in_int=True)  # doctest: +ELLIPSIS
     np.float64(0.18...)
     """
-
-    XYZ_p = as_float_array(XYZ_p)
-
-    if in_int:
-        XYZ_p = XYZ_p / 4095
-
-    XYZ = 52.37 * spow(XYZ_p, 2.6)
-
-    return as_float(XYZ)
+    pass

@@ -84,8 +84,7 @@ def metric_mse(
     >>> metric_mse(a, b)  # doctest: +ELLIPSIS
     np.float64(0.0012714...)
     """
-
-    return as_float(np.mean((as_float_array(a) - as_float_array(b)) ** 2, axis=axis))
+    pass
 
 
 def metric_psnr(
@@ -128,10 +127,4 @@ def metric_psnr(
     >>> metric_psnr(a, b)  # doctest: +ELLIPSIS
     np.float64(28.9568515...)
     """
-
-    mse = as_float_array(metric_mse(a, b, axis))
-
-    with sdiv_mode():
-        psnr = np.where(mse != 0, 10 * np.log10(sdiv(max_a**2, mse)), 0)
-
-    return as_float(psnr)
+    pass

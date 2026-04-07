@@ -328,24 +328,7 @@ def uv_to_Luv(
     >>> uv_to_Luv(uv, L=41.5278752)  # doctest: +ELLIPSIS
     array([41.5278752..., 96.8362609..., 17.7521029...])
     """
-
-    u, v = tsplit(uv)
-    L = to_domain_100(
-        optional(L, 100 if get_domain_range_scale() == "reference" else 1)
-    )
-
-    _X_r, Y_r, _Z_r = tsplit(xyY_to_XYZ(xy_to_xyY(illuminant)))
-
-    with domain_range_scale("ignore"):
-        Y = luminance_CIE1976(L, Y_r)
-
-    with sdiv_mode():
-        X = sdiv(9 * Y * u, 4 * v)
-        Z = sdiv(Y * (-3 * u - 20 * v + 12), 4 * v)
-
-    XYZ = tstack([X, np.resize(Y, u.shape), Z])
-
-    return XYZ_to_Luv(from_range_1(XYZ), illuminant)
+    pass
 
 
 def Luv_uv_to_xy(uv: ArrayLike) -> NDArrayFloat:
@@ -474,14 +457,7 @@ def XYZ_to_CIE1976UCS(
     >>> XYZ_to_CIE1976UCS(XYZ)  # doctest: +ELLIPSIS
     array([ 0.3772021...,  0.5012026..., 41.5278752...])
     """
-
-    Luv = XYZ_to_Luv(XYZ, illuminant)
-
-    L, _u, _v = tsplit(Luv)
-
-    u, v = tsplit(Luv_to_uv(Luv, illuminant))
-
-    return tstack([u, v, L])
+    pass
 
 
 def CIE1976UCS_to_XYZ(
@@ -540,9 +516,4 @@ def CIE1976UCS_to_XYZ(
     >>> CIE1976UCS_to_XYZ(uvL)  # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
     """
-
-    u, v, L = tsplit(uvL)
-
-    _L, u, v = tsplit(uv_to_Luv(tstack([u, v]), illuminant, L))
-
-    return Luv_to_XYZ(tstack([L, u, v]), illuminant)
+    pass

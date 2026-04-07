@@ -270,14 +270,7 @@ def msds_constant(
     >>> msds.labels  # doctest: +SKIP
     ['a', 'b', 'c']
     """
-
-    settings = {"name": f"{k} Constant", "interpolator": LinearInterpolator}
-    settings.update(kwargs)
-
-    wavelengths = shape.wavelengths
-    values = full((len(wavelengths), len(labels)), k)
-
-    return MultiSpectralDistributions(values, wavelengths, labels=labels, **settings)
+    pass
 
 
 def msds_zeros(
@@ -324,8 +317,7 @@ def msds_zeros(
     >>> msds.labels  # doctest: +SKIP
     ['a', 'b', 'c']
     """
-
-    return msds_constant(0, labels, shape, **kwargs)
+    pass
 
 
 def msds_ones(
@@ -373,8 +365,7 @@ def msds_ones(
     >>> msds.labels  # doctest: +SKIP
     ['a', 'b', 'c']
     """
-
-    return msds_constant(1, labels, shape, **kwargs)
+    pass
 
 
 def sd_gaussian_normal(
@@ -425,13 +416,7 @@ def sd_gaussian_normal(
     >>> sd[530]  # doctest: +ELLIPSIS
     np.float64(0.6065306...)
     """
-
-    settings = {"name": f"{mu}nm - {sigma} Sigma - Gaussian"}
-    settings.update(kwargs)
-
-    values = np.exp(-((shape.wavelengths - mu) ** 2) / (2 * sigma**2))
-
-    return SpectralDistribution(values, shape.wavelengths, **settings)
+    pass
 
 
 def sd_gaussian_fwhm(
@@ -481,14 +466,7 @@ def sd_gaussian_fwhm(
     >>> sd[530]  # doctest: +ELLIPSIS
     np.float64(0.062...)
     """
-
-    settings = {"name": f"{peak_wavelength}nm - {fwhm} FWHM - Gaussian"}
-    settings.update(kwargs)
-
-    mu, sigma = peak_wavelength, fwhm / (2 * np.sqrt(2 * np.log(2)))
-    values = np.exp(-((shape.wavelengths - mu) ** 2) / (2 * sigma**2))
-
-    return SpectralDistribution(values, shape.wavelengths, **settings)
+    pass
 
 
 def sd_gaussian_super_clamped(
@@ -653,10 +631,7 @@ def sd_gaussian(
     >>> round(sd[700], 5)
     np.float64(1.0)
     """
-
-    method = validate_method(method, tuple(SD_GAUSSIAN_METHODS))
-
-    return SD_GAUSSIAN_METHODS[method](mu_peak_wavelength, sigma_fwhm, shape, **kwargs)
+    pass
 
 
 def sd_single_led_Ohno2005(
@@ -707,19 +682,7 @@ def sd_single_led_Ohno2005(
     >>> sd[555]  # doctest: +ELLIPSIS
     np.float64(1...)
     """
-
-    settings = {
-        "name": f"{peak_wavelength}nm - {half_spectral_width} "
-        f"Half Spectral Width LED - Ohno (2005)"
-    }
-    settings.update(kwargs)
-
-    values = np.exp(
-        -(((shape.wavelengths - peak_wavelength) / half_spectral_width) ** 2)
-    )
-    values = (values + 2 * values**5) / 3
-
-    return SpectralDistribution(values, shape.wavelengths, **settings)
+    pass
 
 
 SD_SINGLE_LED_METHODS: CanonicalMapping = CanonicalMapping(
@@ -779,11 +742,7 @@ def sd_single_led(
     >>> sd[555]  # doctest: +ELLIPSIS
     np.float64(1...)
     """
-
-    method = validate_method(method, tuple(SD_SINGLE_LED_METHODS))
-    kwargs["shape"] = shape
-
-    return SD_SINGLE_LED_METHODS[method](peak_wavelength, **kwargs)
+    pass
 
 
 def sd_multi_leds_Ohno2005(
@@ -850,37 +809,7 @@ def sd_multi_leds_Ohno2005(
     >>> sd[500]  # doctest: +ELLIPSIS
     np.float64(0.1295132...)
     """
-
-    peak_wavelengths = as_float_array(peak_wavelengths)
-    half_spectral_widths = np.resize(half_spectral_widths, peak_wavelengths.shape)
-    if peak_power_ratios is None:
-        peak_power_ratios = ones(peak_wavelengths.shape)
-    else:
-        peak_power_ratios = np.resize(peak_power_ratios, peak_wavelengths.shape)
-
-    sd = sd_zeros(shape)
-
-    for peak_wavelength, half_spectral_width, peak_power_ratio in zip(
-        peak_wavelengths, half_spectral_widths, peak_power_ratios, strict=True
-    ):
-        sd += (
-            sd_single_led_Ohno2005(peak_wavelength, half_spectral_width, **kwargs)
-            * peak_power_ratio
-        )
-
-    def _format_array(a: NDArrayFloat) -> str:
-        """Format specified array :math:`a`."""
-
-        return ", ".join([str(e) for e in a])
-
-    sd.name = (
-        f"{_format_array(peak_wavelengths)}nm - "
-        f"{_format_array(half_spectral_widths)} FWHM - "
-        f"{_format_array(peak_power_ratios)} Peak Power Ratios - "
-        f"LED - Ohno (2005)"
-    )
-
-    return sd
+    pass
 
 
 SD_MULTI_LEDS_METHODS: CanonicalMapping = CanonicalMapping(
@@ -946,8 +875,4 @@ def sd_multi_leds(
     >>> sd[500]  # doctest: +ELLIPSIS
     np.float64(0.1295132...)
     """
-
-    method = validate_method(method, tuple(SD_MULTI_LEDS_METHODS))
-    kwargs["shape"] = shape
-
-    return SD_MULTI_LEDS_METHODS[method](peak_wavelengths, **kwargs)
+    pass

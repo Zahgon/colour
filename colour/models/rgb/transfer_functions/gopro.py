@@ -75,12 +75,7 @@ def log_encoding_Protune(x: Domain1) -> Range1:
     >>> log_encoding_Protune(0.18)  # doctest: +ELLIPSIS
     np.float64(0.6456234...)
     """
-
-    x = to_domain_1(x)
-
-    y = np.log1p(x * 112) / np.log(113)
-
-    return as_float(from_range_1(y))
+    pass
 
 
 def log_decoding_Protune(y: Domain1) -> Range1:
@@ -120,9 +115,4 @@ def log_decoding_Protune(y: Domain1) -> Range1:
     >>> log_decoding_Protune(0.645623486803636)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    y = to_domain_1(y)
-
-    x = (113**y - 1) / 112
-
-    return as_float(from_range_1(x))
+    pass

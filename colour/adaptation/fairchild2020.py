@@ -209,31 +209,7 @@ def matrix_chromatic_adaptation_vk20(
            [ 0.0276321...,  0.9822296..., -0.0082419...],
            [-0.0029508...,  0.0040690...,  0.9102430...]])
     """
-
-    XYZ_n = as_float_array(XYZ_n)
-    XYZ_r = as_float_array(XYZ_r)
-    XYZ_p = as_float_array(XYZ_p)
-
-    transform = validate_method(
-        transform,
-        tuple(CHROMATIC_ADAPTATION_TRANSFORMS),
-        '"{0}" chromatic adaptation transform is invalid, it must be one of {1}!',
-    )
-
-    M = CHROMATIC_ADAPTATION_TRANSFORMS[transform]
-
-    D_n, D_r, D_p = coefficients.values
-
-    LMS_n = vecmul(M, XYZ_n)
-    LMS_r = vecmul(M, XYZ_r)
-    LMS_p = vecmul(M, XYZ_p)
-
-    with sdiv_mode():
-        D = row_as_diagonal(sdiv(1, (D_n * LMS_n + D_r * LMS_r + D_p * LMS_p)))
-
-    M_CAT = np.matmul(np.linalg.inv(M), D)
-
-    return np.matmul(M_CAT, M)
+    pass
 
 
 def chromatic_adaptation_vK20(
@@ -331,22 +307,4 @@ def chromatic_adaptation_vK20(
     ... # doctest: +ELLIPSIS
     array([0.2153837..., 0.1250885..., 0.0466455...])
     """
-
-    XYZ = to_domain_1(XYZ)
-    XYZ_p = to_domain_1(XYZ_p)
-    XYZ_n = to_domain_1(XYZ_n)
-    XYZ_r = to_domain_1(
-        optional(
-            XYZ_r,
-            TVS_XYZ_R_VK20
-            if get_domain_range_scale() == "reference"
-            else TVS_XYZ_R_VK20 / 100,
-        )
-    )
-
-    M_CAT = matrix_chromatic_adaptation_vk20(
-        XYZ_p, XYZ_n, XYZ_r, transform, coefficients
-    )
-    XYZ_a = vecmul(M_CAT, XYZ)
-
-    return from_range_1(XYZ_a)
+    pass

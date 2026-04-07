@@ -109,14 +109,7 @@ def air_refraction_index_Penndorf1957(
     >>> air_refraction_index_Penndorf1957(0.555)  # doctest: +ELLIPSIS
     np.float64(1.0002777...)
     """
-
-    wl = as_float_array(wavelength)
-
-    n = 6432.8 + 2949810 / (146 - wl ** (-2)) + 25540 / (41 - wl ** (-2))
-    n /= 1.0e8
-    n += +1
-
-    return n
+    pass
 
 
 def air_refraction_index_Edlen1966(
@@ -142,14 +135,7 @@ def air_refraction_index_Edlen1966(
     >>> air_refraction_index_Edlen1966(0.555)  # doctest: +ELLIPSIS
     np.float64(1.0002777...)
     """
-
-    wl = as_float_array(wavelength)
-
-    n = 8342.13 + 2406030 / (130 - wl ** (-2)) + 15997 / (38.9 - wl ** (-2))
-    n /= 1.0e8
-    n += +1
-
-    return n
+    pass
 
 
 def air_refraction_index_Peck1972(
@@ -175,14 +161,7 @@ def air_refraction_index_Peck1972(
     >>> air_refraction_index_Peck1972(0.555)  # doctest: +ELLIPSIS
     np.float64(1.0002777...)
     """
-
-    wl = as_float_array(wavelength)
-
-    n = 8060.51 + 2480990 / (132.274 - wl ** (-2)) + 17455.7 / (39.32957 - wl ** (-2))
-    n /= 1.0e8
-    n += +1
-
-    return n
+    pass
 
 
 def air_refraction_index_Bodhaine1999(
@@ -211,16 +190,7 @@ def air_refraction_index_Bodhaine1999(
     >>> air_refraction_index_Bodhaine1999(0.555)  # doctest: +ELLIPSIS
     np.float64(1.0002777...)
     """
-
-    wl = as_float_array(wavelength)
-    CO2_c = as_float_array(CO2_concentration)
-
-    # Converting from parts per million (ppm) to parts per volume (ppv).
-    CO2_c = CO2_c * 1e-6
-
-    n = (1 + 0.54 * (CO2_c - 300e-6)) * (air_refraction_index_Peck1972(wl) - 1) + 1
-
-    return as_float(n)
+    pass
 
 
 def N2_depolarisation(wavelength: ArrayLike) -> NDArrayFloat:
@@ -243,10 +213,7 @@ def N2_depolarisation(wavelength: ArrayLike) -> NDArrayFloat:
     >>> N2_depolarisation(0.555)  # doctest: +ELLIPSIS
     np.float64(1.0350291...)
     """
-
-    wl = as_float_array(wavelength)
-
-    return 1.034 + 3.17 * 1.0e-4 * (1 / wl**2)
+    pass
 
 
 def O2_depolarisation(wavelength: ArrayLike) -> NDArrayFloat:
@@ -269,10 +236,7 @@ def O2_depolarisation(wavelength: ArrayLike) -> NDArrayFloat:
     >>> O2_depolarisation(0.555)  # doctest: +ELLIPSIS
     np.float64(1.1020225...)
     """
-
-    wl = as_float_array(wavelength)
-
-    return 1.096 + 1.385 * 1.0e-3 * (1 / wl**2) + 1.448 * 1.0e-4 * (1 / wl**4)
+    pass
 
 
 def F_air_Penndorf1957(wavelength: ArrayLike) -> NDArrayFloat:
@@ -301,10 +265,7 @@ def F_air_Penndorf1957(wavelength: ArrayLike) -> NDArrayFloat:
     >>> F_air_Penndorf1957(0.555)
     np.float64(1.0608)
     """
-
-    wl = as_float_array(wavelength)
-
-    return as_float(np.resize(np.array([1.0608]), wl.shape))
+    pass
 
 
 def F_air_Young1981(wavelength: ArrayLike) -> NDArrayFloat:
@@ -333,10 +294,7 @@ def F_air_Young1981(wavelength: ArrayLike) -> NDArrayFloat:
     >>> F_air_Young1981(0.555)
     np.float64(1.048)
     """
-
-    wl = as_float_array(wavelength)
-
-    return as_float(np.resize(np.array([1.0480]), wl.shape))
+    pass
 
 
 def F_air_Bates1984(wavelength: ArrayLike) -> NDArrayFloat:
@@ -360,13 +318,7 @@ def F_air_Bates1984(wavelength: ArrayLike) -> NDArrayFloat:
     >>> F_air_Bates1984(0.555)  # doctest: +ELLIPSIS
     np.float64(1.0481535...)
     """
-
-    O2 = O2_depolarisation(wavelength)
-    N2 = N2_depolarisation(wavelength)
-    Ar = 1.00
-    CO2 = 1.15
-
-    return (78.084 * N2 + 20.946 * O2 + CO2 + Ar) / (78.084 + 20.946 + Ar + CO2)
+    pass
 
 
 def F_air_Bodhaine1999(
@@ -396,17 +348,7 @@ def F_air_Bodhaine1999(
     >>> F_air_Bodhaine1999(0.555)  # doctest: +ELLIPSIS
     np.float64(1.0487697...)
     """
-
-    O2 = O2_depolarisation(wavelength)
-    N2 = N2_depolarisation(wavelength)
-    CO2_c = as_float_array(CO2_concentration)
-
-    # Converting from parts per million (ppm) to parts per volume per percent.
-    CO2_c = CO2_c * 1e-4
-
-    return (78.084 * N2 + 20.946 * O2 + 0.934 * 1 + CO2_c * 1.15) / (
-        78.084 + 20.946 + 0.934 + CO2_c
-    )
+    pass
 
 
 def molecular_density(

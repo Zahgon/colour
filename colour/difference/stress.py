@@ -74,16 +74,7 @@ def index_stress_Garcia2007(d_E: ArrayLike, d_V: ArrayLike) -> NDArrayFloat:
     >>> index_stress_Garcia2007(d_E, d_V)  # doctest: +ELLIPSIS
     np.float64(0.1211709...)
     """
-
-    d_E = as_float_array(d_E)
-    d_V = as_float_array(d_V)
-
-    with sdiv_mode():
-        F_1 = sdiv(np.sum(d_E**2), np.sum(d_E * d_V))
-
-        stress = np.sqrt(sdiv(np.sum((d_E - F_1 * d_V) ** 2), np.sum(F_1**2 * d_V**2)))
-
-    return as_float(stress)
+    pass
 
 
 INDEX_STRESS_METHODS: CanonicalMapping = CanonicalMapping(
@@ -135,9 +126,4 @@ def index_stress(
     >>> index_stress(d_E, d_V)  # doctest: +ELLIPSIS
     np.float64(0.1211709...)
     """
-
-    method = validate_method(method, tuple(INDEX_STRESS_METHODS))
-
-    function = INDEX_STRESS_METHODS[method]
-
-    return function(d_E, d_V)
+    pass

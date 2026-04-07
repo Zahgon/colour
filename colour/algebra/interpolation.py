@@ -183,8 +183,7 @@ def kernel_nearest_neighbour(x: ArrayLike) -> NDArrayFloat:
     >>> kernel_nearest_neighbour(np.linspace(0, 1, 10))
     array([1, 1, 1, 1, 1, 0, 0, 0, 0, 0])
     """
-
-    return np.where(np.abs(x) < 0.5, 1, 0)
+    pass
 
 
 def kernel_linear(x: ArrayLike) -> NDArrayFloat:
@@ -216,8 +215,7 @@ def kernel_linear(x: ArrayLike) -> NDArrayFloat:
     array([1.        , 0.8888888..., 0.7777777..., 0.6666666..., 0.5555555...,
            0.4444444..., 0.3333333..., 0.2222222..., 0.1111111..., 0.        ])
     """
-
-    return np.where(np.abs(x) < 1, 1 - np.abs(x), 0)
+    pass
 
 
 def kernel_sinc(x: ArrayLike, a: float = 3) -> NDArrayFloat:
@@ -256,12 +254,7 @@ def kernel_sinc(x: ArrayLike, a: float = 3) -> NDArrayFloat:
            7.0531659...e-01, 5.6425327...e-01, 4.1349667...e-01, 2.6306440...e-01,
            1.2247694...e-01, 3.8981718...e-17])
     """
-
-    x = as_float_array(x)
-
-    attest(bool(a >= 1), '"a" must be equal or superior to 1!')
-
-    return np.where(np.abs(x) < a, np.sinc(x), 0)
+    pass
 
 
 def kernel_lanczos(x: ArrayLike, a: float = 3) -> NDArrayFloat:
@@ -297,12 +290,7 @@ def kernel_lanczos(x: ArrayLike, a: float = 3) -> NDArrayFloat:
            6.8012706...e-01, 5.3295773...e-01, 3.8071690...e-01, 2.3492839...e-01,
            1.0554054...e-01, 3.2237621...e-17])
     """
-
-    x = as_float_array(x)
-
-    attest(bool(a >= 1), '"a" must be equal or superior to 1!')
-
-    return np.where(np.abs(x) < a, np.sinc(x) * np.sinc(x / a), 0)
+    pass
 
 
 def kernel_cardinal_spline(
@@ -342,22 +330,7 @@ def kernel_cardinal_spline(
     array([1.        , 0.9711934..., 0.8930041..., 0.7777777..., 0.6378600...,
            0.4855967..., 0.3333333..., 0.1934156..., 0.0781893..., 0.        ])
     """
-
-    x = as_float_array(x)
-
-    x_abs = np.abs(x)
-    y = np.where(
-        x_abs < 1,
-        (-6 * a - 9 * b + 12) * x_abs**3 + (6 * a + 12 * b - 18) * x_abs**2 - 2 * b + 6,
-        (-6 * a - b) * x_abs**3
-        + (30 * a + 6 * b) * x_abs**2
-        + (-48 * a - 12 * b) * x_abs
-        + 24 * a
-        + 8 * b,
-    )
-    y = np.where(x_abs >= 2, 0, y)
-
-    return 1 / 6 * y
+    pass
 
 
 class KernelInterpolator:
@@ -493,39 +466,12 @@ class KernelInterpolator:
         :class:`numpy.ndarray`
             Independent :math:`x` variable.
         """
-
-        return self._x
+        pass
 
     @x.setter
     def x(self, value: ArrayLike) -> None:
         """Setter for the **self.x** property."""
-
-        value = np.atleast_1d(value).astype(self._dtype)
-
-        attest(
-            value.ndim == 1,
-            '"x" independent variable must have exactly one dimension!',
-        )
-
-        value_interval = interval(value)
-
-        if value_interval.size != 1:
-            runtime_warning(
-                '"x" independent variable is not uniform, '
-                "unpredictable results may occur!"
-            )
-
-        self._x = as_array(value, self._dtype)
-
-        self._x_p = np.pad(
-            self._x,
-            as_int_array([self._window, self._window]),
-            "linear_ramp",
-            end_values=(
-                np.min(self._x) - self._window * value_interval[0],
-                np.max(self._x) + self._window * value_interval[0],
-            ),
-        )
+        pass
 
     @property
     def y(self) -> NDArrayFloat:
@@ -543,24 +489,12 @@ class KernelInterpolator:
         :class:`numpy.ndarray`
             Dependent and already known :math:`y` variable.
         """
-
-        return self._y
+        pass
 
     @y.setter
     def y(self, value: ArrayLike) -> None:
         """Setter for the **self.y** property."""
-
-        value = np.atleast_1d(value).astype(self._dtype)
-
-        attest(
-            value.ndim == 1,
-            '"y" dependent variable must have exactly one dimension!',
-        )
-
-        self._y = as_array(value, self._dtype)
-
-        if self._window is not None:
-            self._y_p = np.pad(self._y, **self._padding_kwargs)
+        pass
 
     @property
     def window(self) -> float:
@@ -582,24 +516,12 @@ class KernelInterpolator:
         :class:`float`
             Window size for the moving average filter.
         """
-
-        return self._window
+        pass
 
     @window.setter
     def window(self, value: float) -> None:
         """Setter for the **self.window** property."""
-
-        attest(bool(value >= 1), '"window" must be equal to or greater than 1!')
-
-        self._window = value
-
-        # Triggering "self._x_p" update.
-        if self._x is not None:
-            self.x = self._x
-
-        # Triggering "self._y_p" update.
-        if self._y is not None:
-            self.y = self._y
+        pass
 
     @property
     def kernel(self) -> Callable:
@@ -622,19 +544,12 @@ class KernelInterpolator:
         AssertionError
             If the provided value is not callable.
         """
-
-        return self._kernel
+        pass
 
     @kernel.setter
     def kernel(self, value: Callable) -> None:
         """Setter for the **self.kernel** property."""
-
-        attest(
-            callable(value),
-            f'"kernel" property: "{value}" is not callable!',
-        )
-
-        self._kernel = value
+        pass
 
     @property
     def kernel_kwargs(self) -> dict:
@@ -658,19 +573,12 @@ class KernelInterpolator:
         AssertionError
             If the provided value is not a :class:'dict` class instance.
         """
-
-        return self._kernel_kwargs
+        pass
 
     @kernel_kwargs.setter
     def kernel_kwargs(self, value: dict) -> None:
         """Setter for the **self.kernel_kwargs** property."""
-
-        attest(
-            isinstance(value, dict),
-            f'"kernel_kwargs" property: "{value}" type is not "dict"!',
-        )
-
-        self._kernel_kwargs = value
+        pass
 
     @property
     def padding_kwargs(self) -> dict:
@@ -694,23 +602,12 @@ class KernelInterpolator:
         AssertionError
             If the provided value is not a :class:`dict` class instance.
         """
-
-        return self._padding_kwargs
+        pass
 
     @padding_kwargs.setter
     def padding_kwargs(self, value: dict) -> None:
         """Setter for the **self.padding_kwargs** property."""
-
-        attest(
-            isinstance(value, dict),
-            f'"padding_kwargs" property: "{value}" type is not a "dict" instance!',
-        )
-
-        self._padding_kwargs = value
-
-        # Triggering "self._y_p" update.
-        if self._y is not None:
-            self.y = self._y
+        pass
 
     def __call__(self, x: ArrayLike) -> NDArrayFloat:
         """
@@ -747,27 +644,7 @@ class KernelInterpolator:
         :class:`numpy.ndarray`
             Interpolated values at the specified point.
         """
-
-        self._validate_dimensions()
-        self._validate_interpolation_range(x)
-
-        x_interval = interval(self._x)[0]
-        x_f = np.floor(x / x_interval)
-
-        windows = x_f[..., None] + np.arange(-self._window + 1, self._window + 1)
-        clip_l = min(self._x_p) / x_interval
-        clip_h = max(self._x_p) / x_interval
-        windows = np.clip(windows, clip_l, clip_h) - clip_l
-        windows = as_int_array(np.around(windows))
-
-        return np.sum(
-            self._y_p[windows]
-            * self._kernel(
-                x[..., None] / x_interval - windows - min(self._x_p) / x_interval,
-                **self._kernel_kwargs,
-            ),
-            axis=-1,
-        )
+        pass
 
     def _validate_dimensions(self) -> None:
         """
@@ -778,14 +655,7 @@ class KernelInterpolator:
         ValueError
             If the x and y variable dimensions do not match.
         """
-
-        if len(self._x) != len(self._y):
-            error = (
-                '"x" independent and "y" dependent variables have different '
-                f'dimensions: "{len(self._x)}", "{len(self._y)}"'
-            )
-
-            raise ValueError(error)
+        pass
 
     def _validate_interpolation_range(self, x: NDArrayFloat) -> None:
         """
@@ -805,19 +675,7 @@ class KernelInterpolator:
         ValueError
             If the point is outside the valid interpolation range.
         """
-
-        below_interpolation_range = x < self._x[0]
-        above_interpolation_range = x > self._x[-1]
-
-        if below_interpolation_range.any():
-            error = f'"{x}" is below interpolation range.'
-
-            raise ValueError(error)
-
-        if above_interpolation_range.any():
-            error = f'"{x}" is above interpolation range.'
-
-            raise ValueError(error)
+        pass
 
 
 class NearestNeighbourInterpolator(KernelInterpolator):
@@ -944,21 +802,12 @@ class LinearInterpolator:
         AssertionError
             If the provided value has not exactly one dimension.
         """
-
-        return self._x
+        pass
 
     @x.setter
     def x(self, value: ArrayLike) -> None:
         """Setter for the **self.x** property."""
-
-        value = cast("NDArrayFloat", np.atleast_1d(value).astype(self._dtype))
-
-        attest(
-            value.ndim == 1,
-            '"x" independent variable must have exactly one dimension!',
-        )
-
-        self._x = value
+        pass
 
     @property
     def y(self) -> NDArrayFloat:
@@ -982,21 +831,12 @@ class LinearInterpolator:
         AssertionError
             If the provided value has not exactly one dimension.
         """
-
-        return self._y
+        pass
 
     @y.setter
     def y(self, value: ArrayLike) -> None:
         """Setter for the **self.y** property."""
-
-        value = cast("NDArrayFloat", np.atleast_1d(value).astype(self._dtype))
-
-        attest(
-            value.ndim == 1,
-            '"y" dependent variable must have exactly one dimension!',
-        )
-
-        self._y = value
+        pass
 
     def __call__(self, x: ArrayLike) -> NDArrayFloat:
         """
@@ -1034,38 +874,15 @@ class LinearInterpolator:
         :class:`numpy.ndarray`
             Interpolated points values.
         """
-
-        self._validate_dimensions()
-        self._validate_interpolation_range(x)
-
-        return np.interp(x, self._x, self._y)
+        pass
 
     def _validate_dimensions(self) -> None:
         """Validate that the variables dimensions are the same."""
-
-        if len(self._x) != len(self._y):
-            error = (
-                '"x" independent and "y" dependent variables have different '
-                f'dimensions: "{len(self._x)}", "{len(self._y)}"'
-            )
-
-            raise ValueError(error)
+        pass
 
     def _validate_interpolation_range(self, x: NDArrayFloat) -> None:
         """Validate specified point to be in interpolation range."""
-
-        below_interpolation_range = x < self._x[0]
-        above_interpolation_range = x > self._x[-1]
-
-        if below_interpolation_range.any():
-            error = f'"{x}" is below interpolation range.'
-
-            raise ValueError(error)
-
-        if above_interpolation_range.any():
-            error = f'"{x}" is above interpolation range.'
-
-            raise ValueError(error)
+        pass
 
 
 class SpragueInterpolator:
@@ -1187,36 +1004,12 @@ class SpragueInterpolator:
         AssertionError
             If the provided value has not exactly one dimension.
         """
-
-        return self._x
+        pass
 
     @x.setter
     def x(self, value: ArrayLike) -> None:
         """Setter for the **self.x** property."""
-
-        value = as_array(np.atleast_1d(value), self._dtype)
-
-        attest(
-            value.ndim == 1,
-            '"x" independent variable must have exactly one dimension!',
-        )
-
-        self._x = value
-
-        value_interval = interval(self._x)[0]
-
-        xp1 = self._x[0] - value_interval * 2
-        xp2 = self._x[0] - value_interval
-        xp3 = self._x[-1] + value_interval
-        xp4 = self._x[-1] + value_interval * 2
-
-        self._xp = np.concatenate(
-            [
-                as_array([xp1, xp2], self._dtype),
-                value,
-                as_array([xp3, xp4], self._dtype),
-            ]
-        )
+        pass
 
     @property
     def y(self) -> NDArrayFloat:
@@ -1241,43 +1034,12 @@ class SpragueInterpolator:
             If the provided value has not exactly one dimension and its value
             count is less than 6.
         """
-
-        return self._y
+        pass
 
     @y.setter
     def y(self, value: ArrayLike) -> None:
         """Setter for the **self.y** property."""
-
-        value = as_array(np.atleast_1d(value), self._dtype)
-
-        attest(
-            value.ndim == 1,
-            '"y" dependent variable must have exactly one dimension!',
-        )
-
-        attest(
-            len(value) >= 6,
-            '"y" dependent variable values count must be equal to or greater than 6!',
-        )
-
-        self._y = value
-
-        yp1, yp2, yp3, yp4 = (
-            np.sum(
-                self.SPRAGUE_C_COEFFICIENTS
-                * np.asarray((value[0:6], value[0:6], value[-6:], value[-6:])),
-                axis=1,
-            )
-            / 209
-        )
-
-        self._yp = np.concatenate(
-            [
-                as_array([yp1, yp2], self._dtype),
-                value,
-                as_array([yp3, yp4], self._dtype),
-            ]
-        )
+        pass
 
     def __call__(self, x: ArrayLike) -> NDArrayFloat:
         """
@@ -1314,64 +1076,15 @@ class SpragueInterpolator:
         :class:`numpy.ndarray`
             Interpolated point values.
         """
-
-        self._validate_dimensions()
-        self._validate_interpolation_range(x)
-
-        i = np.searchsorted(self._xp, x) - 1
-        with sdiv_mode():
-            X = sdiv(x - self._xp[i], self._xp[i + 1] - self._xp[i])
-
-        r = self._yp
-
-        r_s = np.asarray((r[i - 2], r[i - 1], r[i], r[i + 1], r[i + 2], r[i + 3]))
-        w_s = np.asarray(
-            (
-                (2, -16, 0, 16, -2, 0),
-                (-1, 16, -30, 16, -1, 0),
-                (-9, 39, -70, 66, -33, 7),
-                (13, -64, 126, -124, 61, -12),
-                (-5, 25, -50, 50, -25, 5),
-            )
-        )
-        a = np.dot(w_s, r_s) / 24
-
-        # Fancy vector code here... use underlying numpy structures to accelerate
-        # parts of the linear algebra.
-
-        y = r[i] + (a.reshape(5, -1) * X ** np.arange(1, 6).reshape(-1, 1)).sum(axis=0)
-
-        if y.size == 1:
-            return y[0]
-
-        return y
+        pass
 
     def _validate_dimensions(self) -> None:
         """Validate that the variables dimensions are the same."""
-
-        if len(self._x) != len(self._y):
-            error = (
-                '"x" independent and "y" dependent variables have different '
-                f'dimensions: "{len(self._x)}", "{len(self._y)}"'
-            )
-
-            raise ValueError(error)
+        pass
 
     def _validate_interpolation_range(self, x: NDArrayFloat) -> None:
         """Validate specified point to be in interpolation range."""
-
-        below_interpolation_range = x < self._x[0]
-        above_interpolation_range = x > self._x[-1]
-
-        if below_interpolation_range.any():
-            error = f'"{x}" is below interpolation range.'
-
-            raise ValueError(error)
-
-        if above_interpolation_range.any():
-            error = f'"{x}" is above interpolation range.'
-
-            raise ValueError(error)
+        pass
 
 
 class CubicSplineInterpolator(scipy.interpolate.interp1d):
@@ -1445,14 +1158,12 @@ class PchipInterpolator(scipy.interpolate.PchipInterpolator):
         :class:`numpy.ndarray`
             Dependent and already known :math:`y` variable.
         """
-
-        return self._y
+        pass
 
     @y.setter
     def y(self, value: ArrayLike) -> None:
         """Setter for the **self.y** property."""
-
-        self._y = as_float_array(value)
+        pass
 
 
 class NullInterpolator:
@@ -1557,21 +1268,12 @@ class NullInterpolator:
         AssertionError
             If the provided value has not exactly one dimension.
         """
-
-        return self._x
+        pass
 
     @x.setter
     def x(self, value: ArrayLike) -> None:
         """Setter for the **self.x** property."""
-
-        value = cast("NDArrayFloat", np.atleast_1d(value).astype(self._dtype))
-
-        attest(
-            value.ndim == 1,
-            '"x" independent variable must have exactly one dimension!',
-        )
-
-        self._x = value
+        pass
 
     @property
     def y(self) -> NDArrayFloat:
@@ -1595,21 +1297,12 @@ class NullInterpolator:
         AssertionError
             If the provided value has not exactly one dimension.
         """
-
-        return self._y
+        pass
 
     @y.setter
     def y(self, value: ArrayLike) -> None:
         """Setter for the **self.y** property."""
-
-        value = cast("NDArrayFloat", np.atleast_1d(value).astype(self._dtype))
-
-        attest(
-            value.ndim == 1,
-            '"y" dependent variable must have exactly one dimension!',
-        )
-
-        self._y = value
+        pass
 
     @property
     def relative_tolerance(self) -> float:
@@ -1632,19 +1325,12 @@ class NullInterpolator:
         AssertionError
             If the value is not numeric.
         """
-
-        return self._relative_tolerance
+        pass
 
     @relative_tolerance.setter
     def relative_tolerance(self, value: float) -> None:
         """Setter for the **self.relative_tolerance** property."""
-
-        attest(
-            is_numeric(value),
-            '"relative_tolerance" variable must be a "numeric"!',
-        )
-
-        self._relative_tolerance = as_float_scalar(value)
+        pass
 
     @property
     def absolute_tolerance(self) -> float:
@@ -1667,19 +1353,12 @@ class NullInterpolator:
         AssertionError
             If the value is not numeric.
         """
-
-        return self._absolute_tolerance
+        pass
 
     @absolute_tolerance.setter
     def absolute_tolerance(self, value: float) -> None:
         """Setter for the **self.absolute_tolerance** property."""
-
-        attest(
-            is_numeric(value),
-            '"absolute_tolerance" variable must be a "numeric"!',
-        )
-
-        self._absolute_tolerance = as_float_scalar(value)
+        pass
 
     @property
     def default(self) -> float:
@@ -1702,16 +1381,12 @@ class NullInterpolator:
         AssertionError
             If the value is not numeric.
         """
-
-        return self._default
+        pass
 
     @default.setter
     def default(self, value: float) -> None:
         """Setter for the **self.default** property."""
-
-        attest(is_numeric(value), '"default" variable must be a "numeric"!')
-
-        self._default = value
+        pass
 
     def __call__(self, x: ArrayLike) -> NDArrayFloat:
         """
@@ -1749,48 +1424,15 @@ class NullInterpolator:
         :class:`numpy.ndarray`
             Interpolated points values.
         """
-
-        self._validate_dimensions()
-        self._validate_interpolation_range(x)
-
-        indexes = closest_indexes(self._x, x)
-        values = self._y[indexes]
-        close = np.isclose(
-            self._x[indexes],
-            x,
-            rtol=self._absolute_tolerance,
-            atol=self._relative_tolerance,
-        )
-        values = np.where(~close, self._default, values)
-
-        return np.squeeze(values)
+        pass
 
     def _validate_dimensions(self) -> None:
         """Validate that the variables dimensions are the same."""
-
-        if len(self._x) != len(self._y):
-            error = (
-                '"x" independent and "y" dependent variables have different '
-                f'dimensions: "{len(self._x)}", "{len(self._y)}"'
-            )
-
-            raise ValueError(error)
+        pass
 
     def _validate_interpolation_range(self, x: NDArrayFloat) -> None:
         """Validate specified point to be in interpolation range."""
-
-        below_interpolation_range = x < self._x[0]
-        above_interpolation_range = x > self._x[-1]
-
-        if below_interpolation_range.any():
-            error = f'"{x}" is below interpolation range.'
-
-            raise ValueError(error)
-
-        if above_interpolation_range.any():
-            error = f'"{x}" is above interpolation range.'
-
-            raise ValueError(error)
+        pass
 
 
 def lagrange_coefficients(r: float, n: int = 4) -> NDArrayFloat:
@@ -1820,14 +1462,7 @@ def lagrange_coefficients(r: float, n: int = 4) -> NDArrayFloat:
     >>> lagrange_coefficients(0.1)
     array([ 0.8265,  0.2755, -0.1305,  0.0285])
     """
-
-    r_i = np.arange(n)
-    L_n = []
-    for j in range(len(r_i)):
-        basis = [(r - r_i[i]) / (r_i[j] - r_i[i]) for i in range(len(r_i)) if i != j]
-        L_n.append(reduce(lambda x, y: x * y, basis))
-
-    return np.array(L_n)
+    pass
 
 
 def table_interpolation_trilinear(V_xyz: ArrayLike, table: ArrayLike) -> NDArrayFloat:

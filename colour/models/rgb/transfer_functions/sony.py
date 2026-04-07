@@ -116,21 +116,7 @@ def log_encoding_SLog(
     >>> np.around(log_encoding_SLog(x) * (2**10 - 1)).astype(np.int_)
     array([ 90, 394, 636])
     """
-
-    x = to_domain_1(x)
-
-    if in_reflection:
-        x = x / 0.9
-
-    y = np.where(
-        x >= 0,
-        ((0.432699 * np.log10(x + 0.037584) + 0.616596) + 0.03),
-        x * 5 + 0.030001222851889303,
-    )
-
-    y_cv = full_to_legal(y, bit_depth) if out_normalised_code_value else y
-
-    return as_float(from_range_1(y_cv))
+    pass
 
 
 def log_decoding_SLog(
@@ -184,22 +170,7 @@ def log_decoding_SLog(
     >>> log_decoding_SLog(0.384970815928670)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    y = to_domain_1(y)
-
-    x = legal_to_full(y, bit_depth) if in_normalised_code_value else y
-
-    with domain_range_scale("ignore"):
-        x = np.where(
-            y >= log_encoding_SLog(0.0, bit_depth, in_normalised_code_value),
-            10 ** ((x - 0.616596 - 0.03) / 0.432699) - 0.037584,
-            (x - 0.030001222851889303) / 5.0,
-        )
-
-    if out_reflection:
-        x = x * 0.9
-
-    return as_float(from_range_1(x))
+    pass
 
 
 def log_encoding_SLog2(
@@ -262,12 +233,7 @@ def log_encoding_SLog2(
     >>> np.around(log_encoding_SLog2(x) * (2**10 - 1)).astype(np.int_)
     array([ 90, 347, 582])
     """
-
-    x = as_float_array(x)
-
-    return log_encoding_SLog(
-        x * 155 / 219, bit_depth, out_normalised_code_value, in_reflection
-    )
+    pass
 
 
 def log_decoding_SLog2(
@@ -321,12 +287,7 @@ def log_decoding_SLog2(
     >>> log_decoding_SLog2(0.339532524633774)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    return (
-        219
-        * log_decoding_SLog(y, bit_depth, in_normalised_code_value, out_reflection)
-        / 155
-    )
+    pass
 
 
 def log_encoding_SLog3(
@@ -389,21 +350,7 @@ def log_encoding_SLog3(
     >>> np.around(log_encoding_SLog3(x) * (2**10 - 1)).astype(np.int_)
     array([ 95, 420, 598])
     """
-
-    x = to_domain_1(x)
-
-    if not in_reflection:
-        x = x * 0.9
-
-    y = np.where(
-        x >= 0.01125000,
-        (420 + np.log10((x + 0.01) / (0.18 + 0.01)) * 261.5) / 1023,
-        (x * (171.2102946929 - 95) / 0.01125000 + 95) / 1023,
-    )
-
-    y_cv = y if out_normalised_code_value else legal_to_full(y, bit_depth)
-
-    return as_float(from_range_1(y_cv))
+    pass
 
 
 def log_decoding_SLog3(
@@ -457,18 +404,4 @@ def log_decoding_SLog3(
     >>> log_decoding_SLog3(0.410557184750733)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    y = to_domain_1(y)
-
-    y = y if in_normalised_code_value else full_to_legal(y, bit_depth)
-
-    x = np.where(
-        y >= 171.2102946929 / 1023,
-        ((10 ** ((y * 1023 - 420) / 261.5)) * (0.18 + 0.01) - 0.01),
-        (y * 1023 - 95) * 0.01125000 / (171.2102946929 - 95),
-    )
-
-    if not out_reflection:
-        x = x / 0.9
-
-    return as_float(from_range_1(x))
+    pass

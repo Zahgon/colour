@@ -202,22 +202,7 @@ def Lab_to_metamerism_index(
     ... )  # doctest: +ELLIPSIS
     np.float64(3.9842216...)
     """
-
-    correction = validate_method(correction, ("Additive", "Multiplicative"))
-
-    if correction == "additive":
-        Lab_corr_t = as_array(Lab_spl_t) - (as_array(Lab_spl_r) - as_array(Lab_std_r))
-
-    elif correction == "multiplicative":
-        Lab_corr_t = as_array(Lab_spl_t) * (as_array(Lab_std_r) / as_array(Lab_spl_r))
-
-    return colour.difference.delta_E(
-        Lab_std_t,
-        Lab_corr_t,
-        method=method,
-        additional_data=additional_data,
-        **kwargs,
-    )
+    pass
 
 
 @typing.overload
@@ -367,25 +352,7 @@ def XYZ_to_metamerism_index(
     ... )  # doctest: +ELLIPSIS
     np.float64(4.6910648...)
     """
-
-    correction = validate_method(correction, ("Additive", "Multiplicative"))
-
-    if correction == "additive":
-        XYZ_corr_t = as_array(XYZ_spl_t) - (as_array(XYZ_spl_r) - as_array(XYZ_std_r))
-
-    elif correction == "multiplicative":
-        XYZ_corr_t = as_array(XYZ_spl_t) * (as_array(XYZ_std_r) / as_array(XYZ_spl_r))
-
-    Lab_std_t = XYZ_to_Lab(XYZ_std_t, **filter_kwargs(XYZ_to_Lab, **kwargs))
-    Lab_corr_t = XYZ_to_Lab(XYZ_corr_t, **filter_kwargs(XYZ_to_Lab, **kwargs))
-
-    return colour.difference.delta_E(
-        Lab_std_t,
-        Lab_corr_t,
-        method=method,
-        additional_data=additional_data,
-        **kwargs,
-    )
+    pass
 
 
 def sd_to_metamerism_index(
@@ -566,46 +533,4 @@ def sd_to_metamerism_index(
     ... )  # doctest: +ELLIPSIS
     np.float64(3.4766679...)
     """
-
-    attest(
-        sd_spl.shape == sd_std.shape,
-        "`sd_spl` and `sd_std` spectral distributions must have the same shape!",
-    )
-
-    shape = sd_spl.shape
-
-    A_r = tristimulus_weighting_factors_integration(cmfs, illuminant_r, shape=shape)
-    A_t = tristimulus_weighting_factors_integration(cmfs, illuminant_t, shape=shape)
-
-    R = np.dot(
-        np.dot(A_r, np.linalg.inv(np.dot(np.transpose(A_r), A_r))), np.transpose(A_r)
-    )
-
-    sd_spl_corr = np.dot(R, sd_std.values) + np.dot(
-        np.identity(R.shape[0]) - R, sd_spl.values
-    )
-    sd_spl_corr = SpectralDistribution(sd_spl_corr, shape)
-
-    XYZ_spl_corr_t = np.dot(sd_spl_corr.values, A_t) / 100
-    XYZ_std_t = np.dot(sd_std.values, A_t) / 100
-    XYZ_spl_corr = np.dot(sd_spl_corr.values, A_r) / 100
-    XYZ_std = np.dot(sd_std.values, A_r) / 100
-
-    attest(
-        np.allclose(XYZ_std, XYZ_spl_corr, atol=TOLERANCE_ABSOLUTE_TESTS),
-        "The corrected sample under reference illuminant must be equal "
-        "to the standard under reference illuminant!",
-    )
-
-    with domain_range_scale("ignore"):
-        Lab_std_t = XYZ_to_Lab(XYZ_std_t, **filter_kwargs(XYZ_to_Lab, **kwargs))
-        Lab_spl_corr_t = XYZ_to_Lab(
-            XYZ_spl_corr_t, **filter_kwargs(XYZ_to_Lab, **kwargs)
-        )
-
-        return colour.difference.delta_E(
-            Lab_std_t,
-            Lab_spl_corr_t,
-            method=method,
-            **kwargs,
-        )
+    pass

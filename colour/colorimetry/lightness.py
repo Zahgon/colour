@@ -510,30 +510,7 @@ def lightness_Abebe2017(
     ... # doctest: +ELLIPSIS
     np.float64(0.4745447...)
     """
-
-    Y = as_float_array(Y)
-    Y_n = as_float_array(optional(Y_n, 100))
-    method = validate_method(method, ("Michaelis-Menten", "Stevens"))
-
-    Y_Y_n = Y / Y_n
-    if method == "stevens":
-        L = np.where(
-            Y_n <= 100,
-            1.226 * spow(Y_Y_n, 0.266) - 0.226,
-            1.127 * spow(Y_Y_n, 0.230) - 0.127,
-        )
-    else:
-        L = np.where(
-            Y_n <= 100,
-            reaction_rate_MichaelisMenten_Abebe2017(
-                spow(Y_Y_n, 0.582), 1.448, 0.635, 0.813
-            ),
-            reaction_rate_MichaelisMenten_Abebe2017(
-                spow(Y_Y_n, 0.293), 1.680, 1.584, 0.096
-            ),
-        )
-
-    return as_float(L)
+    pass
 
 
 LIGHTNESS_METHODS: CanonicalMapping = CanonicalMapping(

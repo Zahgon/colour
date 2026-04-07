@@ -659,32 +659,7 @@ def corresponding_chromaticities_prediction_Zhai2018(
      (array([0.176, 0.431]), array([0.1763887..., 0.4146000...])),
      (array([0.244, 0.349]), array([0.2267005..., 0.3551480...]))]
     """
-
-    experiment_results = (
-        experiment
-        if isinstance(experiment, CorrespondingColourDataset)
-        else convert_experiment_results_Breneman1987(experiment)
-    )
-
-    with domain_range_scale("1"):
-        XYZ_w, XYZ_wr = experiment_results.XYZ_t, experiment_results.XYZ_r
-        xy_w, xy_wr = XYZ_to_xy([XYZ_w, XYZ_wr])
-
-        uv_t = Luv_to_uv(XYZ_to_Luv(experiment_results.XYZ_ct, xy_w), xy_w)
-        uv_m = Luv_to_uv(XYZ_to_Luv(experiment_results.XYZ_cr, xy_wr), xy_wr)
-
-        XYZ_1 = experiment_results.XYZ_ct
-        XYZ_2 = chromatic_adaptation_Zhai2018(
-            XYZ_1, XYZ_w, XYZ_wr, D_b, D_d, XYZ_wo, transform
-        )
-        uv_p = Luv_to_uv(XYZ_to_Luv(XYZ_2, xy_wr), xy_wr)
-
-        return tuple(
-            CorrespondingChromaticitiesPrediction(
-                experiment_results.name, uv_t[i], uv_m[i], uv_p[i]
-            )
-            for i in range(len(uv_t))
-        )
+    pass
 
 
 CORRESPONDING_CHROMATICITIES_PREDICTION_MODELS = CanonicalMapping(

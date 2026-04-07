@@ -102,31 +102,7 @@ def log_encoding_AppleLogProfile(
     >>> log_encoding_AppleLogProfile(0.18)  # doctest: +ELLIPSIS
     np.float64(0.4882724...)
     """
-
-    R = to_domain_1(R)
-    constants = optional(constants, CONSTANTS_APPLE_LOG_PROFILE)
-
-    R_0 = constants.R_0
-    R_t = constants.R_t
-    sigma = constants.sigma
-    beta = constants.beta
-    gamma = constants.gamma
-    delta = constants.delta
-
-    P = np.select(
-        [
-            R >= R_t,  # noqa: SIM300
-            np.logical_and(R_0 <= R, R < R_t),  # noqa: SIM300
-            R < R_0,
-        ],
-        [
-            gamma * np.log2(R + beta) + delta,
-            sigma * (R - R_0) ** 2,
-            0,
-        ],
-    )
-
-    return as_float(from_range_1(P))
+    pass
 
 
 def log_decoding_AppleLogProfile(
@@ -176,30 +152,4 @@ def log_decoding_AppleLogProfile(
     >>> log_decoding_AppleLogProfile(0.48827245852686763)  # doctest: +ELLIPSIS
     np.float64(0.1800000...)
     """
-
-    P = to_domain_1(P)
-    constants = optional(constants, CONSTANTS_APPLE_LOG_PROFILE)
-
-    R_0 = constants.R_0
-    R_t = constants.R_t
-    sigma = constants.sigma
-    beta = constants.beta
-    gamma = constants.gamma
-    delta = constants.delta
-
-    P_t = sigma * (R_t - R_0) ** 2
-
-    R = np.select(
-        [
-            P >= P_t,  # noqa: SIM300
-            np.logical_and(0 <= P, P < P_t),  # noqa: SIM300
-            P < 0,
-        ],
-        [
-            2 ** ((P - delta) / gamma) - beta,
-            np.sqrt(P / sigma) + R_0,
-            R_0,
-        ],
-    )
-
-    return as_float(from_range_1(R))
+    pass

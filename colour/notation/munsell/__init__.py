@@ -230,10 +230,7 @@ def munsell_specification_to_xyY(
     ... # doctest: +ELLIPSIS
     array([0.31006  , 0.31616  , 0.7461345...])
     """
-
-    method = validate_method(method, tuple(MUNSELL_SPECIFICATION_TO_XYY_METHODS))
-
-    return MUNSELL_SPECIFICATION_TO_XYY_METHODS[method](specification)
+    pass
 
 
 def munsell_colour_to_xyY(
@@ -275,10 +272,7 @@ def munsell_colour_to_xyY(
     >>> munsell_colour_to_xyY("N8.9")  # doctest: +ELLIPSIS
     array([0.31006  , 0.31616  , 0.7461345...])
     """
-
-    method = validate_method(method, tuple(MUNSELL_COLOUR_TO_XYY_METHODS))
-
-    return MUNSELL_COLOUR_TO_XYY_METHODS[method](munsell_colour)
+    pass
 
 
 def xyY_to_munsell_specification(
@@ -341,10 +335,7 @@ def xyY_to_munsell_specification(
     >>> xyY_to_munsell_specification(xyY)  # doctest: +ELLIPSIS
     array([4.2000019..., 8.0999999..., 5.2999996..., 6.        ])
     """
-
-    method = validate_method(method, tuple(XYY_TO_MUNSELL_SPECIFICATION_METHODS))
-
-    return XYY_TO_MUNSELL_SPECIFICATION_METHODS[method](xyY)
+    pass
 
 
 def xyY_to_munsell_colour(

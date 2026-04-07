@@ -66,7 +66,4 @@ def keyword_to_RGB_CSSColor3(keyword: str) -> Range1:
     >>> keyword_to_RGB_CSSColor3("aliceblue")  # doctest: +ELLIPSIS
     array([0.9411764..., 0.9725490..., 1.        ])
     """
-
-    attest(keyword in CSS_COLOR_3, f'{keyword} is not defined in "CSS Color 3"!')
-
-    return HEX_to_RGB(CSS_COLOR_3[keyword])
+    pass

@@ -916,15 +916,7 @@ def chroma_components(
     >>> chroma_components(L_star_P, S_RG, S_YB)  # doctest: +ELLIPSIS
     array([-0.00288527, -0.01303961])
     """
-
-    L_star_P = as_float_array(L_star_P)
-    S_RG = as_float_array(S_RG)
-    S_YB = as_float_array(S_YB)
-
-    C_RG = spow(L_star_P / 50, 0.7) * S_RG
-    C_YB = spow(L_star_P / 50, 0.7) * S_YB
-
-    return tstack([C_RG, C_YB])
+    pass
 
 
 def chroma_correlate(L_star_P: ArrayLike, S: ArrayLike) -> NDArrayFloat:
@@ -987,15 +979,7 @@ def colourfulness_components(
     >>> colourfulness_components(C_RG, C_YB, B_rw)  # doctest: +ELLIPSIS
     array([-0.0036136..., -0.0163313...])
     """
-
-    C_RG = as_float_array(C_RG)
-    C_YB = as_float_array(C_YB)
-    B_rw = as_float_array(B_rw)
-
-    M_RG = C_RG * B_rw / 100
-    M_YB = C_YB * B_rw / 100
-
-    return tstack([M_RG, M_YB])
+    pass
 
 
 def colourfulness_correlate(C: ArrayLike, B_rw: ArrayLike) -> NDArrayFloat:

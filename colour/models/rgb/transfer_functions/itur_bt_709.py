@@ -120,5 +120,4 @@ def oetf_inverse_BT709(V: ArrayLike) -> Range1:
     >>> oetf_inverse_BT709(0.409007728864150)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    return oetf_inverse_BT601(V)
+    pass

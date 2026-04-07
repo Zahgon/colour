@@ -121,8 +121,7 @@ class StopMinimizationEarlyError(Exception):
         :class:`numpy.ndarray`
             *Jakob and Hanika (2019)* exception coefficients.
         """
-
-        return self._coefficients
+        pass
 
     @property
     def error(self) -> float:
@@ -136,8 +135,7 @@ class StopMinimizationEarlyError(Exception):
             *Jakob and Hanika (2019)* spectral upsampling error value
             representing the quality of the coefficient fitting process.
         """
-
-        return self._error
+        pass
 
 
 def sd_Jakob2019(
@@ -279,64 +277,7 @@ def error_function(
     StopMinimizationEarlyError
         Raised when the error is below ``max_error``.
     """
-
-    target = as_float_array(target)
-
-    c_0, c_1, c_2 = as_float_array(coefficients)
-    wv = np.linspace(0, 1, len(cmfs.shape))
-
-    U = c_0 * wv**2 + c_1 * wv + c_2
-    t1 = np.sqrt(1 + U**2)
-    R = 1 / 2 + U / (2 * t1)
-
-    t2 = 1 / (2 * t1) - U**2 / (2 * t1**3)
-    dR = np.array([wv**2 * t2, wv * t2, t2])
-
-    XYZ = sd_to_XYZ_integration(R, cmfs, illuminant, shape=cmfs.shape) / 100
-    dXYZ = np.transpose(
-        sd_to_XYZ_integration(dR, cmfs, illuminant, shape=cmfs.shape) / 100
-    )
-
-    XYZ_n = sd_to_XYZ_integration(illuminant, cmfs)
-    XYZ_n = XYZ_n / XYZ_n[1]
-    XYZ_XYZ_n = XYZ / XYZ_n
-
-    XYZ_f = intermediate_lightness_function_CIE1976(XYZ, XYZ_n)
-    dXYZ_f = np.where(
-        XYZ_XYZ_n[..., None] > (24 / 116) ** 3,
-        1 / (3 * spow(XYZ_n[..., None], 1 / 3) * spow(XYZ[..., None], 2 / 3)) * dXYZ,
-        (841 / 108) * dXYZ / XYZ_n[..., None],
-    )
-
-    def intermediate_XYZ_to_Lab(
-        XYZ_i: NDArrayFloat, offset: float | None = 16
-    ) -> NDArrayFloat:
-        """
-        Return the final intermediate value for the *CIE Lab* to *CIE XYZ*
-        conversion.
-        """
-
-        return np.array(
-            [
-                116 * XYZ_i[1] - offset,
-                500 * (XYZ_i[0] - XYZ_i[1]),
-                200 * (XYZ_i[1] - XYZ_i[2]),
-            ]
-        )
-
-    Lab_i = intermediate_XYZ_to_Lab(XYZ_f)
-    dLab_i = intermediate_XYZ_to_Lab(dXYZ_f, 0)
-
-    error = np.sqrt(np.sum((Lab_i - target) ** 2))
-    if max_error is not None and error <= max_error:
-        raise StopMinimizationEarlyError(coefficients, error)
-
-    derror = np.sum(dLab_i * (Lab_i[..., None] - target[..., None]), axis=0) / error
-
-    if additional_data:
-        return error, derror, R, XYZ, Lab_i
-
-    return error, derror
+    pass
 
 
 def dimensionalise_coefficients(
@@ -829,8 +770,7 @@ class LUT3D_Jakob2019:
         :class:`int`
             *Jakob and Hanika (2019)* interpolator size.
         """
-
-        return self._size
+        pass
 
     @property
     def lightness_scale(self) -> NDArrayFloat:
@@ -856,8 +796,7 @@ class LUT3D_Jakob2019:
         :class:`numpy.ndarray`
             *Jakob and Hanika (2019)* interpolator coefficients.
         """
-
-        return self._coefficients
+        pass
 
     @property
     def interpolator(self) -> RegularGridInterpolator:

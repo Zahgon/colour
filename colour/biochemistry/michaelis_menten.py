@@ -147,15 +147,7 @@ def reaction_rate_MichaelisMenten_Abebe2017(
     ... # doctest: +ELLIPSIS
     np.float64(0.6951512...)
     """
-
-    S = as_float_array(S)
-    V_max = as_float_array(V_max)
-    K_m = as_float_array(K_m)
-    b_m = as_float_array(b_m)
-
-    v = (V_max * S) / (b_m * S + K_m)
-
-    return as_float(v)
+    pass
 
 
 REACTION_RATE_MICHAELISMENTEN_METHODS: CanonicalMapping = CanonicalMapping(
@@ -223,12 +215,7 @@ def reaction_rate_MichaelisMenten(
     ... )  # doctest: +ELLIPSIS
     np.float64(1.0360547...)
     """
-
-    method = validate_method(method, tuple(REACTION_RATE_MICHAELISMENTEN_METHODS))
-
-    function = REACTION_RATE_MICHAELISMENTEN_METHODS[method]
-
-    return function(S, V_max, K_m, **filter_kwargs(function, **kwargs))
+    pass
 
 
 def substrate_concentration_MichaelisMenten_Michaelis1913(
@@ -318,15 +305,7 @@ def substrate_concentration_MichaelisMenten_Abebe2017(
     ... )  # doctest: +ELLIPSIS
     np.float64(0.4999999...)
     """
-
-    v = as_float_array(v)
-    V_max = as_float_array(V_max)
-    K_m = as_float_array(K_m)
-    b_m = as_float_array(b_m)
-
-    S = (v * K_m) / (V_max - b_m * v)
-
-    return as_float(S)
+    pass
 
 
 SUBSTRATE_CONCENTRATION_MICHAELISMENTEN_METHODS: CanonicalMapping = CanonicalMapping(
@@ -397,11 +376,4 @@ substrate_concentration_MichaelisMenten_Abebe2017`},
     ... # doctest: +ELLIPSIS
     np.float64(0.5000000...)
     """
-
-    method = validate_method(
-        method, tuple(SUBSTRATE_CONCENTRATION_MICHAELISMENTEN_METHODS)
-    )
-
-    function = SUBSTRATE_CONCENTRATION_MICHAELISMENTEN_METHODS[method]
-
-    return function(v, V_max, K_m, **filter_kwargs(function, **kwargs))
+    pass

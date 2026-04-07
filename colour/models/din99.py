@@ -225,31 +225,7 @@ def DIN99_to_Lab(
     >>> DIN99_to_Lab(Lab_99)  # doctest: +ELLIPSIS
     array([41.5278752..., 52.6385830..., 26.9231792...])
     """
-
-    c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8 = DIN99_METHODS[
-        validate_method(method, tuple(DIN99_METHODS))
-    ]
-
-    L_99, a_99, b_99 = tsplit(to_domain_100(Lab_99))
-
-    cos = np.cos(np.radians(c_3))
-    sin = np.sin(np.radians(c_3))
-
-    h_99 = np.arctan2(b_99, a_99) - np.radians(c_7)
-
-    C_99 = np.hypot(a_99, b_99)
-    G = np.expm1((c_8 / c_5) * C_99 * k_CH * k_E) / c_6
-
-    e = G * np.cos(h_99)
-    f = G * np.sin(h_99)
-
-    a = e * cos - (f / c_4) * sin
-    b = e * sin + (f / c_4) * cos
-    L = np.expm1(L_99 * k_E / c_1) / c_2
-
-    Lab = tstack([L, a, b])
-
-    return from_range_100(Lab)
+    pass
 
 
 def XYZ_to_DIN99(
@@ -316,10 +292,7 @@ def XYZ_to_DIN99(
     >>> XYZ_to_DIN99(XYZ)  # doctest: +ELLIPSIS
     array([53.2282198..., 28.4163465...,  3.8983955...])
     """
-
-    Lab = XYZ_to_Lab(XYZ, illuminant)
-
-    return Lab_to_DIN99(Lab, k_E, k_CH, method)
+    pass
 
 
 def DIN99_to_XYZ(
@@ -386,7 +359,4 @@ def DIN99_to_XYZ(
     >>> DIN99_to_XYZ(Lab_99)  # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
     """
-
-    Lab = DIN99_to_Lab(Lab_99, k_E, k_CH, method)
-
-    return Lab_to_XYZ(Lab, illuminant)
+    pass

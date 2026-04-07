@@ -273,19 +273,7 @@ def rayleigh_jeans_law(wavelength: ArrayLike, temperature: ArrayLike) -> NDArray
     ... # doctest: +ELLIPSIS
     array([6.6225353...e+14, 7.2847888...e+14, 7.9470423...e+14])
     """
-
-    l = as_float_array(wavelength)  # noqa: E741
-    t = as_float_array(temperature)
-
-    l = np.ravel(l)[..., None]  # noqa: E741
-    t = np.ravel(t)[None, ...]
-
-    c = CONSTANT_LIGHT_SPEED
-    k_B = CONSTANT_BOLTZMANN
-
-    B = (2 * c * k_B * t) / (l**4)
-
-    return as_float(np.squeeze(B))
+    pass
 
 
 def sd_rayleigh_jeans(
@@ -347,9 +335,4 @@ def sd_rayleigh_jeans(
                          Extrapolator,
                          {'method': 'Constant', 'left': None, 'right': None})
     """
-
-    return SpectralDistribution(
-        rayleigh_jeans_law(shape.wavelengths * 1e-9, temperature) * 1e-9,
-        shape.wavelengths,
-        name=f"{temperature}K Rayleigh-Jeans",
-    )
+    pass

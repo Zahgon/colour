@@ -98,8 +98,7 @@ def log_encoding_MiLog(
     >>> log_encoding_MiLog(0.18)  # doctest: +ELLIPSIS
     np.float64(0.4534596...)
     """
-
-    return log_encoding_AppleLogProfile(R, optional(constants, CONSTANTS_MI_LOG))
+    pass
 
 
 def log_decoding_MiLog(
@@ -148,5 +147,4 @@ def log_decoding_MiLog(
     >>> log_decoding_MiLog(0.45345968)  # doctest: +ELLIPSIS
     np.float64(0.1800000...)
     """
-
-    return log_decoding_AppleLogProfile(P, optional(constants, CONSTANTS_MI_LOG))
+    pass

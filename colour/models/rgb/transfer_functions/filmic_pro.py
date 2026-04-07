@@ -85,12 +85,7 @@ def log_encoding_FilmicPro6(t: Domain1) -> Range1:
     >>> log_encoding_FilmicPro6(0.18)  # doctest: +ELLIPSIS
     np.float64(0.6066345...)
     """
-
-    t = to_domain_1(t)
-
-    y = 0.371 * (np.sqrt(t) + 0.28257 * np.log(t) + 1.69542)
-
-    return as_float(from_range_1(y))
+    pass
 
 
 _CACHE_LOG_DECODING_FILMICPRO_INTERPOLATOR: Extrapolator | None = None
@@ -107,16 +102,7 @@ def _log_decoding_FilmicPro6_interpolator() -> Extrapolator:
         *FiLMiC Pro 6* log decoding curve / electro-optical transfer
         function interpolator.
     """
-
-    global _CACHE_LOG_DECODING_FILMICPRO_INTERPOLATOR  # noqa: PLW0603
-
-    t = np.arange(0, 1, 0.0001)
-    if _CACHE_LOG_DECODING_FILMICPRO_INTERPOLATOR is None:
-        _CACHE_LOG_DECODING_FILMICPRO_INTERPOLATOR = Extrapolator(
-            LinearInterpolator(log_encoding_FilmicPro6(t), t)
-        )
-
-    return _CACHE_LOG_DECODING_FILMICPRO_INTERPOLATOR
+    pass
 
 
 def log_decoding_FilmicPro6(y: Domain1) -> Range1:
@@ -166,9 +152,4 @@ def log_decoding_FilmicPro6(y: Domain1) -> Range1:
     >>> log_decoding_FilmicPro6(0.6066345199247033)  # doctest: +ELLIPSIS
     np.float64(0.1800000...)
     """
-
-    y = to_domain_1(y)
-
-    t = _log_decoding_FilmicPro6_interpolator()(y)
-
-    return as_float(from_range_1(t))
+    pass

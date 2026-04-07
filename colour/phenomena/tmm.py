@@ -375,11 +375,7 @@ def polarised_light_reflection_coefficient(
     >>> result.real
     array([0.04, 0.04])
     """
-
-    # Reflectance: R = |r|^2 (Byrnes Eq. 23)
-    R = np.abs(polarised_light_reflection_amplitude(n_1, n_2, theta_i, theta_t)) ** 2
-
-    return as_complex_array(R)
+    pass
 
 
 def polarised_light_transmission_amplitude(
@@ -526,19 +522,7 @@ def polarised_light_transmission_coefficient(
     >>> polarised_light_transmission_coefficient(1.0, 1.5, 0.0, 0.0)
     array([0.96+0.j, 0.96+0.j])
     """
-
-    n_1 = as_complex_array(n_1)
-    n_2 = as_complex_array(n_2)
-
-    n_1_cos_theta_i, _n_1_cos_theta_t, _n_2_cos_theta_i, n_2_cos_theta_t = (
-        polarised_light_magnitude_elements(n_1, n_2, theta_i, theta_t)
-    )
-
-    # Transmittance with beam cross-section correction (Byrnes Eq. 21-22)
-    T = (n_2_cos_theta_t / n_1_cos_theta_i)[..., None] * np.abs(
-        polarised_light_transmission_amplitude(n_1, n_2, theta_i, theta_t)
-    ) ** 2
-    return as_complex_array(T)
+    pass
 
 
 @dataclass

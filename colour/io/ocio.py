@@ -133,36 +133,4 @@ def process_image_OpenColorIO(a: ArrayLike, *args: Any, **kwargs: Any) -> NDArra
            [[ 0.3559542...,  0.3559542...,  0.3559542...],
             [ 0.3559542...,  0.3559542...,  0.3559542...]]])
     """
-
-    import PyOpenColorIO as ocio  # noqa: PLC0415
-
-    config = kwargs.get("config")
-    config = (
-        ocio.Config.CreateFromEnv()  # pyright: ignore
-        if config is None
-        else ocio.Config.CreateFromFile(config)  # pyright: ignore
-    )
-
-    a = as_float_array(a)
-    shape, dtype = a.shape, a.dtype
-    a = as_3_channels_image(a).astype(np.float32)
-
-    height, width, channels = a.shape
-
-    processor = config.getProcessor(*args).getDefaultCPUProcessor()
-
-    image_desc = ocio.PackedImageDesc(  # pyright: ignore
-        a, width, height, channels
-    )
-
-    processor.apply(image_desc)
-
-    b = np.reshape(image_desc.getData(), (height, width, channels)).astype(dtype)
-
-    if len(shape) == 0:
-        return as_float(np.squeeze(b)[0])
-
-    if shape[-1] == 1:
-        return np.reshape(b[..., 0], shape)
-
-    return np.reshape(b, shape)
+    pass

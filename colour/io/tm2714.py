@@ -247,8 +247,7 @@ class Header_IESTM2714:
         :class:`colour.utilities.Structure`
             Mapping structure.
         """
-
-        return self._mapping
+        pass
 
     @property
     def manufacturer(self) -> str | None:
@@ -265,20 +264,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Manufacturer name.
         """
-
-        return self._manufacturer
+        pass
 
     @manufacturer.setter
     def manufacturer(self, value: str | None) -> None:
         """Setter for the **self.manufacturer** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"manufacturer" property: "{value}" type is not "str"!',
-            )
-
-        self._manufacturer = value
+        pass
 
     @property
     def catalog_number(self) -> str | None:
@@ -295,20 +286,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Catalog number.
         """
-
-        return self._catalog_number
+        pass
 
     @catalog_number.setter
     def catalog_number(self, value: str | None) -> None:
         """Setter for the **self.catalog_number** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"catalog_number" property: "{value}" type is not "str"!',
-            )
-
-        self._catalog_number = value
+        pass
 
     @property
     def description(self) -> str | None:
@@ -325,20 +308,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Description.
         """
-
-        return self._description
+        pass
 
     @description.setter
     def description(self, value: str | None) -> None:
         """Setter for the **self.description** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"description" property: "{value}" type is not "str"!',
-            )
-
-        self._description = value
+        pass
 
     @property
     def document_creator(self) -> str | None:
@@ -355,20 +330,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Document creator.
         """
-
-        return self._document_creator
+        pass
 
     @document_creator.setter
     def document_creator(self, value: str | None) -> None:
         """Setter for the **self.document_creator** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"document_creator" property: "{value}" type is not "str"!',
-            )
-
-        self._document_creator = value
+        pass
 
     @property
     def unique_identifier(self) -> str | None:
@@ -385,20 +352,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Unique identifier.
         """
-
-        return self._unique_identifier
+        pass
 
     @unique_identifier.setter
     def unique_identifier(self, value: str | None) -> None:
         """Setter for the **self.unique_identifier** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"unique_identifier" property: "{value}" type is not "str"!',
-            )
-
-        self._unique_identifier = value
+        pass
 
     @property
     def measurement_equipment(self) -> str | None:
@@ -415,20 +374,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Measurement equipment.
         """
-
-        return self._measurement_equipment
+        pass
 
     @measurement_equipment.setter
     def measurement_equipment(self, value: str | None) -> None:
         """Setter for the **self.measurement_equipment** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"measurement_equipment" property: "{value}" type is not "str"!',
-            )
-
-        self._measurement_equipment = value
+        pass
 
     @property
     def laboratory(self) -> str | None:
@@ -445,20 +396,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Laboratory.
         """
-
-        return self._laboratory
+        pass
 
     @laboratory.setter
     def laboratory(self, value: str | None) -> None:
         """Setter for the **self.laboratory** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"laboratory" property: "{value}" type is not "str"!',
-            )
-
-        self._laboratory = value
+        pass
 
     @property
     def report_number(self) -> str | None:
@@ -475,20 +418,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Report number.
         """
-
-        return self._report_number
+        pass
 
     @report_number.setter
     def report_number(self, value: str | None) -> None:
         """Setter for the **self.report_number** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"report_number" property: "{value}" type is not "str"!',
-            )
-
-        self._report_number = value
+        pass
 
     @property
     def report_date(self) -> str | None:
@@ -505,20 +440,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Report date.
         """
-
-        return self._report_date
+        pass
 
     @report_date.setter
     def report_date(self, value: str | None) -> None:
         """Setter for the **self.report_date** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"report_date" property: "{value}" type is not "str"!',
-            )
-
-        self._report_date = value
+        pass
 
     @property
     def document_creation_date(self) -> str | None:
@@ -535,20 +462,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Document creation date.
         """
-
-        return self._document_creation_date
+        pass
 
     @document_creation_date.setter
     def document_creation_date(self, value: str | None) -> None:
         """Setter for the **self.document_creation_date** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"document_creation_date" property: "{value}" type is not "str"!',
-            )
-
-        self._document_creation_date = value
+        pass
 
     @property
     def comments(self) -> str | None:
@@ -565,20 +484,12 @@ class Header_IESTM2714:
         :class:`str` or :py:data:`None`
             Comments.
         """
-
-        return self._comments
+        pass
 
     @comments.setter
     def comments(self, value: str | None) -> None:
         """Setter for the **self.comments** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"comments" property: "{value}" type is not "str"!',
-            )
-
-        self._comments = value
+        pass
 
     def __str__(self) -> str:
         """
@@ -1025,8 +936,7 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         :class:`colour.utilities.Structure`
             Mapping structure.
         """
-
-        return self._mapping
+        pass
 
     @property
     def path(self) -> str | None:
@@ -1043,22 +953,12 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         :class:`str` or :py:data:`None`
             Path to the resource.
         """
-
-        return self._path
+        pass
 
     @path.setter
     def path(self, value: str | PathLike | None) -> None:
         """Setter for the **self.path** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, (str, Path)),
-                f'"path" property: "{value}" type is not "str" or "Path"!',
-            )
-
-            value = str(value)
-
-        self._path = value
+        pass
 
     @property
     def header(self) -> Header_IESTM2714:
@@ -1075,19 +975,12 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         :class:`colour.io.tm2714.Header_IESTM2714`
             Header object containing spectral distribution metadata.
         """
-
-        return self._header
+        pass
 
     @header.setter
     def header(self, value: Header_IESTM2714) -> None:
         """Setter for the **self.header** property."""
-
-        attest(
-            isinstance(value, Header_IESTM2714),
-            f'"header" property: "{value}" type is not "Header_IESTM2714"!',
-        )
-
-        self._header = value
+        pass
 
     @property
     def spectral_quantity(
@@ -1122,8 +1015,7 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         :class:`str` or :py:data:`None`
             Spectral quantity.
         """
-
-        return self._spectral_quantity
+        pass
 
     @spectral_quantity.setter
     def spectral_quantity(
@@ -1147,14 +1039,7 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         ),
     ) -> None:
         """Setter for the **self.spectral_quantity** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"spectral_quantity" property: "{value}" type is not "str"!',
-            )
-
-        self._spectral_quantity = value
+        pass
 
     @property
     def reflection_geometry(
@@ -1189,8 +1074,7 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         :class:`str` or :py:data:`None`
             Reflection geometry.
         """
-
-        return self._reflection_geometry
+        pass
 
     @reflection_geometry.setter
     def reflection_geometry(
@@ -1214,14 +1098,7 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         ),
     ) -> None:
         """Setter for the **self.reflection_geometry** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"reflection_geometry" property: "{value}" type is not "str"!',
-            )
-
-        self._reflection_geometry = value
+        pass
 
     @property
     def transmission_geometry(
@@ -1240,8 +1117,7 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         :class:`str` or :py:data:`None`
             Transmission geometry.
         """
-
-        return self._transmission_geometry
+        pass
 
     @transmission_geometry.setter
     def transmission_geometry(
@@ -1249,14 +1125,7 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         value: (Literal["0:0", "di:0", "de:0", "0:di", "0:de", "d:d", "other"] | None),
     ) -> None:
         """Setter for the **self.transmission_geometry** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, str),
-                f'"transmission_geometry" property: "{value}" type is not "str"!',
-            )
-
-        self._transmission_geometry = value
+        pass
 
     @property
     def bandwidth_FWHM(self) -> float | None:
@@ -1274,22 +1143,12 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
         :class:`float` or :py:data:`None`
             Full-width half-maximum bandwidth.
         """
-
-        return self._bandwidth_FWHM
+        pass
 
     @bandwidth_FWHM.setter
     def bandwidth_FWHM(self, value: float | None) -> None:
         """Setter for the **self.bandwidth_FWHM** property."""
-
-        if value is not None:
-            attest(
-                is_numeric(value),
-                f'"bandwidth_FWHM" property: "{value}" is not a "number"!',
-            )
-
-            value = as_float_scalar(value)
-
-        self._bandwidth_FWHM = value
+        pass
 
     @property
     def bandwidth_corrected(self) -> bool | None:
@@ -1309,20 +1168,12 @@ class SpectralDistribution_IESTM2714(SpectralDistribution):
             Whether bandwidth correction has been applied to the measured
             data.
         """
-
-        return self._bandwidth_corrected
+        pass
 
     @bandwidth_corrected.setter
     def bandwidth_corrected(self, value: bool | None) -> None:
         """Setter for the **self.bandwidth_corrected** property."""
-
-        if value is not None:
-            attest(
-                isinstance(value, bool),
-                f'"bandwidth_corrected" property: "{value}" type is not "bool"!',
-            )
-
-        self._bandwidth_corrected = value
+        pass
 
     def __str__(self) -> str:
         """

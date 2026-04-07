@@ -156,30 +156,7 @@ def set_sdiv_mode(
     ignore zero conversion
     raise
     """
-
-    global _SDIV_MODE  # noqa: PLW0603
-
-    _SDIV_MODE = cast(
-        "Literal['Numpy', 'Ignore', 'Warning', 'Raise', "  # pyright: ignore
-        "'Ignore Zero Conversion', 'Warning Zero Conversion', "
-        "'Ignore Limit Conversion', 'Warning Limit Conversion', "
-        "'Replace With Epsilon', 'Warning Replace With Epsilon']",
-        validate_method(
-            mode,
-            (
-                "Numpy",
-                "Ignore",
-                "Warning",
-                "Raise",
-                "Ignore Zero Conversion",
-                "Warning Zero Conversion",
-                "Ignore Limit Conversion",
-                "Warning Limit Conversion",
-                "Replace With Epsilon",
-                "Warning Replace With Epsilon",
-            ),
-        ),
-    )
+    pass
 
 
 class sdiv_mode:
@@ -247,10 +224,6 @@ class sdiv_mode:
         state to the wrapped function during its execution.
         """
 
-        @functools.wraps(function)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            with self:
-                return function(*args, **kwargs)
 
         return wrapper
 
@@ -435,10 +408,7 @@ def set_spow_enable(enable: bool) -> None:
     True
     False
     """
-
-    global _SPOW_ENABLED  # noqa: PLW0603
-
-    _SPOW_ENABLED = enable
+    pass
 
 
 class spow_enable:
@@ -484,10 +454,6 @@ class spow_enable:
     def __call__(self, function: Callable) -> Callable:
         """Call the wrapped definition."""
 
-        @functools.wraps(function)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            with self:
-                return function(*args, **kwargs)
 
         return wrapper
 
@@ -723,8 +689,7 @@ def manhattan_distance(a: ArrayLike, b: ArrayLike) -> NDArrayFloat:
     >>> manhattan_distance(a, b)  # doctest: +ELLIPSIS
     np.float64(604.9396351...)
     """
-
-    return as_float(np.sum(np.abs(as_float_array(a) - as_float_array(b)), axis=-1))
+    pass
 
 
 def linear_conversion(
@@ -886,8 +851,7 @@ def is_identity(a: ArrayLike) -> bool:
     >>> is_identity(np.reshape(np.array([1, 2, 0, 0, 1, 0, 0, 0, 1]), (3, 3)))
     False
     """
-
-    return np.array_equal(np.identity(len(np.diag(a))), a)
+    pass
 
 
 def eigen_decomposition(

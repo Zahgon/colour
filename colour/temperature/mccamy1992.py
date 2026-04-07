@@ -124,47 +124,4 @@ def CCT_to_xy_McCamy1992(
     >>> CCT_to_xy_McCamy1992(6505.0805913074782)  # doctest: +ELLIPSIS
     array([0.3127..., 0.329...])
     """
-
-    from scipy.optimize import minimize  # noqa: PLC0415
-
-    usage_warning(
-        '"McCamy (1992)" method for computing "CIE xy" chromaticity '
-        "coordinates from given correlated colour temperature is not a "
-        "bijective function and might produce unexpected results. It is given "
-        "for consistency with other correlated colour temperature computation "
-        "methods but should be avoided for practical applications."
-    )
-
-    CCT = as_float_array(CCT)
-    shape = list(CCT.shape)
-    CCT = np.atleast_1d(np.reshape(CCT, (-1, 1)))
-
-    def objective_function(xy: NDArrayFloat, CCT: NDArrayFloat) -> DTypeFloat:
-        """Objective function."""
-
-        objective = np.linalg.norm(xy_to_CCT_McCamy1992(xy) - CCT)
-
-        return as_float(objective)
-
-    optimisation_settings = {
-        "method": "Nelder-Mead",
-        "options": {
-            "fatol": 1e-10,
-        },
-    }
-    if optimisation_kwargs is not None:
-        optimisation_settings.update(optimisation_kwargs)
-
-    xy = as_float_array(
-        [
-            minimize(
-                objective_function,
-                x0=CCS_ILLUMINANTS["CIE 1931 2 Degree Standard Observer"]["D65"],
-                args=(CCT_i,),
-                **optimisation_settings,
-            ).x
-            for CCT_i in CCT
-        ]
-    )
-
-    return np.reshape(xy, ([*shape, 2]))
+    pass

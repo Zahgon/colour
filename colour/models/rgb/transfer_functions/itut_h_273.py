@@ -109,18 +109,7 @@ def oetf_H273_Log(L_c: Domain1) -> Range1:
     >>> oetf_H273_Log(1.0)  # doctest: +ELLIPSIS
     np.float64(1.0)
     """
-
-    L_c = to_domain_1(L_c)
-
-    V = np.where(
-        L_c >= 0.01,
-        # L_c in [0.01, 1] range
-        1 + np.log10(L_c) / 2,
-        # L_c in [0, 0.01] range
-        0,
-    )
-
-    return as_float(from_range_1(V))
+    pass
 
 
 def oetf_inverse_H273_Log(V: Domain1) -> Range1:
@@ -170,18 +159,7 @@ def oetf_inverse_H273_Log(V: Domain1) -> Range1:
     >>> oetf_inverse_H273_Log(1.0)  # doctest: +ELLIPSIS
     np.float64(1.0)
     """
-
-    V = to_domain_1(V)
-
-    L_c = np.where(
-        oetf_H273_Log(0.01) <= V,
-        # L_c in [0.01, 1] range
-        spow(10, (V - 1) * 2),
-        # L_c in [0, 0.01] range
-        0,
-    )
-
-    return as_float(from_range_1(L_c))
+    pass
 
 
 def oetf_H273_LogSqrt(L_c: Domain1) -> Range1:
@@ -234,18 +212,7 @@ def oetf_H273_LogSqrt(L_c: Domain1) -> Range1:
     >>> oetf_H273_LogSqrt(1.0)  # doctest: +ELLIPSIS
     np.float64(1.0)
     """
-
-    L_c = to_domain_1(L_c)
-
-    V = np.where(
-        L_c >= np.sqrt(10) / 1000,
-        # L_c in [sqrt(10)/1000, 1] range
-        1 + np.log10(L_c) / 2.5,
-        # L_c in [0, sqrt(10)/1000] range
-        0,
-    )
-
-    return as_float(from_range_1(V))
+    pass
 
 
 def oetf_inverse_H273_LogSqrt(V: Domain1) -> Range1:
@@ -294,18 +261,7 @@ def oetf_inverse_H273_LogSqrt(V: Domain1) -> Range1:
     >>> oetf_inverse_H273_LogSqrt(1.0)  # doctest: +ELLIPSIS
     np.float64(1.0)
     """
-
-    V = to_domain_1(V)
-
-    L_c = np.where(
-        oetf_H273_LogSqrt(np.sqrt(10) / 1000) <= V,
-        # L_c in [sqrt(10)/1000, 1] range
-        spow(10, (V - 1) * 2.5),
-        # L_c in [0, sqrt(10)/1000] range
-        0,
-    )
-
-    return as_float(from_range_1(L_c))
+    pass
 
 
 def oetf_H273_IEC61966_2(L_c: Domain1) -> Range1:
@@ -356,16 +312,7 @@ def oetf_H273_IEC61966_2(L_c: Domain1) -> Range1:
     >>> oetf_H273_IEC61966_2(-0.18)  # doctest: +ELLIPSIS
     np.float64(-0.4613561295004...)
     """
-
-    L_c = as_float_array(L_c)
-
-    V = np.where(
-        L_c >= 0,
-        eotf_inverse_sRGB(L_c),
-        -eotf_inverse_sRGB(-L_c),
-    )
-
-    return as_float(V)
+    pass
 
 
 def oetf_inverse_H273_IEC61966_2(
@@ -420,16 +367,7 @@ def oetf_inverse_H273_IEC61966_2(
     >>> oetf_inverse_H273_IEC61966_2(-0.461356129500)  # doctest: +ELLIPSIS
     np.float64(-0.1799999999...)
     """
-
-    V = as_float_array(V)
-
-    L_c = np.where(
-        V >= 0,
-        eotf_sRGB(V),
-        -eotf_sRGB(-V),
-    )
-
-    return as_float(L_c)
+    pass
 
 
 def eotf_H273_ST428_1(V: Domain1) -> Range1:
@@ -477,10 +415,7 @@ def eotf_H273_ST428_1(V: Domain1) -> Range1:
     >>> eotf_H273_ST428_1(0.5000483377172)  # doctest: +ELLIPSIS
     np.float64(0.1799999...)
     """
-
-    V = to_domain_1(V)
-
-    return as_float(from_range_1(eotf_DCDM(V) / 48))
+    pass
 
 
 def eotf_inverse_H273_ST428_1(
@@ -530,7 +465,4 @@ def eotf_inverse_H273_ST428_1(
     >>> eotf_inverse_H273_ST428_1(0.18)  # doctest: +ELLIPSIS
     np.float64(0.5000483...)
     """
-
-    L_o = to_domain_1(L_o)
-
-    return as_float(from_range_1(eotf_inverse_DCDM(L_o * 48)))
+    pass

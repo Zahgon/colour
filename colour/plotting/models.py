@@ -1351,25 +1351,7 @@ def ellipses_MacAdam1942(
     array([  1.60000000e-01,   5.70000000e-02,   5.00000023e-03,
              1.56666660e-02,  -2.77000015e+01])
     """
-
-    method = validate_method(method, ("CIE 1931", "CIE 1960 UCS", "CIE 1976 UCS"))
-
-    xy_to_ij = METHODS_CHROMATICITY_DIAGRAM[method]["xy_to_ij"]
-
-    x, y, _a, _b, _theta, a, b, theta = tsplit(DATA_MACADAM_1942_ELLIPSES)
-
-    ellipses_coefficients = []
-    for i in range(len(theta)):
-        xy = point_at_angle_on_ellipse(
-            np.linspace(0, 360, 36),
-            [x[i], y[i], a[i] / 60, b[i] / 60, theta[i]],
-        )
-        ij = xy_to_ij(xy)
-        ellipses_coefficients.append(
-            ellipse_coefficients_canonical_form(ellipse_fitting(ij))
-        )
-
-    return ellipses_coefficients
+    pass
 
 
 @override_style()
@@ -1423,76 +1405,7 @@ Plotting_Plot_Ellipses_MacAdam1942_In_Chromaticity_Diagram.png
         :align: center
         :alt: plot_ellipses_MacAdam1942_in_chromaticity_diagram
     """
-
-    settings: Dict[str, Any] = {"uniform": True}
-    settings.update(kwargs)
-
-    _figure, axes = artist(**settings)
-
-    settings = dict(kwargs)
-    settings.update({"axes": axes, "show": False})
-
-    ellipses_coefficients = ellipses_MacAdam1942(method=method)
-
-    if chromaticity_diagram_clipping:
-        diagram_clipping_path_x = []
-        diagram_clipping_path_y = []
-        for coefficients in ellipses_coefficients:
-            coefficients = np.copy(coefficients)  # noqa: PLW2901
-
-            coefficients[2:4] /= 2
-
-            x, y = tsplit(
-                point_at_angle_on_ellipse(
-                    np.linspace(0, 360, 36),
-                    coefficients,
-                )
-            )
-            diagram_clipping_path_x.append(x)
-            diagram_clipping_path_y.append(y)
-
-        diagram_clipping_path = np.rollaxis(
-            np.array([diagram_clipping_path_x, diagram_clipping_path_y]), 0, 3
-        )
-        diagram_clipping_path = Path.make_compound_path_from_polys(
-            diagram_clipping_path
-        ).vertices
-        settings.update({"diagram_clipping_path": diagram_clipping_path})
-
-    chromaticity_diagram_callable(**settings)
-
-    ellipse_settings_collection = [
-        {
-            "color": CONSTANTS_COLOUR_STYLE.colour.cycle[4],
-            "alpha": 0.4,
-            "linewidth": colour_style()["lines.linewidth"],
-            "zorder": CONSTANTS_COLOUR_STYLE.zorder.midground_polygon,
-        }
-        for _ellipses_coefficient in ellipses_coefficients
-    ]
-
-    if ellipse_kwargs is not None:
-        update_settings_collection(
-            ellipse_settings_collection,
-            ellipse_kwargs,
-            len(ellipses_coefficients),
-        )
-
-    for i, coefficients in enumerate(ellipses_coefficients):
-        x_c, y_c, a_a, a_b, theta_e = coefficients
-        ellipse = Ellipse(
-            (x_c, y_c),
-            a_a,
-            a_b,
-            angle=theta_e,
-            **ellipse_settings_collection[i],
-        )
-        axes.add_artist(ellipse)
-
-    settings.update({"show": True})
-    settings.update(kwargs)
-
-    return render(**settings)
+    pass
 
 
 @override_style()
@@ -1547,16 +1460,7 @@ Plotting_Plot_Ellipses_MacAdam1942_In_Chromaticity_Diagram_CIE1931.png
         :align: center
         :alt: plot_ellipses_MacAdam1942_in_chromaticity_diagram_CIE1931
     """
-
-    settings = dict(kwargs)
-    settings.update({"method": "CIE 1931"})
-
-    return plot_ellipses_MacAdam1942_in_chromaticity_diagram(
-        chromaticity_diagram_callable_CIE1931,
-        chromaticity_diagram_clipping=chromaticity_diagram_clipping,
-        ellipse_kwargs=ellipse_kwargs,
-        **settings,
-    )
+    pass
 
 
 @override_style()
@@ -1612,16 +1516,7 @@ Plotting_Plot_Ellipses_MacAdam1942_In_Chromaticity_Diagram_CIE1960UCS.png
         :align: center
         :alt: plot_ellipses_MacAdam1942_in_chromaticity_diagram_CIE1960UCS
     """
-
-    settings = dict(kwargs)
-    settings.update({"method": "CIE 1960 UCS"})
-
-    return plot_ellipses_MacAdam1942_in_chromaticity_diagram(
-        chromaticity_diagram_callable_CIE1960UCS,
-        chromaticity_diagram_clipping=chromaticity_diagram_clipping,
-        ellipse_kwargs=ellipse_kwargs,
-        **settings,
-    )
+    pass
 
 
 @override_style()
@@ -1677,16 +1572,7 @@ Plotting_Plot_Ellipses_MacAdam1942_In_Chromaticity_Diagram_CIE1976UCS.png
         :align: center
         :alt: plot_ellipses_MacAdam1942_in_chromaticity_diagram_CIE1976UCS
     """
-
-    settings = dict(kwargs)
-    settings.update({"method": "CIE 1976 UCS"})
-
-    return plot_ellipses_MacAdam1942_in_chromaticity_diagram(
-        chromaticity_diagram_callable_CIE1976UCS,
-        chromaticity_diagram_clipping=chromaticity_diagram_clipping,
-        ellipse_kwargs=ellipse_kwargs,
-        **settings,
-    )
+    pass
 
 
 @override_style()
@@ -1944,101 +1830,4 @@ def plot_constant_hue_loci(
         :align: center
         :alt: plot_constant_hue_loci
     """
-
-    import scipy.optimize  # noqa: PLC0415
-
-    # TODO: Filter appropriate colour models.
-    # NOTE: "dtype=object" is required for ragged array support
-    # in "Numpy" 1.24.0.
-    data = as_array(data, dtype=object)  # pyright: ignore
-
-    settings: Dict[str, Any] = {"uniform": True}
-    settings.update(kwargs)
-
-    _figure, axes = artist(**settings)
-
-    scatter_settings = {
-        "s": 40,
-        "c": "RGB",
-        "marker": "o",
-        "alpha": 0.85,
-        "zorder": CONSTANTS_COLOUR_STYLE.zorder.foreground_scatter,
-    }
-    if scatter_kwargs is not None:
-        scatter_settings.update(scatter_kwargs)
-
-    convert_kwargs = optional(convert_kwargs, {})
-
-    use_RGB_colours = str(scatter_settings["c"]).upper() == "RGB"
-
-    colourspace = CONSTANTS_COLOUR_STYLE.colour.colourspace
-    for hue_data in data:
-        _name, XYZ_r, XYZ_cr, XYZ_ct, _metadata = hue_data
-
-        xy_r = XYZ_to_xy(XYZ_r)
-
-        convert_settings = {"illuminant": xy_r}
-        convert_settings.update(convert_kwargs)
-
-        ijk_ct = colourspace_model_axis_reorder(
-            convert(XYZ_ct, "CIE XYZ", model, **convert_settings),  # pyright: ignore
-            model,
-        )
-        ijk_cr = colourspace_model_axis_reorder(
-            convert(XYZ_cr, "CIE XYZ", model, **convert_settings),  # pyright: ignore
-            model,
-        )
-
-        ijk_ct = colourspace_model_to_reference(ijk_ct, model)
-        ijk_cr = colourspace_model_to_reference(ijk_cr, model)
-
-        def _linear_equation(
-            x: NDArrayFloat, a: NDArrayFloat, b: NDArrayFloat
-        ) -> NDArrayFloat:
-            """Define the canonical linear equation for a line."""
-
-            return a * x + b
-
-        popt, _pcov = scipy.optimize.curve_fit(
-            _linear_equation, ijk_ct[..., 0], ijk_ct[..., 1]
-        )
-
-        axes.plot(
-            ijk_ct[..., 0],
-            _linear_equation(ijk_ct[..., 0], *popt),  # type: ignore
-            c=CONSTANTS_COLOUR_STYLE.colour.average,
-            zorder=CONSTANTS_COLOUR_STYLE.zorder.midground_line,
-        )
-
-        if use_RGB_colours:
-            RGB_ct = XYZ_to_RGB(XYZ_ct, colourspace, xy_r, apply_cctf_encoding=True)
-            scatter_settings["c"] = np.clip(RGB_ct, 0, 1)
-            RGB_cr = XYZ_to_RGB(XYZ_cr, colourspace, xy_r, apply_cctf_encoding=True)
-            RGB_cr = np.clip(np.ravel(RGB_cr), 0, 1)
-        else:
-            RGB_cr = scatter_settings["c"]
-
-        axes.scatter(ijk_ct[..., 0], ijk_ct[..., 1], **scatter_settings)
-
-        axes.plot(
-            ijk_cr[..., 0],
-            ijk_cr[..., 1],
-            "s",
-            c=RGB_cr,
-            markersize=CONSTANTS_COLOUR_STYLE.geometry.short * 8,
-            zorder=CONSTANTS_COLOUR_STYLE.zorder.midground_line,
-        )
-
-    labels = np.array(COLOURSPACE_MODELS_AXIS_LABELS[model])[
-        as_int_array(colourspace_model_axis_reorder([0, 1, 2], model))
-    ]
-
-    settings = {
-        "axes": axes,
-        "title": f"Constant Hue Loci - {model}",
-        "x_label": labels[0],
-        "y_label": labels[1],
-    }
-    settings.update(kwargs)
-
-    return render(**settings)
+    pass

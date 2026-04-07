@@ -375,36 +375,7 @@ def generate_illuminants_rawtoaces_v1() -> CanonicalMapping:
 'D245', 'D250', 'D40', 'D45', 'D50', 'D55', 'D60', 'D65', 'D70', 'D75', \
 'D80', 'D85', 'D90', 'D95', 'iso7589']
     """
-
-    global _ILLUMINANTS_RAWTOACES_V1  # noqa: PLW0603
-
-    if _ILLUMINANTS_RAWTOACES_V1 is not None:
-        illuminants = _ILLUMINANTS_RAWTOACES_V1
-    else:
-        illuminants = CanonicalMapping()
-
-        # CIE Illuminants D Series from 4000K to 25000K.
-        for i in np.arange(4000, 25000 + 500, 500):
-            CCT = i * 1.4388 / 1.4380
-            xy = CCT_to_xy_CIE_D(CCT)
-            sd = sd_CIE_illuminant_D_series(xy)
-            sd.name = f"D{int(CCT / 100):d}"
-            illuminants[sd.name] = sd.align(SPECTRAL_SHAPE_RAWTOACES)
-
-        # Blackbody from 1000K to 4000K.
-        for i in np.arange(1000, 4000, 500):
-            sd = sd_blackbody(cast("float", i), SPECTRAL_SHAPE_RAWTOACES)
-            illuminants[sd.name] = sd
-
-        # A.M.P.A.S. variant of ISO 7589 Studio Tungsten.
-        sd = read_sds_from_csv_file(
-            os.path.join(ROOT_RESOURCES_RAWTOACES, "AMPAS_ISO_7589_Tungsten.csv")
-        )["iso7589"]
-        illuminants.update({sd.name: sd})
-
-        _ILLUMINANTS_RAWTOACES_V1 = illuminants
-
-    return illuminants
+    pass
 
 
 def white_balance_multipliers(
@@ -494,19 +465,7 @@ def best_illuminant(
     >>> best_illuminant(RGB_w, sensitivities, illuminants).name
     'D40'
     """
-
-    RGB_w = as_float_array(RGB_w)
-
-    sse = np.inf
-    illuminant_b = None
-    for illuminant in illuminants.values():
-        RGB_wi = white_balance_multipliers(sensitivities, illuminant)
-        sse_c = np.sum((RGB_wi / RGB_w - 1) ** 2)
-        if sse_c < sse:
-            sse = sse_c
-            illuminant_b = illuminant
-
-    return cast("SpectralDistribution", illuminant_b)
+    pass
 
 
 def normalise_illuminant(
@@ -781,39 +740,7 @@ def optimisation_factory_rawtoaces_v1() -> Tuple[
 <function optimisation_factory_rawtoaces_v1.<locals>\
 .finaliser_function at 0x...>)
     """
-
-    x_0 = as_float_array([1, 0, 0, 1, 0, 0])
-
-    def objective_function(
-        M: NDArrayFloat, RGB: NDArrayFloat, Lab: NDArrayFloat
-    ) -> DTypeFloat:
-        """Objective function according to *RAW to ACES* v1."""
-
-        M = finaliser_function(M)
-
-        XYZ_t = vecmul(RGB_COLOURSPACE_ACES2065_1.matrix_RGB_to_XYZ, vecmul(M, RGB))
-        Lab_t = XYZ_to_optimization_colour_model(XYZ_t)
-
-        return as_float(np.linalg.norm(Lab_t - Lab))
-
-    def XYZ_to_optimization_colour_model(XYZ: ArrayLike) -> NDArrayFloat:
-        """*CIE XYZ* colourspace to *CIE L\\*a\\*b\\** colourspace function."""
-
-        return XYZ_to_Lab(XYZ, RGB_COLOURSPACE_ACES2065_1.whitepoint)
-
-    def finaliser_function(M: ArrayLike) -> NDArrayFloat:
-        """Finaliser function."""
-
-        return whitepoint_preserving_matrix(
-            np.hstack([np.reshape(M, (3, 2)), zeros((3, 1))])
-        )
-
-    return (
-        x_0,
-        objective_function,
-        XYZ_to_optimization_colour_model,
-        finaliser_function,
-    )
+    pass
 
 
 def optimisation_factory_Jzazbz() -> Tuple[NDArrayFloat, Callable, Callable, Callable]:
@@ -845,37 +772,7 @@ def optimisation_factory_Jzazbz() -> Tuple[NDArrayFloat, Callable, Callable, Cal
 <function optimisation_factory_Jzazbz.<locals>.\
 finaliser_function at 0x...>)
     """
-
-    x_0 = as_float_array([1, 0, 0, 1, 0, 0])
-
-    def objective_function(M: ArrayLike, RGB: ArrayLike, Jab: ArrayLike) -> DTypeFloat:
-        """:math:`J_za_zb_z` colourspace based objective function."""
-
-        M = finaliser_function(M)
-
-        XYZ_t = vecmul(RGB_COLOURSPACE_ACES2065_1.matrix_RGB_to_XYZ, vecmul(M, RGB))
-        Jab_t = XYZ_to_optimization_colour_model(XYZ_t)
-
-        return as_float(np.sum(euclidean_distance(Jab, Jab_t)))
-
-    def XYZ_to_optimization_colour_model(XYZ: ArrayLike) -> NDArrayFloat:
-        """*CIE XYZ* colourspace to :math:`J_za_zb_z` colourspace function."""
-
-        return XYZ_to_Jzazbz(XYZ)
-
-    def finaliser_function(M: ArrayLike) -> NDArrayFloat:
-        """Finaliser function."""
-
-        return whitepoint_preserving_matrix(
-            np.hstack([np.reshape(M, (3, 2)), zeros((3, 1))])
-        )
-
-    return (
-        x_0,
-        objective_function,
-        XYZ_to_optimization_colour_model,
-        finaliser_function,
-    )
+    pass
 
 
 def optimisation_factory_Oklab_15() -> Tuple[
@@ -914,46 +811,7 @@ def optimisation_factory_Oklab_15() -> Tuple[
 <function optimisation_factory_Oklab_15.<locals>.\
 finaliser_function at 0x...>)
     """
-
-    x_0 = as_float_array([1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1])
-
-    def objective_function(M: ArrayLike, RGB: ArrayLike, Jab: ArrayLike) -> DTypeFloat:
-        """*Oklab* colourspace based objective function."""
-
-        M = finaliser_function(M)
-
-        XYZ_t = np.transpose(
-            np.dot(
-                RGB_COLOURSPACE_ACES2065_1.matrix_RGB_to_XYZ,
-                np.dot(
-                    M,
-                    np.transpose(polynomial_expansion_Finlayson2015(RGB, 2, True)),
-                ),
-            )
-        )
-
-        Jab_t = XYZ_to_optimization_colour_model(XYZ_t)
-
-        return as_float(np.sum(euclidean_distance(Jab, Jab_t)))
-
-    def XYZ_to_optimization_colour_model(XYZ: ArrayLike) -> NDArrayFloat:
-        """*CIE XYZ* colourspace to *Oklab* colourspace function."""
-
-        return XYZ_to_Oklab(XYZ)
-
-    def finaliser_function(M: ArrayLike) -> NDArrayFloat:
-        """Finaliser function."""
-
-        return whitepoint_preserving_matrix(
-            np.hstack([np.reshape(M, (3, 5)), zeros((3, 1))])
-        )
-
-    return (
-        x_0,
-        objective_function,
-        XYZ_to_optimization_colour_model,
-        finaliser_function,
-    )
+    pass
 
 
 @typing.overload
@@ -1217,14 +1075,4 @@ def camera_RGB_to_ACES2065_1(
     ... # doctest: +ELLIPSIS
     array([0.270644 ..., 0.1561487..., 0.5012965...])
     """
-
-    RGB = as_float_array(RGB)
-    B = as_float_array(B)
-    b = as_float_array(b)
-    k = as_float_array(k)
-
-    RGB_r = b * RGB / np.min(b)
-
-    RGB_r = np.clip(RGB_r, -np.inf, 1) if clip else RGB_r
-
-    return k * vecmul(B, RGB_r)
+    pass

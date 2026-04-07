@@ -84,23 +84,7 @@ def oetf_BT1361(L: Domain1) -> Range1:
     >>> oetf_BT1361(1.33)  # doctest: +ELLIPSIS
     np.float64(1.1504846663972...)
     """
-
-    L = to_domain_1(L)
-
-    with domain_range_scale("ignore"):
-        E_p = np.where(
-            L >= 0,
-            oetf_BT709(L),
-            np.where(
-                L <= -0.0045,
-                # L in [-0.25, -0.0045] range
-                -(1.099 * spow(-4 * L, 0.45) - 0.099) / 4,
-                # L in [-0.0045, 0] range
-                4.500 * L,
-            ),
-        )
-
-    return as_float(from_range_1(E_p))
+    pass
 
 
 def oetf_inverse_BT1361(E_p: Domain1) -> Range1:
@@ -145,20 +129,4 @@ def oetf_inverse_BT1361(E_p: Domain1) -> Range1:
     >>> oetf_inverse_BT1361(1.1504846663972)  # doctest: +ELLIPSIS
     np.float64(1.3299999...)
     """
-
-    E_p = to_domain_1(E_p)
-
-    with domain_range_scale("ignore"):
-        L = np.where(
-            E_p >= 0,
-            oetf_inverse_BT709(E_p),
-            np.where(
-                E_p <= 4.500 * -0.0045,
-                # L in [-0.25, -0.0045] range
-                -spow((-4 * E_p + 0.099) / 1.099, 1 / 0.45) / 4,
-                # L in [-0.0045, 0] range
-                E_p / 4.500,
-            ),
-        )
-
-    return as_float(from_range_1(L))
+    pass

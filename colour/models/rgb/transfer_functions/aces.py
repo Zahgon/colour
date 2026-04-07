@@ -181,33 +181,7 @@ def log_encoding_ACESproxy(
     >>> log_encoding_ACESproxy(0.18, out_int=True)
     np.int64(426)
     """
-
-    lin_AP1 = to_domain_1(lin_AP1)
-    constants = optional(constants, CONSTANTS_ACES_PROXY)
-
-    CV_min = constants[bit_depth].CV_min
-    CV_max = constants[bit_depth].CV_max
-    mid_CV_offset = constants[bit_depth].mid_CV_offset
-    mid_log_offset = constants[bit_depth].mid_log_offset
-    steps_per_stop = constants[bit_depth].steps_per_stop
-
-    def float_2_cv(x: float) -> float:
-        """Convert specified numeric to code value."""
-
-        return np.maximum(CV_min, np.minimum(CV_max, np.round(x)))
-
-    ACESproxy = np.where(
-        lin_AP1 > 2**-9.72,
-        float_2_cv(
-            (np.log2(lin_AP1) + mid_log_offset) * steps_per_stop + mid_CV_offset
-        ),
-        np.resize(CV_min, lin_AP1.shape),
-    )
-
-    if out_int:
-        return as_int(np.round(ACESproxy))
-
-    return as_float(from_range_1(ACESproxy / (2**bit_depth - 1)))
+    pass
 
 
 def log_decoding_ACESproxy(
@@ -267,20 +241,7 @@ def log_decoding_ACESproxy(
     >>> log_decoding_ACESproxy(426, in_int=True)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    ACESproxy = to_domain_1(ACESproxy)
-    constants = optional(constants, CONSTANTS_ACES_PROXY)
-
-    mid_CV_offset = constants[bit_depth].mid_CV_offset
-    mid_log_offset = constants[bit_depth].mid_log_offset
-    steps_per_stop = constants[bit_depth].steps_per_stop
-
-    if not in_int:
-        ACESproxy = ACESproxy * (2**bit_depth - 1)
-
-    lin_AP1 = 2 ** ((ACESproxy - mid_CV_offset) / steps_per_stop - mid_log_offset)
-
-    return as_float(from_range_1(lin_AP1))
+    pass
 
 
 def log_encoding_ACEScc(lin_AP1: Domain1) -> Range1:
@@ -323,21 +284,7 @@ def log_encoding_ACEScc(lin_AP1: Domain1) -> Range1:
     >>> log_encoding_ACEScc(0.18)  # doctest: +ELLIPSIS
     np.float64(0.4135884...)
     """
-
-    lin_AP1 = to_domain_1(lin_AP1)
-
-    ACEScc = np.where(
-        lin_AP1 < 0,
-        (np.log2(2**-16) + 9.72) / 17.52,
-        (np.log2(2**-16 + lin_AP1 * 0.5) + 9.72) / 17.52,
-    )
-    ACEScc = np.where(
-        lin_AP1 >= 2**-15,
-        (np.log2(lin_AP1) + 9.72) / 17.52,
-        ACEScc,
-    )
-
-    return as_float(from_range_1(ACEScc))
+    pass
 
 
 def log_decoding_ACEScc(ACEScc: Domain1) -> Range1:
@@ -380,21 +327,7 @@ def log_decoding_ACEScc(ACEScc: Domain1) -> Range1:
     >>> log_decoding_ACEScc(0.413588402492442)  # doctest: +ELLIPSIS
     np.float64(0.1799999...)
     """
-
-    ACEScc = to_domain_1(ACEScc)
-
-    lin_AP1 = np.where(
-        ACEScc < (9.72 - 15) / 17.52,
-        (2 ** (ACEScc * 17.52 - 9.72) - 2**-16) * 2,
-        2 ** (ACEScc * 17.52 - 9.72),
-    )
-    lin_AP1 = np.where(
-        ACEScc >= (np.log2(65504) + 9.72) / 17.52,
-        65504,
-        lin_AP1,
-    )
-
-    return as_float(from_range_1(lin_AP1))
+    pass
 
 
 def log_encoding_ACEScct(
@@ -441,17 +374,7 @@ def log_encoding_ACEScct(
     >>> log_encoding_ACEScct(0.18)  # doctest: +ELLIPSIS
     np.float64(0.4135884...)
     """
-
-    lin_AP1 = to_domain_1(lin_AP1)
-    constants = optional(constants, CONSTANTS_ACES_CCT)
-
-    ACEScct = np.where(
-        lin_AP1 <= constants.X_BRK,
-        constants.A * lin_AP1 + constants.B,
-        (np.log2(lin_AP1) + 9.72) / 17.52,
-    )
-
-    return as_float(from_range_1(ACEScct))
+    pass
 
 
 def log_decoding_ACEScct(
@@ -498,14 +421,4 @@ def log_decoding_ACEScct(
     >>> log_decoding_ACEScct(0.413588402492442)  # doctest: +ELLIPSIS
     np.float64(0.1799999...)
     """
-
-    ACEScct = to_domain_1(ACEScct)
-    constants = optional(constants, CONSTANTS_ACES_CCT)
-
-    lin_AP1 = np.where(
-        ACEScct > constants.Y_BRK,
-        2 ** (ACEScct * 17.52 - 9.72),
-        (ACEScct - constants.B) / constants.A,
-    )
-
-    return as_float(from_range_1(lin_AP1))
+    pass

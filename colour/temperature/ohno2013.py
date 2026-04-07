@@ -406,8 +406,7 @@ def XYZ_to_CCT_Ohno2013(
     >>> XYZ_to_CCT_Ohno2013(XYZ, cmfs)  # doctest: +ELLIPSIS
     array([6.5074399...e+03, 3.2236914...e-03])
     """
-
-    return uv_to_CCT_Ohno2013(UCS_to_uv(XYZ_to_UCS(XYZ)), cmfs, start, end, spacing)
+    pass
 
 
 def CCT_to_XYZ_Ohno2013(
@@ -451,5 +450,4 @@ def CCT_to_XYZ_Ohno2013(
     >>> CCT_to_XYZ_Ohno2013(CCT_D_uv, cmfs)  # doctest: +ELLIPSIS
     array([0.9503504..., 1.        , 1.0893570...])
     """
-
-    return UCS_to_XYZ(uv_to_UCS(CCT_to_uv_Ohno2013(CCT_D_uv, cmfs)))
+    pass

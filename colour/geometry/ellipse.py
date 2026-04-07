@@ -89,25 +89,7 @@ def ellipse_coefficients_general_form(coefficients: ArrayLike) -> NDArrayFloat:
     >>> ellipse_coefficients_general_form(coefficients)
     array([ 2.5, -3. ,  2.5, -1. , -1. , -3.5])
     """
-
-    x_c, y_c, a_a, a_b, theta = tsplit(coefficients)
-
-    theta = np.radians(theta)
-    cos_theta = np.cos(theta)
-    sin_theta = np.sin(theta)
-    cos_theta_2 = cos_theta**2
-    sin_theta_2 = sin_theta**2
-    a_a_2 = a_a**2
-    a_b_2 = a_b**2
-
-    a = a_a_2 * sin_theta_2 + a_b_2 * cos_theta_2
-    b = 2 * (a_b_2 - a_a_2) * sin_theta * cos_theta
-    c = a_a_2 * cos_theta_2 + a_b_2 * sin_theta_2
-    d = -2 * a * x_c - b * y_c
-    e = -b * x_c - 2 * c * y_c
-    f = a * x_c**2 + b * x_c * y_c + c * y_c**2 - a_a_2 * a_b_2
-
-    return np.array([a, b, c, d, e, f])
+    pass
 
 
 def ellipse_coefficients_canonical_form(
@@ -147,33 +129,7 @@ def ellipse_coefficients_canonical_form(
     >>> ellipse_coefficients_canonical_form(coefficients)
     array([ 0.5,  0.5,  2. ,  1. , 45. ])
     """
-
-    a, b, c, d, e, f = tsplit(coefficients)
-
-    d_1 = b**2 - 4 * a * c
-    n_p_1 = 2 * (a * e**2 + c * d**2 - b * d * e + d_1 * f)
-    n_p_2 = np.sqrt((a - c) ** 2 + b**2)
-
-    a_a = (-np.sqrt(n_p_1 * (a + c + n_p_2))) / d_1
-    a_b = (-np.sqrt(n_p_1 * (a + c - n_p_2))) / d_1
-
-    x_c = (2 * c * d - b * e) / d_1
-    y_c = (2 * a * e - b * d) / d_1
-
-    theta = np.select(
-        [
-            np.logical_and(b == 0, a < c),
-            np.logical_and(b == 0, a > c),
-            b != 0,
-        ],
-        [
-            0,
-            90,
-            np.degrees(np.arctan((c - a - n_p_2) / b)),
-        ],
-    )
-
-    return np.array([x_c, y_c, a_a, a_b, theta])
+    pass
 
 
 def point_at_angle_on_ellipse(phi: ArrayLike, coefficients: ArrayLike) -> NDArrayFloat:
@@ -203,20 +159,7 @@ def point_at_angle_on_ellipse(phi: ArrayLike, coefficients: ArrayLike) -> NDArra
     >>> point_at_angle_on_ellipse(45, coefficients)  # doctest: +ELLIPSIS
     array([1., 2.])
     """
-
-    phi = np.radians(phi)
-    x_c, y_c, a_a, a_b, theta = tsplit(coefficients)
-    theta = np.radians(theta)
-
-    cos_phi = np.cos(phi)
-    sin_phi = np.sin(phi)
-    cos_theta = np.cos(theta)
-    sin_theta = np.sin(theta)
-
-    x = x_c + a_a * cos_theta * cos_phi - a_b * sin_theta * sin_phi
-    y = y_c + a_a * sin_theta * cos_phi + a_b * cos_theta * sin_phi
-
-    return tstack([x, y])
+    pass
 
 
 def ellipse_fitting_Halir1998(a: ArrayLike) -> NDArrayFloat:
@@ -257,36 +200,7 @@ def ellipse_fitting_Halir1998(a: ArrayLike) -> NDArrayFloat:
     >>> ellipse_coefficients_canonical_form(ellipse_fitting_Halir1998(a))
     array([-0., -0.,  2.,  1.,  0.])
     """
-
-    x, y = tsplit(a)
-
-    # Quadratic part of the design matrix.
-    D1 = tstack([x**2, x * y, y**2])
-    # Linear part of the design matrix.
-    D2 = tstack([x, y, ones(x.shape)])
-
-    D1_T = np.transpose(D1)
-    D2_T = np.transpose(D2)
-
-    # Quadratic part of the scatter matrix.
-    S1 = np.dot(D1_T, D1)
-    # Combined part of the scatter matrix.
-    S2 = np.dot(D1_T, D2)
-    # Linear part of the scatter matrix.
-    S3 = np.dot(D2_T, D2)
-
-    T = -np.dot(np.linalg.inv(S3), np.transpose(S2))
-
-    # Reduced scatter matrix.
-    M = S1 + np.dot(S2, T)
-    M = np.array([M[2, :] / 2, -M[1, :], M[0, :] / 2])
-
-    _w, v = np.linalg.eig(M)
-
-    A1 = v[:, np.nonzero(4 * v[0, :] * v[2, :] - v[1, :] ** 2 > 0)[0]]
-    A2 = np.dot(T, A1)
-
-    return cast("NDArrayFloat", np.ravel([A1, A2]))
+    pass
 
 
 ELLIPSE_FITTING_METHODS: CanonicalMapping = CanonicalMapping(
@@ -342,9 +256,4 @@ def ellipse_fitting(
     >>> ellipse_coefficients_canonical_form(ellipse_fitting(a))
     array([-0., -0.,  2.,  1.,  0.])
     """
-
-    method = validate_method(method, tuple(ELLIPSE_FITTING_METHODS))
-
-    function = ELLIPSE_FITTING_METHODS[method]
-
-    return function(a)
+    pass

@@ -254,10 +254,7 @@ def RGB_luminance_equation(primaries: ArrayLike, whitepoint: ArrayLike) -> str:
     >>> RGB_luminance_equation(p, whitepoint)  # doctest: +ELLIPSIS
     'Y = 0.3439664...(R) + 0.7281660...(G) + -0.0721325...(B)'
     """
-
-    return "Y = {}(R) + {}(G) + {}(B)".format(
-        *np.ravel(normalised_primary_matrix(primaries, whitepoint))[3:6]
-    )
+    pass
 
 
 def RGB_luminance(

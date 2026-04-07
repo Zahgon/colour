@@ -518,36 +518,7 @@ def luminance_Abebe2017(
     ... # doctest: +ELLIPSIS
     np.float64(12.1972253...)
     """
-
-    L = as_float_array(L)
-    Y_n = as_float_array(optional(Y_n, 100))
-    method = validate_method(method, ("Michaelis-Menten", "Stevens"))
-
-    if method == "stevens":
-        Y = np.where(
-            Y_n <= 100,
-            spow((L + 0.226) / 1.226, 1 / 0.266),
-            spow((L + 0.127) / 1.127, 1 / 0.230),
-        )
-    else:
-        Y = np.where(
-            Y_n <= 100,
-            spow(
-                substrate_concentration_MichaelisMenten_Abebe2017(
-                    L, 1.448, 0.635, 0.813
-                ),
-                1 / 0.582,
-            ),
-            spow(
-                substrate_concentration_MichaelisMenten_Abebe2017(
-                    L, 1.680, 1.584, 0.096
-                ),
-                1 / 0.293,
-            ),
-        )
-    Y = Y * Y_n
-
-    return as_float(Y)
+    pass
 
 
 LUMINANCE_METHODS: CanonicalMapping = CanonicalMapping(

@@ -92,23 +92,7 @@ def oetf_DaVinciIntermediate(
     >>> oetf_DaVinciIntermediate(0.18)  # doctest: +ELLIPSIS
     np.float64(0.3360432...)
     """
-
-    L = to_domain_1(L)
-    constants = optional(constants, CONSTANTS_DAVINCI_INTERMEDIATE)
-
-    DI_LIN_CUT = constants.DI_LIN_CUT
-    DI_A = constants.DI_A
-    DI_B = constants.DI_B
-    DI_C = constants.DI_C
-    DI_M = constants.DI_M
-
-    V_out = np.where(
-        L <= DI_LIN_CUT,
-        L * DI_M,
-        DI_C * (np.log2(L + DI_A) + DI_B),
-    )
-
-    return as_float(from_range_1(V_out))
+    pass
 
 
 def oetf_inverse_DaVinciIntermediate(
@@ -155,19 +139,4 @@ def oetf_inverse_DaVinciIntermediate(
     ... # doctest: +ELLIPSIS
     np.float64(0.1799999...)
     """
-
-    V = to_domain_1(V)
-    constants = optional(constants, CONSTANTS_DAVINCI_INTERMEDIATE)
-
-    DI_LOG_CUT = constants.DI_LOG_CUT
-    DI_A = constants.DI_A
-    DI_B = constants.DI_B
-    DI_C = constants.DI_C
-    DI_M = constants.DI_M
-
-    L_out = np.where(
-        V <= DI_LOG_CUT,
-        V / DI_M,
-        2 ** ((V / DI_C) - DI_B) - DI_A,
-    )
-    return as_float(from_range_1(L_out))
+    pass

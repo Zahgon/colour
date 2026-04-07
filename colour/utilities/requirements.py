@@ -221,23 +221,7 @@ def is_networkx_installed(raise_exception: bool = False) -> bool:
     :class:`ImportError`
         If *NetworkX* is not installed.
     """
-
-    try:  # pragma: no cover
-        import networkx as nx  # noqa: F401, PLC0415
-    except ImportError as exception:  # pragma: no cover
-        if raise_exception:
-            error = (
-                '"NetworkX" related API features, e.g., the automatic colour '
-                f'conversion graph, are not available: "{exception}".\nPlease refer '
-                "to the installation guide for more information: "
-                "https://www.colour-science.org/installation-guide/"
-            )
-
-            raise ImportError(error) from exception
-
-        return False
-    else:
-        return True
+    pass
 
 
 def is_opencolorio_installed(raise_exception: bool = False) -> bool:
@@ -259,22 +243,7 @@ def is_opencolorio_installed(raise_exception: bool = False) -> bool:
     :class:`ImportError`
         If *OpenColorIO* is not installed.
     """
-
-    try:  # pragma: no cover
-        import PyOpenColorIO  # noqa: F401, PLC0415
-    except ImportError as exception:  # pragma: no cover
-        if raise_exception:
-            error = (
-                '"OpenColorIO" related API features are not available: '
-                f'"{exception}".\nSee the installation guide for more information: '
-                "https://www.colour-science.org/installation-guide/"
-            )
-
-            raise ImportError(error) from exception
-
-        return False
-    else:
-        return True
+    pass
 
 
 def is_pandas_installed(raise_exception: bool = False) -> bool:
@@ -335,34 +304,7 @@ def is_pydot_installed(raise_exception: bool = False) -> bool:
     :class:`ImportError`
         If *Pydot* is not installed.
     """
-
-    try:  # pragma: no cover
-        import pydot  # noqa: F401, PLC0415
-
-    except ImportError as exception:  # pragma: no cover
-        if raise_exception:
-            error = (
-                '"Pydot" related API features are not available: '
-                f'"{exception}".\nSee the installation guide for more information: '
-                "https://www.colour-science.org/installation-guide/"
-            )
-
-            raise ImportError(error) from exception
-
-    if shutil.which("dot") is not None:
-        return True
-
-    if raise_exception:  # pragma: no cover
-        error = (
-            '"Graphviz" is not installed, "Pydot" related API features '
-            "are not available!"
-            "\nSee the installation guide for more information: "
-            "https://www.colour-science.org/installation-guide/"
-        )
-
-        raise RuntimeError(error)
-
-    return False  # pragma: no cover
+    pass
 
 
 def is_scipy_installed(raise_exception: bool = False) -> bool:
@@ -458,22 +400,7 @@ def is_trimesh_installed(raise_exception: bool = False) -> bool:
     :class:`ImportError`
         If *Trimesh* is not installed.
     """
-
-    try:  # pragma: no cover
-        import trimesh  # noqa: F401, PLC0415
-    except ImportError as exception:  # pragma: no cover
-        if raise_exception:
-            error = (
-                '"Trimesh" related API features are not available: '
-                f'"{exception}".\nSee the installation guide for more information: '
-                "https://www.colour-science.org/installation-guide/"
-            )
-
-            raise ImportError(error) from exception
-
-        return False
-    else:
-        return True
+    pass
 
 
 def is_onnxruntime_installed(raise_exception: bool = False) -> bool:
@@ -606,16 +533,6 @@ def required(
 
     def wrapper(function: Callable) -> Callable:
         """Wrap specified function wrapper."""
-
-        @functools.wraps(function)
-        def wrapped(*args: Any, **kwargs: Any) -> Any:
-            """Wrap specified function."""
-
-            for requirement in requirements:
-                REQUIREMENTS_TO_CALLABLE[requirement](raise_exception=True)
-
-            return function(*args, **kwargs)
-
-        return wrapped
+        pass
 
     return wrapper

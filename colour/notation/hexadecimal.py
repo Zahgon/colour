@@ -134,13 +134,7 @@ def HEX_to_RGB(HEX: ArrayLike) -> Range1:
 
     def to_RGB(x: list) -> list:
         """Convert specified hexadecimal representation to *RGB*."""
-
-        l_x = len(x)
-
-        return [
-            int(x[i : i + l_x // 3], 16)  # pyright: ignore
-            for i in range(0, l_x, l_x // 3)
-        ]
+        pass
 
     to_RGB_v = np.vectorize(to_RGB, otypes=[np.ndarray])
 

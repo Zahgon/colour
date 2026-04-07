@@ -611,20 +611,7 @@ def log_encoding_ARRILogC3(
     >>> log_encoding_ARRILogC3(0.18)  # doctest: +ELLIPSIS
     np.float64(0.3910068...)
     """
-
-    x = to_domain_1(x)
-    firmware = validate_method(firmware, ("SUP 3.x", "SUP 2.x"))
-    method = validate_method(
-        method, ("Linear Scene Exposure Factor", "Normalised Sensor Signal")
-    )
-
-    cut, a, b, c, d, e, f, _e_cut_f = DATA_ALEXA_LOG_C_CURVE_CONVERSION[firmware][
-        method
-    ][EI]
-
-    t = np.where(x > cut, c * np.log10(a * x + b) + d, e * x + f)
-
-    return as_float(from_range_1(t))
+    pass
 
 
 def log_decoding_ARRILogC3(
@@ -678,19 +665,7 @@ def log_decoding_ARRILogC3(
     >>> log_decoding_ARRILogC3(0.391006832034084)  # doctest: +ELLIPSIS
     np.float64(0.18...)
     """
-
-    t = to_domain_1(t)
-    method = validate_method(
-        method, ("Linear Scene Exposure Factor", "Normalised Sensor Signal")
-    )
-
-    cut, a, b, c, d, e, f, _e_cut_f = DATA_ALEXA_LOG_C_CURVE_CONVERSION[firmware][
-        method
-    ][EI]
-
-    x = np.where(t > e * cut + f, (10 ** ((t - d) / c) - b) / a, (t - f) / e)
-
-    return as_float(from_range_1(x))
+    pass
 
 
 CONSTANTS_ARRILOGC4: Structure = Structure(
@@ -752,23 +727,7 @@ def log_encoding_ARRILogC4(
     >>> log_encoding_ARRILogC4(0.18)  # doctest: +ELLIPSIS
     np.float64(0.2783958...)
     """
-
-    E_scene = to_domain_1(E_scene)
-    constants = optional(constants, CONSTANTS_ARRILOGC4)
-
-    a = constants.a
-    b = constants.b
-    c = constants.c
-    s = constants.s
-    t = constants.t
-
-    E_p = np.where(
-        E_scene >= t,
-        (np.log2(a * E_scene + 64) - 6) / 14 * b + c,
-        (E_scene - t) / s,
-    )
-
-    return as_float(from_range_1(E_p))
+    pass
 
 
 def log_decoding_ARRILogC4(
@@ -814,20 +773,4 @@ def log_decoding_ARRILogC4(
     >>> log_decoding_ARRILogC4(0.27839583654826527)  # doctest: +ELLIPSIS
     np.float64(0.18...)
     """
-
-    E_p = to_domain_1(E_p)
-    constants = optional(constants, CONSTANTS_ARRILOGC4)
-
-    a = constants.a
-    b = constants.b
-    c = constants.c
-    s = constants.s
-    t = constants.t
-
-    E_scene = np.where(
-        E_p >= 0,
-        (2 ** (14 * ((E_p - c) / b) + 6) - 64) / a,
-        E_p * s + t,
-    )
-
-    return as_float(from_range_1(E_scene))
+    pass

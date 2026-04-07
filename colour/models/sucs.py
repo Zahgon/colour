@@ -257,12 +257,7 @@ def sUCS_chroma(Iab: Domain100) -> Range100:
     >>> sUCS_chroma(Iab)  # doctest: +ELLIPSIS
     np.float64(40.4205110...)
     """
-
-    _I, a, b = tsplit(to_domain_100(Iab))
-
-    C = 1 / 0.0252 * np.log(1 + 0.0447 * np.hypot(a, b))
-
-    return as_float(from_range_100(C))
+    pass
 
 
 def sUCS_hue_angle(Iab: Domain100) -> Range360:
@@ -303,12 +298,7 @@ def sUCS_hue_angle(Iab: Domain100) -> Range360:
     >>> sUCS_hue_angle(Iab)  # doctest: +ELLIPSIS
     np.float64(20.9041560...)
     """
-
-    _I, a, b = tsplit(to_domain_100(Iab))
-
-    h = np.degrees(np.arctan2(b, a)) % 360
-
-    return as_float(from_range_degrees(h))
+    pass
 
 
 def sUCS_Iab_to_sUCS_ICh(

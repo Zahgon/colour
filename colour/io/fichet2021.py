@@ -230,11 +230,7 @@ def sd_to_spectrum_attribute_Fichet2021(
     >>> sd_to_spectrum_attribute_Fichet2021(SDS_ILLUMINANTS["D65"], 2)[:56]
     '300.00nm:0.03;305.00nm:1.66;310.00nm:3.29;315.00nm:11.77'
     """
-
-    return ";".join(
-        f"{wavelength:.{decimals}f}nm:{value:.{decimals}f}"
-        for wavelength, value in zip(sd.wavelengths, sd.values, strict=True)
-    )
+    pass
 
 
 def spectrum_attribute_to_sd_Fichet2021(
@@ -272,18 +268,7 @@ def spectrum_attribute_to_sd_Fichet2021(
                          Extrapolator,
                          {'method': 'Constant', 'left': None, 'right': None})
     """
-
-    data = {}
-    pattern = re.compile(PATTERN_FICHET2021)
-    parts = spectrum_attribute.split(";")
-    for part in parts:
-        domain, range_ = part.split(":")
-        if (match := pattern.match(domain.replace(".", ","))) is not None:
-            multiplier, units = match.group(3, 4)
-            wavelength = match_groups_to_nm(match.group(1), multiplier, units)
-            data[wavelength] = float(range_)
-
-    return SpectralDistribution(data)
+    pass
 
 
 @dataclass
@@ -681,83 +666,7 @@ def components_to_sRGB_Fichet2021(
     chromaticities
     EV
     """
-
-    from OpenImageIO import TypeDesc  # noqa: PLC0415
-
-    component = components.get("S0", components.get("T"))
-
-    if component is None:
-        return None, []
-
-    # TODO: Implement support for integration of bi-spectral component.
-    if specification.is_bispectral:
-        usage_warning(
-            "Bi-spectral components conversion to *sRGB* colourspace values "
-            "is unsupported!"
-        )
-
-    # TODO: Implement support for re-binning component with non-uniform interval.
-    if len(interval(component[0])) != 1:  # pragma: no cover
-        usage_warning(
-            "Components have a non-uniform interval, unexpected results might occur!"
-        )
-
-    msds = component[1]
-    shape = SpectralShape(component[0][0], component[0][-1], interval(component[0])[0])
-
-    cmfs = MSDS_CMFS["CIE 1931 2 Degree Standard Observer"]
-    colourspace = RGB_COLOURSPACE_sRGB
-
-    if specification.is_emissive:
-        illuminant = SDS_ILLUMINANTS["E"]
-
-        XYZ = msds_to_XYZ(msds, cmfs=cmfs, method="Integration", shape=shape)
-    else:
-        illuminant = SDS_ILLUMINANTS["D65"]
-
-        XYZ = (
-            msds_to_XYZ(
-                msds,
-                cmfs=cmfs,
-                illuminant=illuminant,
-                method="Integration",
-                shape=shape,
-            )
-            / 100
-        )
-
-    RGB = XYZ_to_RGB(XYZ, colourspace)
-
-    chromaticities = np.ravel(
-        np.vstack([colourspace.primaries, colourspace.whitepoint])
-    ).tolist()
-
-    attributes = [
-        Image_Specification_Attribute(
-            "X", sd_to_spectrum_attribute_Fichet2021(cmfs.signals["x_bar"])
-        ),
-        Image_Specification_Attribute(
-            "Y", sd_to_spectrum_attribute_Fichet2021(cmfs.signals["y_bar"])
-        ),
-        Image_Specification_Attribute(
-            "Z", sd_to_spectrum_attribute_Fichet2021(cmfs.signals["z_bar"])
-        ),
-        Image_Specification_Attribute(
-            "illuminant", sd_to_spectrum_attribute_Fichet2021(illuminant)
-        ),
-        Image_Specification_Attribute(
-            "chromaticities", chromaticities, TypeDesc("float[8]")
-        ),
-    ]
-
-    if specification.is_emissive:
-        EV = np.mean(RGB) / 0.18
-        RGB /= EV
-        attributes.append(
-            Image_Specification_Attribute("EV", np.log2(EV)),
-        )
-
-    return RGB, attributes
+    pass
 
 
 @required("OpenImageIO")

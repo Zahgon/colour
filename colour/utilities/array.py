@@ -153,8 +153,7 @@ class MixinDataclassFields:
         :class:`tuple`
             :class:`dataclass`-like class fields.
         """
-
-        return fields(self)  # pyright: ignore
+        pass
 
 
 class MixinDataclassIterable(MixinDataclassFields):
@@ -532,31 +531,7 @@ class MixinDataclassArithmetic(MixinDataclassArray):
             :class:`dataclass`-like class with the arithmetical operation
             performed.
         """
-
-        callable_operation = {
-            "+": add,
-            "-": sub,
-            "*": mul,
-            "/": truediv,
-            "**": pow,
-        }[operation]
-
-        if is_dataclass(a):
-            a = as_float_array(a)  # pyright: ignore
-
-        values = tsplit(callable_operation(as_float_array(self), a))
-        field_values = {field: values[i] for i, field in enumerate(self.keys)}
-        field_values.update({field: None for field, value in self if value is None})
-
-        dataclass = replace(self, **field_values)  # pyright: ignore
-
-        if in_place:
-            for field in self.keys:
-                setattr(self, field, getattr(dataclass, field))
-
-            return self
-
-        return dataclass
+        pass
 
 
 # NOTE : The following messages are pre-generated for performance reasons.
@@ -940,16 +915,7 @@ def set_default_int_dtype(
     >>> as_int_array(np.ones(3)).dtype  # doctest: +SKIP
     dtype('int64')
     """
-
-    # TODO: Investigate behaviour on Windows.
-    with suppress_warnings(colour_usage_warnings=True):
-        for module in sys.modules.values():
-            if not hasattr(module, "DTYPE_INT_DEFAULT"):
-                continue
-
-            module.DTYPE_INT_DEFAULT = dtype  # pyright: ignore
-
-    CACHE_REGISTRY.clear_all_caches()
+    pass
 
 
 def set_default_float_dtype(
@@ -994,15 +960,7 @@ def set_default_float_dtype(
     >>> as_float_array(np.ones(3)).dtype
     dtype('float64')
     """
-
-    with suppress_warnings(colour_usage_warnings=True):
-        for module in sys.modules.values():
-            if not hasattr(module, "DTYPE_FLOAT_DEFAULT"):
-                continue
-
-            module.DTYPE_FLOAT_DEFAULT = dtype  # pyright: ignore
-
-    CACHE_REGISTRY.clear_all_caches()
+    pass
 
 
 # TODO: Annotate with "Union[Literal['ignore', 'reference', '1', '100'], str]"
@@ -1165,10 +1123,6 @@ class domain_range_scale:
         Call the wrapped definition with domain-range scale management.
         """
 
-        @functools.wraps(function)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            with self:
-                return function(*args, **kwargs)
 
         return wrapper
 
@@ -1635,19 +1589,7 @@ def to_domain_int(
     ...     to_domain_int(1)
     array(2.55)
     """
-
-    dtype = optional(dtype, DTYPE_FLOAT_DEFAULT)
-
-    a = as_float_array(a, dtype).copy()
-
-    maximum_code_value: NDArray[DTypeInt] = np.power(2, bit_depth) - 1
-    if _DOMAIN_RANGE_SCALE == "1":
-        a = as_float_array(a * maximum_code_value, dtype)
-
-    if _DOMAIN_RANGE_SCALE == "100":
-        a = as_float_array(a * maximum_code_value / 100, dtype)
-
-    return a
+    pass
 
 
 def from_range_1(
@@ -1998,19 +1940,7 @@ def from_range_int(
     ...     from_range_int(1)  # doctest: +ELLIPSIS
     array(0.3921568...)
     """
-
-    dtype = optional(dtype, DTYPE_FLOAT_DEFAULT)
-
-    a = as_float_array(a, dtype)
-
-    maximum_code_value: NDArray[DTypeInt] = np.power(2, bit_depth) - 1
-    if _DOMAIN_RANGE_SCALE == "1":
-        a = as_float_array(a / maximum_code_value, dtype)
-
-    if _DOMAIN_RANGE_SCALE == "100":
-        a = as_float_array(a / (maximum_code_value / 100), dtype)
-
-    return a
+    pass
 
 
 _NDARRAY_COPY_ENABLED: bool = True
@@ -2042,8 +1972,7 @@ def is_ndarray_copy_enabled() -> bool:
     ...     is_ndarray_copy_enabled()
     True
     """
-
-    return _NDARRAY_COPY_ENABLED
+    pass
 
 
 def set_ndarray_copy_enable(enable: bool) -> None:
@@ -2064,10 +1993,7 @@ def set_ndarray_copy_enable(enable: bool) -> None:
     True
     False
     """
-
-    global _NDARRAY_COPY_ENABLED  # noqa: PLW0603
-
-    _NDARRAY_COPY_ENABLED = enable
+    pass
 
 
 class ndarray_copy_enable:
@@ -2119,10 +2045,6 @@ class ndarray_copy_enable:
             state context.
         """
 
-        @functools.wraps(function)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            with self:
-                return function(*args, **kwargs)
 
         return wrapper
 
@@ -2155,10 +2077,7 @@ def ndarray_copy(a: NDArray) -> NDArray:
     ...     id(a) == id(ndarray_copy(a))
     True
     """
-
-    if _NDARRAY_COPY_ENABLED:
-        return np.copy(a)
-    return a
+    pass
 
 
 def closest_indexes(a: ArrayLike, b: ArrayLike) -> NDArray:
@@ -2376,13 +2295,7 @@ def in_array(a: ArrayLike, b: ArrayLike, tolerance: Real = EPSILON) -> NDArray:
     >>> in_array(a, b)
     array([ True,  True])
     """
-
-    a = as_float_array(a)
-    b = as_float_array(b)
-
-    d = np.abs(np.ravel(a) - b[..., None])
-
-    return np.reshape(np.any(d <= tolerance, axis=0), a.shape)
+    pass
 
 
 def tstack(
@@ -2611,27 +2524,7 @@ def orient(
            [4., 3., 2., 1., 0.],
            [4., 3., 2., 1., 0.]])
     """
-
-    a = as_float_array(a)
-
-    orientation = validate_method(
-        orientation, ("Ignore", "Flip", "Flop", "90 CW", "90 CCW", "180")
-    )
-
-    if orientation == "ignore":
-        oriented = a
-    elif orientation == "flip":
-        oriented = np.fliplr(a)
-    elif orientation == "flop":
-        oriented = np.flipud(a)
-    elif orientation == "90 cw":
-        oriented = np.rot90(a, 3)
-    elif orientation == "90 ccw":
-        oriented = np.rot90(a)
-    elif orientation == "180":
-        oriented = np.rot90(a, 2)
-
-    return oriented
+    pass
 
 
 def centroid(a: ArrayLike) -> NDArrayInt:
@@ -2654,27 +2547,7 @@ def centroid(a: ArrayLike) -> NDArrayInt:
     >>> centroid(a)  # doctest: +ELLIPSIS
     array([2, 3]...)
     """
-
-    a = as_float_array(a)
-
-    a_s = np.sum(a)
-
-    ranges = [np.arange(0, a.shape[i]) for i in range(a.ndim)]
-    coordinates = np.meshgrid(*ranges)
-
-    a_ci = []
-    for axis in coordinates:
-        axis = np.transpose(axis)  # noqa: PLW2901
-        # Aligning axis for N-D arrays where N is normalised to
-        # range [3, :math:`\\\infty`]
-        for i in range(axis.ndim - 2, 0, -1):
-            axis = np.rollaxis(axis, i - 1, axis.ndim)  # noqa: PLW2901
-
-        a_ci.append(np.sum(axis * a) // a_s)
-
-    # NOTE: Cannot use `as_int_array` as presence of NaN will raise a ValueError
-    # exception.
-    return np.array(a_ci).astype(DTYPE_INT_DEFAULT)
+    pass
 
 
 def fill_nan(
@@ -2709,26 +2582,7 @@ def fill_nan(
     >>> fill_nan(a, method="Constant")
     array([0.1, 0.2, 0. , 0.4, 0.5])
     """
-
-    a = np.array(a, copy=True)
-    method = validate_method(method, ("Interpolation", "Constant"))
-
-    mask = np.isnan(a)
-
-    if not np.any(mask):
-        return a
-
-    if method == "interpolation":
-        # Interpolate at all indices, then use np.where to replace only NaN positions
-        a = np.where(
-            mask,
-            np.interp(np.arange(len(a)), np.flatnonzero(~mask), a[~mask]),
-            a,
-        )
-    elif method == "constant":
-        a = np.where(mask, default, a)
-
-    return a
+    pass
 
 
 def has_only_nan(a: ArrayLike) -> bool:
@@ -2789,15 +2643,7 @@ def ndarray_write(a: ArrayLike) -> Generator:
     >>> with ndarray_write(a):
     ...     a += 1
     """
-
-    a = as_float_array(a)
-
-    a.setflags(write=True)
-
-    try:
-        yield a
-    finally:
-        a.setflags(write=False)
+    pass
 
 
 def zeros(
@@ -3048,10 +2894,4 @@ def format_array_as_row(a: ArrayLike, decimals: int = 7, separator: str = " ") -
     >>> format_array_as_row([1.25, 2.5, 3.75], 3, ", ")
     '1.250, 2.500, 3.750'
     """
-
-    a = np.ravel(a)
-
-    return separator.join(
-        "{1:0.{0}f}".format(decimals, x)
-        for x in a  # noqa: PLE1300, RUF100
-    )
+    pass

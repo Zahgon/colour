@@ -174,8 +174,7 @@ def oetf_BT2100_PQ(E: ArrayLike) -> NDArrayFloat:
     >>> oetf_BT2100_PQ(0.1)  # doctest: +ELLIPSIS
     np.float64(0.7247698...)
     """
-
-    return eotf_inverse_ST2084(ootf_BT2100_PQ(E), 10000)
+    pass
 
 
 def oetf_inverse_BT2100_PQ(E_p: ArrayLike) -> NDArrayFloat:
@@ -217,8 +216,7 @@ def oetf_inverse_BT2100_PQ(E_p: ArrayLike) -> NDArrayFloat:
     >>> oetf_inverse_BT2100_PQ(0.724769816665726)  # doctest: +ELLIPSIS
     np.float64(0.0999999...)
     """
-
-    return ootf_inverse_BT2100_PQ(eotf_ST2084(E_p, 10000))
+    pass
 
 
 def eotf_BT2100_PQ(E_p: ArrayLike) -> NDArrayFloat:
@@ -261,8 +259,7 @@ def eotf_BT2100_PQ(E_p: ArrayLike) -> NDArrayFloat:
     >>> eotf_BT2100_PQ(0.724769816665726)  # doctest: +ELLIPSIS
     np.float64(779.9883608...)
     """
-
-    return eotf_ST2084(E_p, 10000)
+    pass
 
 
 def eotf_inverse_BT2100_PQ(F_D: ArrayLike) -> NDArrayFloat:
@@ -307,8 +304,7 @@ def eotf_inverse_BT2100_PQ(F_D: ArrayLike) -> NDArrayFloat:
     >>> eotf_inverse_BT2100_PQ(779.988360834085370)  # doctest: +ELLIPSIS
     np.float64(0.7247698...)
     """
-
-    return eotf_inverse_ST2084(F_D, 10000)
+    pass
 
 
 def ootf_BT2100_PQ(E: ArrayLike) -> NDArrayFloat:
@@ -352,11 +348,7 @@ def ootf_BT2100_PQ(E: ArrayLike) -> NDArrayFloat:
     >>> ootf_BT2100_PQ(0.1)  # doctest: +ELLIPSIS
     np.float64(779.9883608...)
     """
-
-    E = as_float_array(E)
-
-    with domain_range_scale("ignore"):
-        return 100 * eotf_BT1886(oetf_BT709(59.5208 * E))
+    pass
 
 
 def ootf_inverse_BT2100_PQ(F_D: ArrayLike) -> NDArrayFloat:
@@ -400,11 +392,7 @@ def ootf_inverse_BT2100_PQ(F_D: ArrayLike) -> NDArrayFloat:
     >>> ootf_inverse_BT2100_PQ(779.988360834115840)  # doctest: +ELLIPSIS
     np.float64(0.1000000...)
     """
-
-    F_D = as_float_array(F_D)
-
-    with domain_range_scale("ignore"):
-        return oetf_inverse_BT709(eotf_inverse_BT1886(F_D / 100)) / 59.5208
+    pass
 
 
 WEIGHTS_BT2100_HLG: NDArrayFloat = np.array([0.2627, 0.6780, 0.0593])
@@ -451,10 +439,7 @@ def gamma_function_BT2100_HLG(L_W: float = 1000) -> float:
     >>> gamma_function_BT2100_HLG(4000)  # doctest: +ELLIPSIS
     np.float64(1.4528651...)
     """
-
-    gamma = 1.2 + 0.42 * np.log10(L_W / 1000)
-
-    return as_float_scalar(gamma)
+    pass
 
 
 def oetf_BT2100_HLG(E: Domain1, constants: Structure | None = None) -> Range1:
@@ -589,12 +574,7 @@ def black_level_lift_BT2100_HLG(
     >>> black_level_lift_BT2100_HLG(0.01, gamma=1.4)  # doctest: +ELLIPSIS
     np.float64(0.0283691...)
     """
-
-    gamma = optional(gamma, gamma_function_BT2100_HLG(L_W))
-
-    beta = np.sqrt(3 * spow((L_B / L_W), 1 / gamma))
-
-    return as_float_scalar(beta)
+    pass
 
 
 def eotf_BT2100_HLG_1(
@@ -655,12 +635,7 @@ def eotf_BT2100_HLG_1(
     >>> eotf_BT2100_HLG_1(0.212132034355964, 0.01)  # doctest: +ELLIPSIS
     np.float64(6.4859750...)
     """
-
-    constants = optional(constants, CONSTANTS_BT2100_HLG)
-
-    return ootf_BT2100_HLG_1(
-        oetf_inverse_ARIBSTDB67(E_p, constants=constants) / 12, L_B, L_W, gamma
-    )
+    pass
 
 
 def eotf_BT2100_HLG_2(
@@ -722,17 +697,7 @@ def eotf_BT2100_HLG_2(
     >>> eotf_BT2100_HLG_2(0.212132034355964, 0.01)  # doctest: +ELLIPSIS
     np.float64(7.3321975...)
     """
-
-    E_p = as_float_array(E_p)
-    constants = optional(constants, CONSTANTS_BT2100_HLG)
-
-    beta = black_level_lift_BT2100_HLG(L_B, L_W, gamma)
-
-    return ootf_BT2100_HLG_2(
-        oetf_inverse_ARIBSTDB67((1 - beta) * E_p + beta, constants=constants) / 12,
-        L_W,
-        gamma,
-    )
+    pass
 
 
 BT2100_HLG_EOTF_METHODS: CanonicalMapping = CanonicalMapping(
@@ -818,11 +783,7 @@ def eotf_BT2100_HLG(
     ... # doctest: +ELLIPSIS
     np.float64(7.3321975...)
     """
-
-    constants = optional(constants, CONSTANTS_BT2100_HLG)
-    method = validate_method(method, tuple(BT2100_HLG_EOTF_METHODS))
-
-    return BT2100_HLG_EOTF_METHODS[method](E_p, L_B, L_W, gamma, constants)
+    pass
 
 
 def eotf_inverse_BT2100_HLG_1(
@@ -885,13 +846,7 @@ def eotf_inverse_BT2100_HLG_1(
     ... # doctest: +ELLIPSIS
     np.float64(0.2121320...)
     """
-
-    constants = optional(constants, CONSTANTS_BT2100_HLG)
-
-    return oetf_ARIBSTDB67(
-        ootf_inverse_BT2100_HLG_1(F_D, L_B, L_W, gamma) * 12,
-        constants=constants,
-    )
+    pass
 
 
 def eotf_inverse_BT2100_HLG_2(
@@ -955,18 +910,7 @@ def eotf_inverse_BT2100_HLG_2(
     ... # doctest: +ELLIPSIS
     np.float64(0.2121320...)
     """
-
-    constants = optional(constants, CONSTANTS_BT2100_HLG)
-
-    beta = black_level_lift_BT2100_HLG(L_B, L_W, gamma)
-
-    return (
-        oetf_ARIBSTDB67(
-            ootf_inverse_BT2100_HLG_2(F_D, L_W, gamma) * 12,
-            constants=constants,
-        )
-        - beta
-    ) / (1 - beta)
+    pass
 
 
 BT2100_HLG_EOTF_INVERSE_METHODS: CanonicalMapping = CanonicalMapping(
@@ -1051,11 +995,7 @@ def eotf_inverse_BT2100_HLG(
     >>> eotf_inverse_BT2100_HLG(7.332197528353875, 0.01)  # doctest: +ELLIPSIS
     np.float64(0.2121320...)
     """
-
-    constants = optional(constants, CONSTANTS_BT2100_HLG)
-    method = validate_method(method, tuple(BT2100_HLG_EOTF_INVERSE_METHODS))
-
-    return BT2100_HLG_EOTF_INVERSE_METHODS[method](F_D, L_B, L_W, gamma, constants)
+    pass
 
 
 def ootf_BT2100_HLG_1(
@@ -1119,39 +1059,7 @@ def ootf_BT2100_HLG_1(
     ... # doctest: +ELLIPSIS
     np.float64(63.1051034...)
     """
-
-    E = to_domain_1(E)
-
-    is_single_channel = np.atleast_1d(E).shape[-1] != 3
-
-    if is_single_channel:
-        usage_warning(
-            '"Recommendation ITU-R BT.2100" "Reference HLG OOTF" uses '
-            "RGB Luminance in computations and expects a vector input, thus "
-            "the specified input array will be stacked to compose a vector for "
-            "internal computations but a single component will be output."
-        )
-        R_S = G_S = B_S = E
-    else:
-        R_S, G_S, B_S = tsplit(E)
-
-    alpha = L_W - L_B
-    beta = L_B
-
-    Y_S = np.sum(WEIGHTS_BT2100_HLG * tstack([R_S, G_S, B_S]), axis=-1)
-
-    gamma = optional(gamma, gamma_function_BT2100_HLG(L_W))
-
-    R_D = alpha * R_S * np.abs(Y_S) ** (gamma - 1) + beta
-    G_D = alpha * G_S * np.abs(Y_S) ** (gamma - 1) + beta
-    B_D = alpha * B_S * np.abs(Y_S) ** (gamma - 1) + beta
-
-    if is_single_channel:
-        return as_float(from_range_1(R_D))
-
-    RGB_D = tstack([R_D, G_D, B_D])
-
-    return from_range_1(RGB_D)
+    pass
 
 
 def ootf_BT2100_HLG_2(
@@ -1207,38 +1115,7 @@ def ootf_BT2100_HLG_2(
     >>> ootf_BT2100_HLG_2(0.1)  # doctest: +ELLIPSIS
     np.float64(63.0957344...)
     """
-
-    E = to_domain_1(E)
-
-    is_single_channel = np.atleast_1d(E).shape[-1] != 3
-
-    if is_single_channel:
-        usage_warning(
-            '"Recommendation ITU-R BT.2100" "Reference HLG OOTF" uses '
-            "RGB Luminance in computations and expects a vector input, thus "
-            "the specified input array will be stacked to compose a vector for "
-            "internal computations but a single component will be output."
-        )
-        R_S = G_S = B_S = E
-    else:
-        R_S, G_S, B_S = tsplit(E)
-
-    alpha = L_W
-
-    Y_S = np.sum(WEIGHTS_BT2100_HLG * tstack([R_S, G_S, B_S]), axis=-1)
-
-    gamma = optional(gamma, gamma_function_BT2100_HLG(L_W))
-
-    R_D = alpha * R_S * np.abs(Y_S) ** (gamma - 1)
-    G_D = alpha * G_S * np.abs(Y_S) ** (gamma - 1)
-    B_D = alpha * B_S * np.abs(Y_S) ** (gamma - 1)
-
-    if is_single_channel:
-        return as_float(from_range_1(R_D))
-
-    RGB_D = tstack([R_D, G_D, B_D])
-
-    return from_range_1(RGB_D)
+    pass
 
 
 BT2100_HLG_OOTF_METHODS: CanonicalMapping = CanonicalMapping(
@@ -1318,15 +1195,7 @@ def ootf_BT2100_HLG(
     ... # doctest: +ELLIPSIS
     np.float64(63.1051034...)
     """
-
-    method = validate_method(method, tuple(BT2100_HLG_OOTF_METHODS))
-
-    function = BT2100_HLG_OOTF_METHODS[method]
-
-    return function(
-        E,
-        **filter_kwargs(function, L_B=L_B, L_W=L_W, gamma=gamma),
-    )
+    pass
 
 
 def ootf_inverse_BT2100_HLG_1(
@@ -1388,53 +1257,7 @@ def ootf_inverse_BT2100_HLG_1(
     ... # doctest: +ELLIPSIS
     np.float64(0.0999999...)
     """
-
-    F_D = to_domain_1(F_D)
-
-    is_single_channel = np.atleast_1d(F_D).shape[-1] != 3
-
-    if is_single_channel:
-        usage_warning(
-            '"Recommendation ITU-R BT.2100" "Reference HLG OOTF" uses '
-            "RGB Luminance in computations and expects a vector input, thus "
-            "the specified input array will be stacked to compose a vector for "
-            "internal computations but a single component will be output."
-        )
-        R_D = G_D = B_D = F_D
-    else:
-        R_D, G_D, B_D = tsplit(F_D)
-
-    Y_D = np.sum(WEIGHTS_BT2100_HLG * tstack([R_D, G_D, B_D]), axis=-1)
-
-    alpha = L_W - L_B
-    beta = L_B
-
-    gamma = optional(gamma, gamma_function_BT2100_HLG(L_W))
-
-    Y_D_beta = np.abs((Y_D - beta) / alpha) ** ((1 - gamma) / gamma)
-
-    R_S = np.where(
-        beta == Y_D,
-        0.0,
-        Y_D_beta * (R_D - beta) / alpha,
-    )
-    G_S = np.where(
-        beta == Y_D,
-        0.0,
-        Y_D_beta * (G_D - beta) / alpha,
-    )
-    B_S = np.where(
-        beta == Y_D,
-        0.0,
-        Y_D_beta * (B_D - beta) / alpha,
-    )
-
-    if is_single_channel:
-        return as_float(from_range_1(R_S))
-
-    RGB_S = tstack([R_S, G_S, B_S])
-
-    return from_range_1(RGB_S)
+    pass
 
 
 def ootf_inverse_BT2100_HLG_2(
@@ -1491,52 +1314,7 @@ def ootf_inverse_BT2100_HLG_2(
     >>> ootf_inverse_BT2100_HLG_2(63.095734448019336)  # doctest: +ELLIPSIS
     np.float64(0.1000000...)
     """
-
-    F_D = to_domain_1(F_D)
-
-    is_single_channel = np.atleast_1d(F_D).shape[-1] != 3
-
-    if is_single_channel:
-        usage_warning(
-            '"Recommendation ITU-R BT.2100" "Reference HLG OOTF" uses '
-            "RGB Luminance in computations and expects a vector input, thus "
-            "the specified input array will be stacked to compose a vector for "
-            "internal computations but a single component will be output."
-        )
-        R_D = G_D = B_D = F_D
-    else:
-        R_D, G_D, B_D = tsplit(F_D)
-
-    Y_D = np.sum(WEIGHTS_BT2100_HLG * tstack([R_D, G_D, B_D]), axis=-1)
-
-    alpha = L_W
-
-    gamma = optional(gamma, gamma_function_BT2100_HLG(L_W))
-
-    Y_D_alpha = np.abs(Y_D / alpha) ** ((1 - gamma) / gamma)
-
-    R_S = np.where(
-        Y_D == 0,
-        0.0,
-        Y_D_alpha * R_D / alpha,
-    )
-    G_S = np.where(
-        Y_D == 0,
-        0.0,
-        Y_D_alpha * G_D / alpha,
-    )
-    B_S = np.where(
-        Y_D == 0,
-        0.0,
-        Y_D_alpha * B_D / alpha,
-    )
-
-    if is_single_channel:
-        return as_float(from_range_1(R_S))
-
-    RGB_S = tstack([R_S, G_S, B_S])
-
-    return from_range_1(RGB_S)
+    pass
 
 
 BT2100_HLG_OOTF_INVERSE_METHODS: CanonicalMapping = CanonicalMapping(
@@ -1620,12 +1398,4 @@ def ootf_inverse_BT2100_HLG(
     ... # doctest: +ELLIPSIS
     np.float64(0.0999999...)
     """
-
-    method = validate_method(method, tuple(BT2100_HLG_OOTF_INVERSE_METHODS))
-
-    function = BT2100_HLG_OOTF_INVERSE_METHODS[method]
-
-    return function(
-        F_D,
-        **filter_kwargs(function, L_B=L_B, L_W=L_W, gamma=gamma),
-    )
+    pass

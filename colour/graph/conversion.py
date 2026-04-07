@@ -344,14 +344,7 @@ def CIECAM02_to_JMh_CIECAM02(
     >>> CIECAM02_to_JMh_CIECAM02(specification)  # doctest: +ELLIPSIS
     array([34.4345257..., 70.0249394..., 22.2791641...])
     """
-
-    return tstack(
-        [
-            cast("NDArrayFloat", specification.J),
-            cast("NDArrayFloat", specification.M),
-            cast("NDArrayFloat", specification.h),
-        ]
-    )
+    pass
 
 
 def JMh_CIECAM02_to_CIECAM02(
@@ -410,10 +403,7 @@ def JMh_CIECAM02_to_CIECAM02(
 h=np.float64(22.2791641), s=None, Q=None, M=np.float64(70.0249394), \
 H=None, HC=None)
     """
-
-    J, M, h = tsplit(JMh)
-
-    return CAM_Specification_CIECAM02(J=J, M=M, h=h)
+    pass
 
 
 def CAM16_to_JMh_CAM16(
@@ -472,8 +462,7 @@ def CAM16_to_JMh_CAM16(
     >>> CAM16_to_JMh_CAM16(specification)  # doctest: +ELLIPSIS
     array([33.8803685..., 72.18638534..., 19.51088733...])
     """
-
-    return tstack([specification.J, specification.M, specification.h])  # pyright: ignore
+    pass
 
 
 def JMh_CAM16_to_CAM16(
@@ -531,10 +520,7 @@ def JMh_CAM16_to_CAM16(
 h=np.float64(19.5108873), s=None, Q=None, M=np.float64(72.1863853), \
 H=None, HC=None)
     """
-
-    J, M, h = tsplit(JMh)
-
-    return CAM_Specification_CAM16(J=J, M=M, h=h)
+    pass
 
 
 def CIECAM16_to_JMh_CIECAM16(
@@ -594,8 +580,7 @@ def CIECAM16_to_JMh_CIECAM16(
     >>> CIECAM16_to_JMh_CIECAM16(specification)  # doctest: +ELLIPSIS
     array([33.8803685..., 72.18638534..., 19.51088733...])
     """
-
-    return tstack([specification.J, specification.M, specification.h])  # pyright: ignore
+    pass
 
 
 def JMh_CIECAM16_to_CIECAM16(
@@ -654,10 +639,7 @@ def JMh_CIECAM16_to_CIECAM16(
 h=np.float64(19.5108873), s=None, Q=None, M=np.float64(72.1863853), \
 H=None, HC=None)
     """
-
-    J, M, h = tsplit(JMh)
-
-    return CAM_Specification_CIECAM16(J=J, M=M, h=h)
+    pass
 
 
 def Hellwig2022_to_JMh_Hellwig2022(
@@ -724,8 +706,7 @@ def Hellwig2022_to_JMh_Hellwig2022(
     >>> Hellwig2022_to_JMh_Hellwig2022(specification)  # doctest: +ELLIPSIS
     array([33.8803685..., 49.57713162..., 19.51088733...])
     """
-
-    return tstack([specification.J, specification.M, specification.h])  # pyright: ignore
+    pass
 
 
 def JMh_Hellwig2022_to_Hellwig2022(
@@ -792,10 +773,7 @@ def JMh_Hellwig2022_to_Hellwig2022(
 h=np.float64(19.5108873...), s=None, Q=None, M=np.float64(49.5771316...), \
 H=None, HC=None, J_HK=None, Q_HK=None)
     """
-
-    J, M, h = tsplit(JMh)
-
-    return CAM_Specification_Hellwig2022(J=J, M=M, h=h)
+    pass
 
 
 def sCAM_to_JMh_sCAM(
@@ -862,8 +840,7 @@ def sCAM_to_JMh_sCAM(
     >>> sCAM_to_JMh_sCAM(specification)  # doctest: +ELLIPSIS
     array([42.5509921..., 14.3253699..., 20.9044554...])
     """
-
-    return tstack([specification.J, specification.M, specification.h])  # pyright: ignore
+    pass
 
 
 def JMh_sCAM_to_sCAM(
@@ -931,10 +908,7 @@ def JMh_sCAM_to_sCAM(
 h=np.float64(20.9044554), Q=None, M=np.float64(14.32537), H=None, \
 HC=None, V=None, K=None, W=None, D=None)
     """
-
-    J, M, h = tsplit(JMh)
-
-    return CAM_Specification_sCAM(J=J, M=M, h=h)
+    pass
 
 
 def ZCAM_to_JMh_ZCAM(
@@ -1001,14 +975,7 @@ def ZCAM_to_JMh_ZCAM(
     >>> ZCAM_to_JMh_ZCAM(specification)  # doctest: +ELLIPSIS
     array([38.3471862..., 42.4038058..., 33.7115789...])
     """
-
-    return tstack(
-        [
-            cast("NDArrayFloat", specification.J),
-            cast("NDArrayFloat", specification.M),
-            cast("NDArrayFloat", specification.h),
-        ]
-    )
+    pass
 
 
 def JMh_ZCAM_to_ZCAM(
@@ -1074,10 +1041,7 @@ def JMh_ZCAM_to_ZCAM(
 h=np.float64(33.7115789), s=None, Q=None, M=np.float64(42.4038058), \
 H=None, HC=None, V=None, K=None, W=None)
     """
-
-    J, M, h = tsplit(JMh)
-
-    return CAM_Specification_ZCAM(J=J, M=M, h=h)
+    pass
 
 
 def Kim2009_to_JMh_Kim2009(
@@ -1137,14 +1101,7 @@ def Kim2009_to_JMh_Kim2009(
     >>> Kim2009_to_JMh_Kim2009(specification)  # doctest: +ELLIPSIS
     array([19.8799185..., 46.3464158..., 22.0133881...])
     """
-
-    return tstack(
-        [
-            cast("NDArrayFloat", specification.J),
-            cast("NDArrayFloat", specification.M),
-            cast("NDArrayFloat", specification.h),
-        ]
-    )
+    pass
 
 
 def JMh_Kim2009_to_Kim2009(
@@ -1203,10 +1160,7 @@ def JMh_Kim2009_to_Kim2009(
 h=np.float64(22.0133882), s=None, Q=None, M=np.float64(46.3464159), \
 H=None, HC=None)
     """
-
-    J, M, h = tsplit(JMh)
-
-    return CAM_Specification_Kim2009(J=J, M=M, h=h)
+    pass
 
 
 def XYZ_to_luminance(XYZ: Domain1) -> Range1:
@@ -1247,10 +1201,7 @@ def XYZ_to_luminance(XYZ: Domain1) -> Range1:
     >>> XYZ_to_luminance(XYZ)  # doctest: +ELLIPSIS
     np.float64(0.1219722...)
     """
-
-    _X, Y, _Z = tsplit(XYZ)
-
-    return Y
+    pass
 
 
 def RGB_luminance_to_RGB(Y: Domain1) -> Range1:
@@ -1286,10 +1237,7 @@ def RGB_luminance_to_RGB(Y: Domain1) -> Range1:
     >>> RGB_luminance_to_RGB(0.123014562384318)  # doctest: +ELLIPSIS
     array([0.1230145..., 0.1230145..., 0.1230145...])
     """
-
-    Y = as_float_array(Y)
-
-    return tstack([Y, Y, Y])
+    pass
 
 
 def CCT_D_uv_to_mired(CCT_D_uv: ArrayLike) -> NDArrayFloat:
@@ -1313,10 +1261,7 @@ def CCT_D_uv_to_mired(CCT_D_uv: ArrayLike) -> NDArrayFloat:
     >>> CCT_D_uv_to_mired(CCT_D_uv)  # doctest: +ELLIPSIS
     np.float64(153.8459612...)
     """
-
-    CCT, _D_uv = tsplit(CCT_D_uv)
-
-    return CCT_to_mired(CCT)
+    pass
 
 
 def mired_to_CCT_D_uv(mired: ArrayLike) -> NDArrayFloat:
@@ -1340,10 +1285,7 @@ def mired_to_CCT_D_uv(mired: ArrayLike) -> NDArrayFloat:
     >>> mired_to_CCT_D_uv(mired)  # doctest: +ELLIPSIS
     array([6500.0081378...,    0.        ])
     """
-
-    mired = as_float_array(mired)
-
-    return tstack([mired_to_CCT(mired), zeros(mired.shape)])
+    pass
 
 
 _ILLUMINANT_DEFAULT: str = "D65"
@@ -1720,20 +1662,7 @@ def _format_node_name(name: str) -> str:
     :class:`str`
         The formatted node name with substitutions applied.
     """
-
-    for pattern, substitution in [
-        ("hdr_", "hdr-"),
-        ("-CIELab", "-CIELAB"),
-        ("_", " "),
-        ("^Lab", "CIE Lab"),
-        ("^LCHab", "CIE LCHab"),
-        ("^Luv", "CIE Luv"),
-        ("^LCHuv", "CIE LCHuv"),
-        ("Ragoo2021", "Ragoo 2021"),
-    ]:
-        name = re.sub(pattern, substitution, name)
-
-    return name
+    pass
 
 
 for _Jab, _JCh in COLOURSPACE_MODELS_POLAR_CONVERSIONS:

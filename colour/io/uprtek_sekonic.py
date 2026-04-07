@@ -186,8 +186,7 @@ class SpectralDistribution_UPRTek(SpectralDistribution_IESTM2714):
             Dataset metadata containing information about the data source,
             structure, and properties.
         """
-
-        return self._metadata
+        pass
 
     def __str__(self) -> str:
         """

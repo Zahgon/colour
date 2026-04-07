@@ -262,31 +262,7 @@ def lagrange_coefficients_ASTME2022(
            [ 0.12...,  0.96..., -0.08...],
            [ 0.05...,  0.99..., -0.04...]])
     """
-
-    global _CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS  # noqa: PLW0602
-
-    interval_type = validate_method(
-        interval_type,
-        ("Boundary", "Inner"),
-        '"{0}" interval type is invalid, it must be one of {1}!',
-    )
-
-    hash_key = hash((interval, interval_type))
-
-    if is_caching_enabled() and hash_key in _CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS:
-        return np.copy(_CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS[hash_key])
-
-    r_n = np.linspace(1 / interval, 1 - (1 / interval), interval - 1)
-    d = 3
-    if interval_type == "inner":
-        r_n += 1
-        d = 4
-
-    lica = as_float_array([lagrange_coefficients(r, d) for r in r_n])
-
-    _CACHE_LAGRANGE_INTERPOLATING_COEFFICIENTS[hash_key] = np.copy(lica)
-
-    return lica
+    pass
 
 
 def tristimulus_weighting_factors_ASTME2022(
@@ -394,94 +370,7 @@ def tristimulus_weighting_factors_ASTME2022(
            [ 0.0004254...,  0.0001704...,  0.       ...],
            [ 0.0000962...,  0.0000389...,  0.       ...]])
     """
-
-    if cmfs.shape.interval != 1:
-        error = f'"{cmfs}" shape "interval" must be 1!'
-
-        raise ValueError(error)
-
-    if illuminant.shape.interval != 1:
-        error = f'"{illuminant}" shape "interval" must be 1!'
-
-        raise ValueError(error)
-
-    global _CACHE_TRISTIMULUS_WEIGHTING_FACTORS  # noqa: PLW0602
-
-    hash_key = hash((cmfs, illuminant, shape, k, get_domain_range_scale()))
-
-    if is_caching_enabled() and hash_key in _CACHE_TRISTIMULUS_WEIGHTING_FACTORS:
-        return np.copy(_CACHE_TRISTIMULUS_WEIGHTING_FACTORS[hash_key])
-
-    Y = cmfs.values
-    S = illuminant.values
-
-    interval_i = int(shape.interval)
-    W = S[::interval_i, None] * Y[::interval_i, :]
-
-    # First and last measurement intervals *Lagrange Coefficients*.
-    c_c = lagrange_coefficients_ASTME2022(interval_i, "boundary")
-    # Intermediate measurement intervals *Lagrange Coefficients*.
-    c_b = lagrange_coefficients_ASTME2022(interval_i, "inner")
-
-    # Total wavelengths count.
-    w_c = len(Y)
-    # Measurement interval interpolated values count.
-    r_c = c_b.shape[0]
-    # Last interval first interpolated wavelength.
-    w_lif = w_c - (w_c - 1) % interval_i - 1 - r_c
-
-    # Intervals count.
-    i_c = W.shape[0]
-    i_cm = i_c - 1
-
-    # Only apply Lagrange interpolation when interval > 1
-    if r_c > 0:
-        # First interval: W[:3, :] += sum over h of c_c[h, g] * S[h+1] * Y[h+1, :]
-        first_interval = np.sum(
-            c_c[:, :, None] * (S[1 : r_c + 1, None, None] * Y[1 : r_c + 1, None, :]),
-            axis=0,
-        )
-        W = np.concatenate([W[:3, :] + first_interval, W[3:, :]], axis=0)
-
-        # Last interval: W[i_cm-2:i_cm+1, :] += contributions with reversed c_c
-        last_interval = np.sum(
-            c_c[::-1, :, None]
-            * (S[w_lif : w_lif + r_c, None, None] * Y[w_lif : w_lif + r_c, None, :]),
-            axis=0,
-        )
-        W = np.concatenate(
-            [W[: i_cm - 2, :], W[i_cm - 2 : i_cm + 1, :] + last_interval[::-1, :]],
-            axis=0,
-        )
-
-        # Intermediate intervals: accumulate c_b contributions
-        for h in range(i_c - 3):
-            w_indices = (r_c + 1) * (h + 1) + 1 + np.arange(r_c)
-            contrib = np.sum(
-                c_b[:, :, None] * (S[w_indices, None, None] * Y[w_indices, None, :]),
-                axis=0,
-            )
-            W = np.concatenate(
-                [W[:h, :], W[h : h + 4, :] + contrib, W[h + 4 :, :]], axis=0
-            )
-
-        # Extrapolation of potential incomplete interval
-        extrap_start = as_int_scalar(w_c - ((w_c - 1) % interval_i))
-        if extrap_start < w_c:
-            extrap_contrib = np.sum(
-                S[extrap_start:w_c, None] * Y[extrap_start:w_c, :], axis=0
-            )
-            W = np.concatenate(
-                [W[:i_cm, :], W[i_cm : i_cm + 1, :] + extrap_contrib, W[i_cm + 1 :, :]],
-                axis=0,
-            )
-
-    with sdiv_mode():
-        W = W * optional(k, sdiv(100, np.sum(W, axis=0)[1]))
-
-    _CACHE_TRISTIMULUS_WEIGHTING_FACTORS[hash_key] = np.copy(W)
-
-    return W
+    pass
 
 
 def adjust_tristimulus_weighting_factors_ASTME308(
@@ -550,28 +439,7 @@ def adjust_tristimulus_weighting_factors_ASTME308(
            [ 1.3236117...,  0.5129694...,  0.       ...],
            [ 0.4171109...,  0.1618194...,  0.       ...]])
     """
-
-    W = as_float_array(W)
-
-    start_index = int((shape_t.start - shape_r.start) / shape_r.interval)
-    end_index = int((shape_r.end - shape_t.end) / shape_r.interval)
-
-    # Compute sums of trimmed portions
-    first_summation = np.sum(W[:start_index], axis=0) if start_index > 0 else 0
-    last_summation = np.sum(W[-end_index:], axis=0) if end_index > 0 else 0
-
-    # Get the result slice
-    end_slice = -end_index if end_index > 0 else None
-    W_slice = W[start_index:end_slice, ...]
-
-    # Build adjustment array using row index broadcasting
-    n = W_slice.shape[0]
-    row_indices = np.arange(n)
-    adjustment = (row_indices == 0)[:, None] * first_summation + (row_indices == n - 1)[
-        :, None
-    ] * last_summation
-
-    return W_slice + adjustment
+    pass
 
 
 def tristimulus_weighting_factors_integration(
@@ -957,55 +825,7 @@ def sd_to_XYZ_tristimulus_weighting_factors_ASTME308(
     ... # doctest: +ELLIPSIS
     array([11.7786111...,  9.9589055...,  5.7403205...])
     """
-
-    cmfs, illuminant = handle_spectral_arguments(
-        cmfs,
-        illuminant,
-        "CIE 1931 2 Degree Standard Observer",
-        "E",
-        SPECTRAL_SHAPE_ASTME308,
-    )
-
-    if cmfs.shape.interval != 1:
-        runtime_warning(f'Interpolating "{cmfs.name}" cmfs to 1nm interval.')
-        cmfs = reshape_msds(
-            cmfs,
-            SpectralShape(cmfs.shape.start, cmfs.shape.end, 1),
-            "Interpolate",
-            copy=False,
-        )
-
-    if illuminant.shape != cmfs.shape:
-        runtime_warning(
-            f'Aligning "{illuminant.name}" illuminant shape to "{cmfs.name}" '
-            f"colour matching functions shape."
-        )
-        illuminant = reshape_sd(illuminant, cmfs.shape, copy=False)
-
-    if sd.shape.boundaries != cmfs.shape.boundaries:
-        runtime_warning(
-            f'Trimming "{sd.name}" spectral distribution boundaries using '
-            f'"{cmfs.name}" colour matching functions shape.'
-        )
-        sd = reshape_sd(sd, cmfs.shape, "Trim", copy=False)
-
-    W = tristimulus_weighting_factors_ASTME2022(
-        cmfs,
-        illuminant,
-        SpectralShape(cmfs.shape.start, cmfs.shape.end, sd.shape.interval),
-        k,
-    )
-    start_w = cmfs.shape.start
-    end_w = cmfs.shape.start + sd.shape.interval * (W.shape[0] - 1)
-    W = adjust_tristimulus_weighting_factors_ASTME308(
-        W, SpectralShape(start_w, end_w, sd.shape.interval), sd.shape
-    )
-
-    R = sd.values
-
-    XYZ = np.sum(W * R[..., None], axis=0)
-
-    return from_range_100(XYZ)
+    pass
 
 
 def sd_to_XYZ_ASTME308(
@@ -1120,101 +940,7 @@ def sd_to_XYZ_ASTME308(
     ... # doctest: +ELLIPSIS
     array([11.7781589...,  9.9585580...,  5.7408602...])
     """
-
-    as_percentage = k is not None
-
-    cmfs, illuminant = handle_spectral_arguments(
-        cmfs,
-        illuminant,
-        "CIE 1931 2 Degree Standard Observer",
-        "E",
-        SPECTRAL_SHAPE_ASTME308,
-    )
-
-    if sd.shape.interval not in (1, 5, 10, 20):
-        error = (
-            "Tristimulus values conversion from spectral data according to "
-            'practise "ASTM E308-15" should be performed on spectral data '
-            "with measurement interval of 1, 5, 10 or 20nm!"
-        )
-
-        raise ValueError(error)
-
-    if sd.shape.interval in (10, 20) and (
-        sd.shape.start % 10 != 0 or sd.shape.end % 10 != 0
-    ):
-        runtime_warning(
-            f'"{sd.name}" spectral distribution shape does not start at a '
-            f'tenth and will be aligned to "{cmfs.name}" colour matching '
-            'functions shape! Note that practise "ASTM E308-15" does not '
-            "define a behaviour in this case."
-        )
-
-        sd = reshape_sd(sd, cmfs.shape, copy=False)
-
-    if use_practice_range:
-        cmfs = reshape_msds(cmfs, SPECTRAL_SHAPE_ASTME308, "Trim", copy=False)
-
-    method = sd_to_XYZ_tristimulus_weighting_factors_ASTME308
-    if sd.shape.interval == 1:
-        method = sd_to_XYZ_integration
-    elif sd.shape.interval == 5 and mi_5nm_omission_method:
-        if cmfs.shape.interval != 5:
-            cmfs = reshape_msds(
-                cmfs,
-                SpectralShape(cmfs.shape.start, cmfs.shape.end, 5),
-                "Interpolate",
-                copy=False,
-            )
-        method = sd_to_XYZ_integration
-    elif sd.shape.interval == 20 and mi_20nm_interpolation_method:
-        sd = sd.copy()
-        if sd.shape.boundaries != cmfs.shape.boundaries:
-            runtime_warning(
-                f'Trimming "{sd.name}" spectral distribution shape to '
-                f'"{cmfs.name}" colour matching functions shape.'
-            )
-            sd = reshape_sd(sd, cmfs.shape, "Trim", copy=False)
-
-        # Extrapolation of additional 20nm padding intervals.
-        sd = reshape_sd(
-            sd,
-            SpectralShape(sd.shape.start - 20, sd.shape.end + 20, 10),
-            copy=False,
-        )
-        for i in range(2):
-            sd[sd.wavelengths[i]] = (
-                3 * sd.values[i + 2] - 3 * sd.values[i + 4] + sd.values[i + 6]
-            )
-            i_e = len(sd.domain) - 1 - i
-            sd[sd.wavelengths[i_e]] = (
-                sd.values[i_e - 6] - 3 * sd.values[i_e - 4] + 3 * sd.values[i_e - 2]
-            )
-
-        # Interpolating every odd numbered values.
-        # TODO: Investigate code vectorisation.
-        for i in range(3, len(sd.domain) - 3, 2):
-            sd[sd.wavelengths[i]] = (
-                -0.0625 * sd.values[i - 3]
-                + 0.5625 * sd.values[i - 1]
-                + 0.5625 * sd.values[i + 1]
-                - 0.0625 * sd.values[i + 3]
-            )
-
-        # Discarding the additional 20nm padding intervals.
-        sd = reshape_sd(
-            sd,
-            SpectralShape(sd.shape.start + 20, sd.shape.end - 20, 10),
-            "Trim",
-            copy=False,
-        )
-
-    XYZ = method(sd, cmfs, illuminant, k=k)
-
-    if as_percentage and method is not sd_to_XYZ_integration:
-        XYZ /= 100
-
-    return XYZ
+    pass
 
 
 SD_TO_XYZ_METHODS = CanonicalMapping(
@@ -1866,37 +1592,7 @@ def msds_to_XYZ_ASTME308(
            [ 8.3365770..., 18.6690888..., 15.8517212...],
            [24.6240657..., 26.0805317..., 27.6706915...]])
     """
-
-    cmfs, illuminant = handle_spectral_arguments(
-        cmfs,
-        illuminant,
-        "CIE 1931 2 Degree Standard Observer",
-        "E",
-        SPECTRAL_SHAPE_ASTME308,
-    )
-
-    if isinstance(msds, MultiSpectralDistributions):
-        return as_float_array(
-            [
-                sd_to_XYZ_ASTME308(
-                    sd,
-                    cmfs,
-                    illuminant,
-                    use_practice_range,
-                    mi_5nm_omission_method,
-                    mi_20nm_interpolation_method,
-                    k,
-                )
-                for sd in msds.to_sds()
-            ]
-        )
-
-    error = (
-        '"ASTM E308-15" method does not support "ArrayLike" '
-        "multi-spectral distributions!"
-    )
-
-    raise TypeError(error)
+    pass
 
 
 MSDS_TO_XYZ_METHODS = CanonicalMapping(

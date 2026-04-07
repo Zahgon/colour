@@ -264,20 +264,12 @@ class Extrapolator:
             Value to return for x < xi[0] for extrapolation beyond the
             leftmost data point.
         """
-
-        return self._left
+        pass
 
     @left.setter
     def left(self, value: Real | None) -> None:
         """Setter for the **self.left** property."""
-
-        if value is not None:
-            attest(
-                is_numeric(value),
-                f'"left" property: "{value}" is not a "number"!',
-            )
-
-            self._left = value
+        pass
 
     @property
     def right(self) -> Real | None:
@@ -299,20 +291,12 @@ class Extrapolator:
             Value to return for x > xi[-1] for extrapolation beyond the
             rightmost data point.
         """
-
-        return self._right
+        pass
 
     @right.setter
     def right(self, value: Real | None) -> None:
         """Setter for the **self.right** property."""
-
-        if value is not None:
-            attest(
-                is_numeric(value),
-                f'"right" property: "{value}" is not a "number"!',
-            )
-
-            self._right = value
+        pass
 
     def __call__(self, x: ArrayLike) -> NDArrayFloat:
         """
@@ -349,51 +333,4 @@ class Extrapolator:
         :class:`numpy.ndarray`
             Extrapolated point values.
         """
-
-        xi = self._interpolator.x
-        yi = self._interpolator.y
-
-        below = x < xi[0]
-        above = x > xi[-1]
-        in_range = np.logical_and(x >= xi[0], x <= xi[-1])
-
-        y = np.zeros_like(x)
-
-        if self._method == "linear":
-            with sdiv_mode():
-                y = np.where(
-                    below,
-                    yi[0] + (x - xi[0]) * sdiv(yi[1] - yi[0], xi[1] - xi[0]),
-                    y,
-                )
-                y = np.where(
-                    above,
-                    yi[-1] + (x - xi[-1]) * sdiv(yi[-1] - yi[-2], xi[-1] - xi[-2]),
-                    y,
-                )
-        elif self._method == "constant":
-            y = np.where(below, yi[0], y)
-            y = np.where(above, yi[-1], y)
-
-        if self._left is not None:
-            y = np.where(below, self._left, y)
-        if self._right is not None:
-            y = np.where(above, self._right, y)
-
-        if np.any(in_range):
-            # Flatten for multi-dimensional array support
-            shape = x.shape
-            x_ravel = np.ravel(x)
-            in_range_ravel = np.ravel(in_range)
-            y_ravel = np.ravel(y)
-
-            interpolated_values = np.atleast_1d(
-                self._interpolator(x_ravel[in_range_ravel])
-            )
-            # Scatter interpolated values back to full array positions
-            dense_idx = np.cumsum(in_range_ravel.astype(np.int64)) - 1
-            safe_idx = np.clip(dense_idx, 0, len(interpolated_values) - 1)
-            y_ravel = np.where(in_range_ravel, interpolated_values[safe_idx], y_ravel)
-            y = np.reshape(y_ravel, shape)
-
-        return y
+        pass

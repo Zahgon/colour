@@ -97,20 +97,7 @@ def bandpass_correction_Stearns1988(
                          Extrapolator,
                          {'method': 'Constant', 'left': None, 'right': None})
     """
-
-    A_S = CONSTANT_ALPHA_STEARNS
-    values = sd.values
-
-    values[0] = (1 + A_S) * values[0] - A_S * values[1]
-    values[-1] = (1 + A_S) * values[-1] - A_S * values[-2]
-    for i in range(1, len(values) - 1):
-        values[i] = (
-            -A_S * values[i - 1] + (1 + 2 * A_S) * values[i] - A_S * values[i + 1]
-        )
-
-    sd.values = values
-
-    return sd
+    pass
 
 
 BANDPASS_CORRECTION_METHODS: CanonicalMapping = CanonicalMapping(

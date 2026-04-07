@@ -80,12 +80,7 @@ def oetf_SMPTE240M(L_c: Domain1) -> Range1:
     >>> oetf_SMPTE240M(0.18)  # doctest: +ELLIPSIS
     np.float64(0.4022857...)
     """
-
-    L_c = to_domain_1(L_c)
-
-    V_c = np.where(L_c < 0.0228, 4 * L_c, 1.1115 * spow(L_c, 0.45) - 0.1115)
-
-    return as_float(from_range_1(V_c))
+    pass
 
 
 def eotf_SMPTE240M(V_r: Domain1) -> Range1:
@@ -127,14 +122,4 @@ def eotf_SMPTE240M(V_r: Domain1) -> Range1:
     >>> eotf_SMPTE240M(0.402285796753870)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    V_r = to_domain_1(V_r)
-
-    with domain_range_scale("ignore"):
-        L_r = np.where(
-            V_r < oetf_SMPTE240M(0.0228),
-            V_r / 4,
-            spow((V_r + 0.1115) / 1.1115, 1 / 0.45),
-        )
-
-    return as_float(from_range_1(L_r))
+    pass

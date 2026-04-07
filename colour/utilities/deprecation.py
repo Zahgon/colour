@@ -437,19 +437,7 @@ def get_attribute(attribute: str) -> Any:
     >>> get_attribute("colour.models.oetf_inverse_BT2020")  # doctest: +ELLIPSIS
     <function oetf_inverse_BT2020 at 0x...>
     """
-
-    attest("." in attribute, '"{0}" attribute has no namespace!')
-
-    module_name, attribute = attribute.rsplit(".", 1)
-
-    module = optional(sys.modules.get(module_name), import_module(module_name))
-
-    attest(
-        module is not None,
-        f'"{module_name}" module does not exists or cannot be imported!',
-    )
-
-    return attrgetter(attribute)(module)
+    pass
 
 
 def build_API_changes(changes: dict) -> dict:

@@ -104,30 +104,7 @@ def log_encoding_LLog(
     >>> log_encoding_LLog(0.18)  # doctest: +ELLIPSIS
     np.float64(0.4353139...)
     """
-
-    LSR = to_domain_1(LSR)
-    constants = optional(constants, CONSTANTS_LLOG)
-
-    if not in_reflection:
-        LSR = LSR * 0.9
-
-    cut1 = constants.cut1
-    a = constants.a
-    b = constants.b
-    c = constants.c
-    d = constants.d
-    e = constants.e
-    f = constants.f
-
-    LLog = np.where(
-        cut1 >= LSR,
-        a * LSR + b,
-        c * np.log10(d * LSR + e) + f,
-    )
-
-    LLog_cv = LLog if out_normalised_code_value else legal_to_full(LLog, bit_depth)
-
-    return as_float(from_range_1(LLog_cv))
+    pass
 
 
 def log_decoding_LLog(
@@ -183,27 +160,4 @@ def log_decoding_LLog(
     >>> log_decoding_LLog(0.43531390404392656)  # doctest: +ELLIPSIS
     np.float64(0.1800000...)
     """
-
-    LLog = to_domain_1(LLog)
-    constants = optional(constants, CONSTANTS_LLOG)
-
-    LLog = LLog if in_normalised_code_value else full_to_legal(LLog, bit_depth)
-
-    cut2 = constants.cut2
-    a = constants.a
-    b = constants.b
-    c = constants.c
-    d = constants.d
-    e = constants.e
-    f = constants.f
-
-    LSR = np.where(
-        LLog <= cut2,
-        (LLog - b) / a,
-        (spow(10, (LLog - f) / c) - e) / d,
-    )
-
-    if not out_reflection:
-        LSR = LSR / 0.9
-
-    return as_float(from_range_1(LSR))
+    pass

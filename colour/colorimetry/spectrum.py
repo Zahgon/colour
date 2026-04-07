@@ -178,24 +178,12 @@ class SpectralShape:
         Real
             Start wavelength of the spectral shape in nanometres.
         """
-
-        return self._start
+        pass
 
     @start.setter
     def start(self, value: Real) -> None:
         """Setter for the **self.start** property."""
-
-        attest(
-            is_numeric(value),
-            f'"start" property: "{value}" is not a "number"!',
-        )
-
-        attest(
-            bool(value < self._end),
-            f'"start" attribute value must be strictly less than "{self._end}"!',
-        )
-
-        self._start = value
+        pass
 
     @property
     def end(self) -> Real:
@@ -213,24 +201,12 @@ class SpectralShape:
              End wavelength of the spectral shape in nanometres.
         .
         """
-
-        return self._end
+        pass
 
     @end.setter
     def end(self, value: Real) -> None:
         """Setter for the **self.end** property."""
-
-        attest(
-            is_numeric(value),
-            f'"end" property: "{value}" is not a "number"!',
-        )
-
-        attest(
-            bool(value > self._start),
-            f'"end" attribute value must be strictly greater than "{self._start}"!',
-        )
-
-        self._end = value
+        pass
 
     @property
     def interval(self) -> Real:
@@ -282,21 +258,12 @@ class SpectralShape:
         :class:`tuple`
             Spectral shape boundaries.
         """
-
-        return self._start, self._end
+        pass
 
     @boundaries.setter
     def boundaries(self, value: ArrayLike) -> None:
         """Setter for the **self.boundaries** property."""
-
-        value = np.asarray(value)
-
-        attest(
-            value.size == 2,
-            f'"boundaries" property: "{value}" must have exactly two elements!',
-        )
-
-        self.start, self.end = value
+        pass
 
     @property
     def wavelengths(self) -> NDArrayFloat:
@@ -308,8 +275,7 @@ class SpectralShape:
         :class:`numpy.ndarray`
             Spectral shape wavelengths.
         """
-
-        return self.range()
+        pass
 
     def __str__(self) -> str:
         """
@@ -526,35 +492,7 @@ class SpectralShape:
                 8.8,  8.9,  9. ,  9.1,  9.2,  9.3,  9.4,  9.5,  9.6,  9.7,  9.8,
                 9.9, 10. ])
         """
-
-        dtype = optional(dtype, DTYPE_FLOAT_DEFAULT)
-
-        hash_key = hash((self, dtype))
-
-        if is_caching_enabled() and hash_key in _CACHE_SHAPE_RANGE:
-            return _CACHE_SHAPE_RANGE[hash_key].copy()
-
-        start, end, interval = (
-            dtype(self._start),
-            dtype(self._end),
-            dtype(self._interval),
-        )
-
-        samples = as_int(round((interval + end - start) / interval))
-        range_, interval_effective = np.linspace(
-            start, end, samples, retstep=True, dtype=dtype
-        )
-
-        _CACHE_SHAPE_RANGE[hash_key] = range_
-
-        if interval_effective != self._interval:
-            self._interval = cast("float", interval_effective)
-            runtime_warning(
-                f'"{(start, end, interval)}" shape could not be honoured, '
-                f'using "{self}"!'
-            )
-
-        return range_
+        pass
 
 
 SPECTRAL_SHAPE_DEFAULT: SpectralShape = SpectralShape(360, 780, 1)
@@ -753,11 +691,7 @@ class SpectralDistribution(Signal):
         :class:`numpy.ndarray`
             The specified domain values, unchanged.
         """
-
-        if name == "_domain":
-            sd._shape = None
-
-        return value
+        pass
 
     @property
     def display_name(self) -> str:
@@ -778,19 +712,12 @@ class SpectralDistribution(Signal):
         :class:`str`
             Spectral distribution's display name.
         """
-
-        return self._display_name
+        pass
 
     @display_name.setter
     def display_name(self, value: str) -> None:
         """Setter for the **self.display_name** property."""
-
-        attest(
-            isinstance(value, str),
-            f'"display_name" property: "{value}" type is not "str"!',
-        )
-
-        self._display_name = value
+        pass
 
     @property
     def wavelengths(self) -> NDArrayFloat:
@@ -809,14 +736,12 @@ class SpectralDistribution(Signal):
         :class:`numpy.ndarray`
             Spectral distribution wavelengths :math:`\\lambda_n`.
         """
-
-        return self.domain
+        pass
 
     @wavelengths.setter
     def wavelengths(self, value: ArrayLike) -> None:
         """Setter for the **self.wavelengths** property."""
-
-        self.domain = as_float_array(value, self.dtype)
+        pass
 
     @property
     def values(self) -> NDArrayFloat:
@@ -1891,19 +1816,12 @@ class MultiSpectralDistributions(MultiSignals):
         :class:`str`
             Multi-spectral distributions' display name.
         """
-
-        return self._display_name
+        pass
 
     @display_name.setter
     def display_name(self, value: str) -> None:
         """Setter for the **self.display_name** property."""
-
-        attest(
-            isinstance(value, str),
-            f'"display_name" property: "{value}" type is not "str"!',
-        )
-
-        self._display_name = value
+        pass
 
     @property
     def display_labels(self) -> List[str]:
@@ -1925,31 +1843,12 @@ class MultiSpectralDistributions(MultiSignals):
         :class:`list`
             Multi-spectral distributions display labels.
         """
-
-        return self._display_labels
+        pass
 
     @display_labels.setter
     def display_labels(self, value: Sequence) -> None:
         """Setter for the **self.display_labels** property."""
-
-        attest(
-            is_iterable(value),
-            f'"display_labels" property: "{value}" is not an "iterable" like object!',
-        )
-
-        attest(
-            len(set(value)) == len(value),
-            '"display_labels" property: values must be unique!',
-        )
-
-        attest(
-            len(value) == len(self.labels),
-            f'"display_labels" property: length must be "{len(self.labels)}"!',
-        )
-
-        self._display_labels = [str(label) for label in value]
-        for i, signal in enumerate(self.signals.values()):
-            cast("SpectralDistribution", signal).display_name = self._display_labels[i]
+        pass
 
     @property
     def wavelengths(self) -> NDArrayFloat:
@@ -1968,14 +1867,12 @@ class MultiSpectralDistributions(MultiSignals):
         :class:`numpy.ndarray`
             Multi-spectral distributions wavelengths :math:`\\lambda_n`.
         """
-
-        return self.domain
+        pass
 
     @wavelengths.setter
     def wavelengths(self, value: ArrayLike) -> None:
         """Setter for the **self.wavelengths** property."""
-
-        self.domain = as_float_array(value, self.dtype)
+        pass
 
     @property
     def values(self) -> NDArrayFloat:

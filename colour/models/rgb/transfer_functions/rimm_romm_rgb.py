@@ -118,19 +118,7 @@ def cctf_encoding_ROMMRGB(
     >>> cctf_encoding_ROMMRGB(0.18, out_int=True)
     np.int64(98)
     """
-
-    X = to_domain_1(X)
-
-    I_max = 2**bit_depth - 1
-
-    E_t = 16 ** (1.8 / (1 - 1.8))
-
-    X_p = np.where(E_t > X, X * 16 * I_max, spow(X, 1 / 1.8) * I_max)
-
-    if out_int:
-        return as_int(np.round(X_p))
-
-    return as_float(from_range_1(X_p / I_max))
+    pass
 
 
 def cctf_decoding_ROMMRGB(
@@ -185,23 +173,7 @@ def cctf_decoding_ROMMRGB(
     >>> cctf_decoding_ROMMRGB(98, in_int=True)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    X_p = to_domain_1(X_p)
-
-    I_max = 2**bit_depth - 1
-
-    if not in_int:
-        X_p = X_p * I_max
-
-    E_t = 16 ** (1.8 / (1 - 1.8))
-
-    X = np.where(
-        X_p < 16 * E_t * I_max,
-        X_p / (16 * I_max),
-        spow(X_p / I_max, 1.8),
-    )
-
-    return as_float(from_range_1(X))
+    pass
 
 
 cctf_encoding_ProPhotoRGB = copy_definition(
@@ -277,23 +249,7 @@ def cctf_encoding_RIMMRGB(
     >>> cctf_encoding_RIMMRGB(0.18, out_int=True)
     np.int64(74)
     """
-
-    X = to_domain_1(X)
-
-    I_max = 2**bit_depth - 1
-
-    V_clip = 1.099 * spow(E_clip, 0.45) - 0.099
-    q = I_max / V_clip
-
-    X_p = q * np.select(
-        [X < 0.0, X < 0.018, X >= 0.018, E_clip < X],
-        [0, 4.5 * X, 1.099 * spow(X, 0.45) - 0.099, I_max],
-    )
-
-    if out_int:
-        return as_int(np.round(X_p))
-
-    return as_float(from_range_1(X_p / I_max))
+    pass
 
 
 def cctf_decoding_RIMMRGB(
@@ -351,26 +307,7 @@ def cctf_decoding_RIMMRGB(
     >>> cctf_decoding_RIMMRGB(74, in_int=True)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    X_p = to_domain_1(X_p)
-
-    I_max = as_float_scalar(2**bit_depth - 1)
-
-    if not in_int:
-        X_p = X_p * I_max
-
-    V_clip = 1.099 * spow(E_clip, 0.45) - 0.099
-
-    m = V_clip * X_p / I_max
-
-    with domain_range_scale("ignore"):
-        X = np.where(
-            X_p / I_max < cctf_encoding_RIMMRGB(0.018, bit_depth, E_clip=E_clip),
-            m / 4.5,
-            spow((m + 0.099) / 1.099, 1 / 0.45),
-        )
-
-    return as_float(from_range_1(X))
+    pass
 
 
 def log_encoding_ERIMMRGB(
@@ -430,35 +367,7 @@ def log_encoding_ERIMMRGB(
     >>> log_encoding_ERIMMRGB(0.18, out_int=True)
     np.int64(105)
     """
-
-    X = to_domain_1(X)
-
-    I_max = 2**bit_depth - 1
-
-    E_t = np.exp(1) * E_min
-
-    l_E_t = np.log(E_t)
-    l_E_min = np.log(E_min)
-    l_E_clip = np.log(E_clip)
-    X_p = np.select(
-        [
-            X < 0.0,
-            E_t >= X,
-            E_t < X,
-            E_clip < X,
-        ],
-        [
-            0,
-            I_max * ((l_E_t - l_E_min) / (l_E_clip - l_E_min)) * X / E_t,
-            I_max * ((np.log(X) - l_E_min) / (l_E_clip - l_E_min)),
-            I_max,
-        ],
-    )
-
-    if out_int:
-        return as_int(np.round(X_p))
-
-    return as_float(from_range_1(X_p / I_max))
+    pass
 
 
 def log_decoding_ERIMMRGB(
@@ -518,23 +427,4 @@ def log_decoding_ERIMMRGB(
     >>> log_decoding_ERIMMRGB(105, in_int=True)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    X_p = to_domain_1(X_p)
-
-    I_max = 2**bit_depth - 1
-
-    if not in_int:
-        X_p = X_p * I_max
-
-    E_t = np.exp(1) * E_min
-
-    l_E_t = np.log(E_t)
-    l_E_min = np.log(E_min)
-    l_E_clip = np.log(E_clip)
-    X = np.where(
-        X_p <= I_max * ((l_E_t - l_E_min) / (l_E_clip - l_E_min)),
-        ((l_E_clip - l_E_min) / (l_E_t - l_E_min)) * ((X_p * E_t) / I_max),
-        np.exp((X_p / I_max) * (l_E_clip - l_E_min) + l_E_min),
-    )
-
-    return as_float(from_range_1(X))
+    pass

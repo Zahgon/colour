@@ -95,10 +95,7 @@ def _scale_domain_0_100_range_0_1(a: ArrayLike, callable_: Callable) -> NDArrayF
     :class:`numpy.ndarray`
         Scaled *luminance* :math:`Y` or *Lightness* :math:`L^*` array.
     """
-
-    a = as_float_array(a)
-
-    return callable_(a * 100, Y_n=100) / 100
+    pass
 
 
 RGB_COLOURSPACE_ECI_RGB_V2: RGB_Colourspace = RGB_Colourspace(

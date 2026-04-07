@@ -71,11 +71,4 @@ def is_within_mesh_volume(
     >>> is_within_mesh_volume(a, mesh)
     array([ True, False])
     """
-
-    from scipy.spatial import Delaunay  # noqa: PLC0415
-
-    triangulation = Delaunay(as_float_array(mesh))
-
-    simplex = triangulation.find_simplex(as_float_array(points), tol=tolerance)
-
-    return np.where(simplex >= 0, True, False)
+    pass

@@ -142,47 +142,7 @@ def exponent_function_basic(
     ... )
     np.float64(-0.18)
     """
-
-    x = as_float_array(x)
-    exponent = as_float_array(exponent)
-    style = validate_method(
-        style,
-        (
-            "basicFwd",
-            "basicRev",
-            "basicMirrorFwd",
-            "basicMirrorRev",
-            "basicPassThruFwd",
-            "basicPassThruRev",
-        ),
-        '"{0}" style is invalid, it must be one of {1}!',
-    )
-
-    def exponent_forward(x: NDArrayFloat) -> NDArrayFloat:
-        """Return the input raised to the exponent value."""
-
-        return x**exponent
-
-    def exponent_reverse(y: NDArrayFloat) -> NDArrayFloat:
-        """Return the input raised to the inverse exponent value."""
-
-        return y ** (as_float_array(1) / exponent)
-
-    m_x = x >= 0
-    if style == "basicfwd":
-        y = np.where(m_x, exponent_forward(x), 0)
-    elif style == "basicrev":
-        y = np.where(m_x, exponent_reverse(x), 0)
-    elif style == "basicmirrorfwd":
-        y = np.where(m_x, exponent_forward(x), -exponent_forward(-x))
-    elif style == "basicmirrorrev":
-        y = np.where(m_x, exponent_reverse(x), -exponent_reverse(-x))
-    elif style == "basicpassthrufwd":
-        y = np.where(m_x, exponent_forward(x), x)
-    else:  # style == 'basicpassthrurev'
-        y = np.where(m_x, exponent_reverse(x), x)
-
-    return as_float(y)
+    pass
 
 
 def exponent_function_monitor_curve(
@@ -268,71 +228,4 @@ def exponent_function_monitor_curve(
     ... )
     np.float64(-0.4581151...)
     """
-
-    x = as_float_array(x)
-    exponent = as_float_array(exponent)
-    offset = as_float_array(offset)
-    style = validate_method(
-        style,
-        (
-            "monCurveFwd",
-            "monCurveRev",
-            "monCurveMirrorFwd",
-            "monCurveMirrorRev",
-        ),
-        '"{0}" style is invalid, it must be one of {1}!',
-    )
-
-    with sdiv_mode():
-        s = as_float_array(
-            sdiv(exponent - 1, offset)
-            * sdiv(exponent * offset, (exponent - 1) * (offset + 1)) ** exponent
-        )
-
-    def monitor_curve_forward(
-        x: NDArrayFloat, offset: NDArrayFloat, exponent: NDArrayFloat
-    ) -> NDArrayFloat:
-        """Define the *Monitor Curve Forward* function."""
-
-        with sdiv_mode():
-            x_break = sdiv(offset, exponent - 1)
-
-        y = as_float_array(x * s)
-
-        return np.where(x >= x_break, ((x + offset) / (1 + offset)) ** exponent, y)
-
-    def monitor_curve_reverse(
-        y: NDArrayFloat, offset: NDArrayFloat, exponent: NDArrayFloat
-    ) -> NDArrayFloat:
-        """Define the *Monitor Curve Reverse* function."""
-
-        with sdiv_mode():
-            y_break = (
-                sdiv(exponent * offset, (exponent - 1) * (1 + offset))
-            ) ** exponent
-
-            x = as_float_array(y / s)
-
-        return np.where(
-            y >= y_break, ((1 + offset) * (y ** (1 / exponent))) - offset, x
-        )
-
-    m_x = x >= 0
-    if style == "moncurvefwd":
-        y = monitor_curve_forward(x, offset, exponent)
-    elif style == "moncurverev":
-        y = monitor_curve_reverse(x, offset, exponent)
-    elif style == "moncurvemirrorfwd":
-        y = np.where(
-            m_x,
-            monitor_curve_forward(x, offset, exponent),
-            -monitor_curve_forward(-x, offset, exponent),
-        )
-    else:  # style == 'moncurvemirrorrev'
-        y = np.where(
-            m_x,
-            monitor_curve_reverse(x, offset, exponent),
-            -monitor_curve_reverse(-x, offset, exponent),
-        )
-
-    return as_float(y)
+    pass

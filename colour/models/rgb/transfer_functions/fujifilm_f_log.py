@@ -130,30 +130,7 @@ def log_encoding_FLog(
     >>> np.around(log_encoding_FLog(x) * (2**10 - 1)).astype(np.int_)
     array([ 95, 470, 705])
     """
-
-    in_r = to_domain_1(in_r)
-    constants = optional(constants, CONSTANTS_FLOG)
-
-    if not in_reflection:
-        in_r = in_r * 0.9
-
-    cut1 = constants.cut1
-    a = constants.a
-    b = constants.b
-    c = constants.c
-    d = constants.d
-    e = constants.e
-    f = constants.f
-
-    out_r = np.where(
-        in_r < cut1,
-        e * in_r + f,
-        c * np.log10(a * in_r + b) + d,
-    )
-
-    out_r_cv = out_r if out_normalised_code_value else legal_to_full(out_r, bit_depth)
-
-    return as_float(from_range_1(out_r_cv))
+    pass
 
 
 def log_decoding_FLog(
@@ -210,30 +187,7 @@ def log_decoding_FLog(
     >>> log_decoding_FLog(0.45931845866162124)  # doctest: +ELLIPSIS
     np.float64(0.1800000...)
     """
-
-    out_r = to_domain_1(out_r)
-    constants = optional(constants, CONSTANTS_FLOG)
-
-    out_r = out_r if in_normalised_code_value else full_to_legal(out_r, bit_depth)
-
-    cut2 = constants.cut2
-    a = constants.a
-    b = constants.b
-    c = constants.c
-    d = constants.d
-    e = constants.e
-    f = constants.f
-
-    in_r = np.where(
-        out_r < cut2,
-        (out_r - f) / e,
-        (10 ** ((out_r - d) / c)) / a - b / a,
-    )
-
-    if not out_reflection:
-        in_r = in_r / 0.9
-
-    return as_float(from_range_1(in_r))
+    pass
 
 
 def log_encoding_FLog2(
@@ -297,12 +251,7 @@ def log_encoding_FLog2(
     >>> np.around(log_encoding_FLog2(x) * (2**10 - 1)).astype(np.int_)
     array([ 95, 400, 570])
     """
-
-    constants = optional(constants, CONSTANTS_FLOG2)
-
-    return log_encoding_FLog(
-        in_r, bit_depth, out_normalised_code_value, in_reflection, constants
-    )
+    pass
 
 
 def log_decoding_FLog2(
@@ -358,9 +307,4 @@ def log_decoding_FLog2(
     >>> log_decoding_FLog2(0.39100724189123004)  # doctest: +ELLIPSIS
     np.float64(0.18...)
     """
-
-    constants = optional(constants, CONSTANTS_FLOG2)
-
-    return log_decoding_FLog(
-        out_r, bit_depth, in_normalised_code_value, out_reflection, constants
-    )
+    pass

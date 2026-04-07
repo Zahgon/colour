@@ -132,38 +132,7 @@ def eotf_inverse_DICOMGSDF(
     >>> eotf_inverse_DICOMGSDF(130.0662, out_int=True)
     np.int64(512)
     """
-
-    L = to_domain_1(L)
-    constants = optional(constants, CONSTANTS_DICOMGSDF)
-
-    L_lg = np.log10(L)
-
-    A = constants.A
-    B = constants.B
-    C = constants.C
-    D = constants.D
-    E = constants.E
-    F = constants.F
-    G = constants.G
-    H = constants.H
-    I = constants.I  # noqa: E741
-
-    J = (
-        A
-        + B * L_lg
-        + C * L_lg**2
-        + D * L_lg**3
-        + E * L_lg**4
-        + F * L_lg**5
-        + G * L_lg**6
-        + H * L_lg**7
-        + I * L_lg**8
-    )
-
-    if out_int:
-        return as_int(np.round(J))
-
-    return as_float(from_range_1(J / 1023))
+    pass
 
 
 def eotf_DICOMGSDF(
@@ -215,33 +184,4 @@ def eotf_DICOMGSDF(
     >>> eotf_DICOMGSDF(512, in_int=True)  # doctest: +ELLIPSIS
     np.float64(130.0652840...)
     """
-
-    J = to_domain_1(J)
-    constants = optional(constants, CONSTANTS_DICOMGSDF)
-
-    if not in_int:
-        J = J * 1023
-
-    a = constants.a
-    b = constants.b
-    c = constants.c
-    d = constants.d
-    e = constants.e
-    f = constants.f
-    g = constants.g
-    h = constants.h
-    k = constants.k
-    m = constants.m
-
-    J_ln = np.log(J)
-    J_ln2 = J_ln**2
-    J_ln3 = J_ln**3
-    J_ln4 = J_ln**4
-    J_ln5 = J_ln**5
-
-    L = (a + c * J_ln + e * J_ln2 + g * J_ln3 + m * J_ln4) / (
-        1 + b * J_ln + d * J_ln2 + f * J_ln3 + h * J_ln4 + k * J_ln5
-    )
-    L = 10**L
-
-    return as_float(from_range_1(L))
+    pass

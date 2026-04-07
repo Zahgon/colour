@@ -249,23 +249,7 @@ def UCS_Luo2006_to_JMh_CIECAM02(
     ... # doctest: +ELLIPSIS
     array([4.1731091...e+01, 1.0884217...e-01, 2.1904843...e+02])
     """
-
-    J_p, a_p, b_p = tsplit(to_domain_100(Jpapbp))
-    _K_L, c_1, c_2 = coefficients.values
-
-    J = -J_p / (c_1 * J_p - 1 - 100 * c_1)
-
-    M_p, h = tsplit(cartesian_to_polar(tstack([a_p, b_p])))
-
-    M = np.expm1(M_p / (1 / c_2)) / c_2
-
-    return tstack(
-        [
-            from_range_100(J),
-            from_range_100(M),
-            from_range_degrees(np.degrees(h) % 360),
-        ]
-    )
+    pass
 
 
 def JMh_CIECAM02_to_CAM02LCD(
@@ -325,10 +309,7 @@ def JMh_CIECAM02_to_CAM02LCD(
     >>> JMh_CIECAM02_to_CAM02LCD(JMh)  # doctest: +ELLIPSIS
     array([54.9043313..., -0.0845039..., -0.0685483...])
     """
-
-    return JMh_CIECAM02_to_UCS_Luo2006(
-        JMh, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-LCD"]
-    )
+    pass
 
 
 def CAM02LCD_to_JMh_CIECAM02(
@@ -378,10 +359,7 @@ def CAM02LCD_to_JMh_CIECAM02(
     >>> CAM02LCD_to_JMh_CIECAM02(Jpapbp)  # doctest: +ELLIPSIS
     array([4.1731091...e+01, 1.0884217...e-01, 2.1904843...e+02])
     """
-
-    return UCS_Luo2006_to_JMh_CIECAM02(
-        Jpapbp, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-LCD"]
-    )
+    pass
 
 
 def JMh_CIECAM02_to_CAM02SCD(
@@ -441,10 +419,7 @@ def JMh_CIECAM02_to_CAM02SCD(
     >>> JMh_CIECAM02_to_CAM02SCD(JMh)  # doctest: +ELLIPSIS
     array([54.9043313..., -0.0843617..., -0.0684329...])
     """
-
-    return JMh_CIECAM02_to_UCS_Luo2006(
-        JMh, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-SCD"]
-    )
+    pass
 
 
 def CAM02SCD_to_JMh_CIECAM02(
@@ -495,10 +470,7 @@ def CAM02SCD_to_JMh_CIECAM02(
     >>> CAM02SCD_to_JMh_CIECAM02(Jpapbp)  # doctest: +ELLIPSIS
     array([4.1731091...e+01, 1.0884217...e-01, 2.1904843...e+02])
     """
-
-    return UCS_Luo2006_to_JMh_CIECAM02(
-        Jpapbp, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-SCD"]
-    )
+    pass
 
 
 def JMh_CIECAM02_to_CAM02UCS(
@@ -611,10 +583,7 @@ def CAM02UCS_to_JMh_CIECAM02(
     >>> CAM02UCS_to_JMh_CIECAM02(Jpapbp)  # doctest: +ELLIPSIS
     array([4.1731091...e+01, 1.0884217...e-01, 2.1904843...e+02])
     """
-
-    return UCS_Luo2006_to_JMh_CIECAM02(
-        Jpapbp, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-UCS"]
-    )
+    pass
 
 
 def XYZ_to_UCS_Luo2006(
@@ -767,32 +736,7 @@ def UCS_Luo2006_to_XYZ(
     ... # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
     """
-
-    from colour.appearance import (  # noqa: PLC0415
-        CAM_KWARGS_CIECAM02_sRGB,
-        CAM_Specification_CIECAM02,
-        CIECAM02_to_XYZ,
-    )
-
-    domain_range_reference = get_domain_range_scale() == "reference"
-
-    settings = CAM_KWARGS_CIECAM02_sRGB.copy()
-    settings.update(**kwargs)
-    XYZ_w = kwargs.get("XYZ_w")
-
-    if XYZ_w is not None and domain_range_reference:
-        settings["XYZ_w"] = as_float_array(XYZ_w) * 100
-
-    J, M, h = tsplit(UCS_Luo2006_to_JMh_CIECAM02(Jpapbp, coefficients))
-
-    specification = CAM_Specification_CIECAM02(J=J, M=M, h=h)
-
-    XYZ = CIECAM02_to_XYZ(specification, **settings)
-
-    if domain_range_reference:
-        XYZ /= 100
-
-    return XYZ
+    pass
 
 
 def XYZ_to_CAM02LCD(XYZ: Domain1, **kwargs: Any) -> Range100:
@@ -853,10 +797,7 @@ def XYZ_to_CAM02LCD(XYZ: Domain1, **kwargs: Any) -> Range100:
     >>> XYZ_to_CAM02LCD(XYZ)  # doctest: +ELLIPSIS
     array([46.6138615..., 39.3576023..., 15.9673043...])
     """
-
-    return XYZ_to_UCS_Luo2006(
-        XYZ, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-LCD"], **kwargs
-    )
+    pass
 
 
 def CAM02LCD_to_XYZ(Jpapbp: Domain100, **kwargs: Any) -> Range1:
@@ -915,10 +856,7 @@ def CAM02LCD_to_XYZ(Jpapbp: Domain100, **kwargs: Any) -> Range1:
     >>> CAM02LCD_to_XYZ(Jpapbp)  # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
     """
-
-    return UCS_Luo2006_to_XYZ(
-        Jpapbp, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-LCD"], **kwargs
-    )
+    pass
 
 
 def XYZ_to_CAM02SCD(XYZ: Domain1, **kwargs: Any) -> Range100:
@@ -979,10 +917,7 @@ def XYZ_to_CAM02SCD(XYZ: Domain1, **kwargs: Any) -> Range100:
     >>> XYZ_to_CAM02SCD(XYZ)  # doctest: +ELLIPSIS
     array([46.6138615..., 25.6287988..., 10.3975548...])
     """
-
-    return XYZ_to_UCS_Luo2006(
-        XYZ, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-SCD"], **kwargs
-    )
+    pass
 
 
 def CAM02SCD_to_XYZ(Jpapbp: Domain100, **kwargs: Any) -> Range1:
@@ -1041,10 +976,7 @@ def CAM02SCD_to_XYZ(Jpapbp: Domain100, **kwargs: Any) -> Range1:
     >>> CAM02SCD_to_XYZ(Jpapbp)  # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
     """
-
-    return UCS_Luo2006_to_XYZ(
-        Jpapbp, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-SCD"], **kwargs
-    )
+    pass
 
 
 def XYZ_to_CAM02UCS(XYZ: Domain1, **kwargs: Any) -> Range100:
@@ -1167,7 +1099,4 @@ def CAM02UCS_to_XYZ(Jpapbp: Domain100, **kwargs: Any) -> Range1:
     >>> CAM02UCS_to_XYZ(Jpapbp)  # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
     """
-
-    return UCS_Luo2006_to_XYZ(
-        Jpapbp, coefficients=COEFFICIENTS_UCS_LUO2006["CAM02-UCS"], **kwargs
-    )
+    pass

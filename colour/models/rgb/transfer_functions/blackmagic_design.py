@@ -91,24 +91,7 @@ def oetf_BlackmagicFilmGeneration5(
     >>> oetf_BlackmagicFilmGeneration5(0.18)  # doctest: +ELLIPSIS
     np.float64(0.3835616...)
     """
-
-    x = to_domain_1(x)
-    constants = optional(constants, CONSTANTS_BLACKMAGIC_FILM_GENERATION_5)
-
-    A = constants.A
-    B = constants.B
-    C = constants.C
-    D = constants.D
-    E = constants.E
-    LIN_CUT = constants.LIN_CUT
-
-    V_out = np.where(
-        x < LIN_CUT,
-        D * x + E,
-        A * np.log(x + B) + C,
-    )
-
-    return as_float(from_range_1(V_out))
+    pass
 
 
 def oetf_inverse_BlackmagicFilmGeneration5(
@@ -155,22 +138,4 @@ def oetf_inverse_BlackmagicFilmGeneration5(
     ... # doctest: +ELLIPSIS
     np.float64(0.1799999...)
     """
-
-    y = to_domain_1(y)
-    constants = optional(constants, CONSTANTS_BLACKMAGIC_FILM_GENERATION_5)
-
-    A = constants.A
-    B = constants.B
-    C = constants.C
-    D = constants.D
-    E = constants.E
-    LIN_CUT = constants.LIN_CUT
-
-    LOG_CUT = D * LIN_CUT + E
-
-    x = np.where(
-        y < LOG_CUT,
-        (y - E) / D,
-        np.exp((y - C) / A) - B,
-    )
-    return as_float(from_range_1(x))
+    pass

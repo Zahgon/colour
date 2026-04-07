@@ -244,23 +244,7 @@ def image_specification_OpenImageIO(
     ... )  # doctest: +SKIP
     <OpenImageIO.ImageSpec object at 0x...>
     """
-
-    from OpenImageIO import ImageSpec  # noqa: PLC0415
-
-    attributes = cast("list", optional(attributes, []))
-
-    bit_depth_specification = MAPPING_BIT_DEPTH[bit_depth]
-
-    image_specification = ImageSpec(
-        width, height, channels, bit_depth_specification.openimageio
-    )
-
-    add_attributes_to_image_specification_OpenImageIO(
-        image_specification,  # pyright: ignore
-        attributes or [],
-    )
-
-    return image_specification  # pyright: ignore
+    pass
 
 
 def convert_bit_depth(
@@ -311,43 +295,7 @@ def convert_bit_depth(
     >>> convert_bit_depth(a, "float32")  # doctest: +ELLIPSIS
     array([0.       , 0.501960..., 1.       ], dtype=float32)
     """
-
-    a = np.asarray(a)
-
-    bit_depths = ", ".join(sorted(MAPPING_BIT_DEPTH.keys()))
-
-    attest(
-        bit_depth in bit_depths,
-        f'Incorrect bit-depth was specified, it must be one of: "{bit_depths}"!',
-    )
-
-    attest(
-        str(a.dtype) in bit_depths,
-        f'Image bit-depth must be one of: "{bit_depths}"!',
-    )
-
-    source_dtype = str(a.dtype)
-    target_dtype = MAPPING_BIT_DEPTH[bit_depth].numpy
-
-    if source_dtype == "uint8":
-        if bit_depth == "uint16":
-            a = a.astype(target_dtype) * 257
-        elif bit_depth in ("float16", "float32", "float64", "float128"):
-            a = (a / 255).astype(target_dtype)
-    elif source_dtype == "uint16":
-        if bit_depth == "uint8":
-            a = (a / 257).astype(target_dtype)
-        elif bit_depth in ("float16", "float32", "float64", "float128"):
-            a = (a / 65535).astype(target_dtype)
-    elif source_dtype in ("float16", "float32", "float64", "float128"):
-        if bit_depth == "uint8":
-            a = np.around(a * 255).astype(target_dtype)
-        elif bit_depth == "uint16":
-            a = np.around(a * 65535).astype(target_dtype)
-        elif bit_depth in ("float16", "float32", "float64", "float128"):
-            a = a.astype(target_dtype)
-
-    return a
+    pass
 
 
 @typing.overload
@@ -439,48 +387,7 @@ def read_image_OpenImageIO(
     ... )
     >>> image = read_image_OpenImageIO(path)  # doctest: +SKIP
     """
-
-    from OpenImageIO import ImageInput  # noqa: PLC0415
-
-    path = str(path)
-
-    kwargs = handle_arguments_deprecation(
-        {
-            "ArgumentRenamed": [["attributes", "additional_data"]],
-        },
-        **kwargs,
-    )
-
-    additional_data = kwargs.get("additional_data", additional_data)
-
-    bit_depth_specification = MAPPING_BIT_DEPTH[bit_depth]
-
-    image_input = ImageInput.open(path)
-    image_specification = image_input.spec()
-
-    shape = (
-        image_specification.height,
-        image_specification.width,
-        image_specification.nchannels,
-    )
-
-    image = image_input.read_image(bit_depth_specification.openimageio)
-    image_input.close()
-
-    image = np.reshape(np.array(image, dtype=bit_depth_specification.numpy), shape)
-    image = cast("NDArrayReal", np.squeeze(image))
-
-    if additional_data:
-        extra_attributes = [
-            Image_Specification_Attribute(
-                attribute.name, attribute.value, attribute.type
-            )
-            for attribute in image_specification.extra_attribs
-        ]
-
-        return image, tuple(extra_attributes)
-
-    return image
+    pass
 
 
 @required("Imageio")
@@ -534,14 +441,7 @@ def read_image_Imageio(
     >>> image.dtype
     dtype('float32')
     """
-
-    from imageio.v2 import imread  # noqa: PLC0415
-
-    path = str(path)
-
-    image = np.squeeze(imread(path, **kwargs))
-
-    return convert_bit_depth(image, bit_depth)
+    pass
 
 
 READ_IMAGE_METHODS: CanonicalMapping = CanonicalMapping(
@@ -731,45 +631,7 @@ def write_image_OpenImageIO(
         in *OpenImageIO* 3.1.7.0+, as it triggers strict ACES validation.
         Use ``openexr:ACESContainerPolicy`` instead.
     """
-
-    from OpenImageIO import ImageOutput  # noqa: PLC0415
-
-    image = as_float_array(image)
-    path = str(path)
-
-    attributes = cast("list", optional(attributes, []))
-
-    bit_depth_specification = MAPPING_BIT_DEPTH[bit_depth]
-
-    if bit_depth_specification.numpy in [np.uint8, np.uint16]:
-        minimum, maximum = (
-            np.iinfo(bit_depth_specification.numpy).min,
-            np.iinfo(bit_depth_specification.numpy).max,
-        )
-        image = np.clip(image * maximum, minimum, maximum)
-
-        image = as_int_array(image, bit_depth_specification.numpy)
-
-    image = image.astype(bit_depth_specification.numpy)
-
-    if image.ndim == 2:
-        height, width = image.shape
-        channels = 1
-    else:
-        height, width, channels = image.shape
-
-    image_specification = image_specification_OpenImageIO(
-        width, height, channels, bit_depth, attributes
-    )
-
-    image_output = ImageOutput.create(path)
-
-    image_output.open(path, image_specification)  # pyright: ignore
-    success = image_output.write_image(image)
-
-    image_output.close()
-
-    return success
+    pass
 
 
 @required("Imageio")
@@ -835,24 +697,7 @@ def write_image_Imageio(
     >>> write_image_Imageio(image, path)  # doctest: +SKIP
     True
     """
-
-    from imageio.v2 import imwrite  # noqa: PLC0415
-
-    path = str(path)
-
-    if all(
-        [
-            path.lower().endswith(".exr"),
-            bit_depth in ("float32", "float64", "float128"),
-        ]
-    ):
-        # Ensures that "OpenEXR" images are saved as "Float32" according to the
-        # image bit-depth.
-        kwargs["flags"] = 0x0001
-
-    image = convert_bit_depth(image, bit_depth)
-
-    return imwrite(path, image, **kwargs)
+    pass
 
 
 WRITE_IMAGE_METHODS: CanonicalMapping = CanonicalMapping(

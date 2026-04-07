@@ -75,12 +75,7 @@ def log_encoding_ViperLog(x: Domain1) -> Range1:
     >>> log_encoding_ViperLog(0.18)  # doctest: +ELLIPSIS
     np.float64(0.6360080...)
     """
-
-    x = to_domain_1(x)
-
-    y = (1023 + 500 * np.log10(x)) / 1023
-
-    return as_float(from_range_1(y))
+    pass
 
 
 def log_decoding_ViperLog(y: Domain1) -> Range1:
@@ -120,9 +115,4 @@ def log_decoding_ViperLog(y: Domain1) -> Range1:
     >>> log_decoding_ViperLog(0.636008067010413)  # doctest: +ELLIPSIS
     np.float64(0.1799999...)
     """
-
-    y = to_domain_1(y)
-
-    x = 10 ** ((1023 * y - 1023) / 500)
-
-    return as_float(from_range_1(x))
+    pass

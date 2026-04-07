@@ -127,13 +127,4 @@ def power_function_Huang2015(
     >>> power_function_Huang2015(d_E)  # doctest: +ELLIPSIS
     array([2.3574879..., 2.9850503..., 3.3965106...])
     """
-
-    coefficients = validate_method(
-        coefficients,
-        tuple(COEFFICIENTS_HUANG2015),
-        '"{0}" coefficients are invalid, they must be one of {1}!',
-    )
-
-    a, b = tsplit(COEFFICIENTS_HUANG2015[coefficients])
-
-    return a * d_E**b
+    pass

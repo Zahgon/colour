@@ -86,13 +86,7 @@ def log_encoding_Panalog(
     >>> log_encoding_Panalog(0.18)  # doctest: +ELLIPSIS
     np.float64(0.3745767...)
     """
-
-    x = to_domain_1(x)
-    black_offset = as_float_array(black_offset)
-
-    y = (681 + 444 * np.log10(x * (1 - black_offset) + black_offset)) / 1023
-
-    return as_float(from_range_1(y))
+    pass
 
 
 def log_decoding_Panalog(
@@ -142,10 +136,4 @@ def log_decoding_Panalog(
     >>> log_decoding_Panalog(0.374576791382298)  # doctest: +ELLIPSIS
     np.float64(0.1...)
     """
-
-    y = to_domain_1(y)
-    black_offset = as_float_array(black_offset)
-
-    x = (10 ** ((1023 * y - 681) / 444) - black_offset) / (1 - black_offset)
-
-    return as_float(from_range_1(x))
+    pass

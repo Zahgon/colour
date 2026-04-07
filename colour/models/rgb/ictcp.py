@@ -500,15 +500,7 @@ def XYZ_to_ICtCp(
     >>> XYZ_to_ICtCp(XYZ, method="ITU-R BT.2100-2 HLG")  # doctest: +ELLIPSIS
     array([ 0.5924279..., -0.0374073...,  0.2512267...])
     """
-
-    RGB = XYZ_to_RGB(
-        XYZ,
-        RGB_COLOURSPACES["ITU-R BT.2020"],
-        illuminant,
-        chromatic_adaptation_transform,
-    )
-
-    return RGB_to_ICtCp(RGB, method, L_p)
+    pass
 
 
 def ICtCp_to_XYZ(
@@ -620,12 +612,4 @@ def ICtCp_to_XYZ(
     >>> ICtCp_to_XYZ(ICtCp, method="ITU-R BT.2100-2 HLG")  # doctest: +ELLIPSIS
     array([0.2065400..., 0.1219722..., 0.0513695...])
     """
-
-    RGB = ICtCp_to_RGB(ICtCp, method, L_p)
-
-    return RGB_to_XYZ(
-        RGB,
-        RGB_COLOURSPACES["ITU-R BT.2020"],
-        illuminant,
-        chromatic_adaptation_transform,
-    )
+    pass

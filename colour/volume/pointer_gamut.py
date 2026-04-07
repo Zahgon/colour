@@ -71,9 +71,4 @@ def is_within_pointer_gamut(
     >>> is_within_pointer_gamut(a)
     array([ True, False])
     """
-
-    XYZ_p = Lab_to_XYZ(
-        LCHab_to_Lab(DATA_POINTER_GAMUT_VOLUME), CCS_ILLUMINANT_POINTER_GAMUT
-    )
-
-    return is_within_mesh_volume(XYZ, XYZ_p, tolerance)
+    pass

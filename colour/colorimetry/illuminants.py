@@ -128,19 +128,7 @@ def sd_CIE_standard_illuminant_A(
                          Extrapolator,
                          {'method': 'Constant', 'left': None, 'right': None})
     """
-
-    values = (
-        100
-        * (560 / shape.wavelengths) ** 5
-        * (
-            np.expm1((1.435 * 10**7) / (2848 * 560))
-            / np.expm1((1.435 * 10**7) / (2848 * shape.wavelengths))
-        )
-    )
-
-    return SpectralDistribution(
-        values, shape.wavelengths, name="CIE Standard Illuminant A"
-    )
+    pass
 
 
 def sd_CIE_illuminant_D_series(

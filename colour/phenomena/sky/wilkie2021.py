@@ -1307,18 +1307,7 @@ def sky_polarisation_Wilkie2021(
     ----------
     :cite:`Wilkie2021`, :cite:`Vevoda2022`
     """
-
-    if dataset.metadata_polarisation.rank == 0:
-        message = "The supplied dataset does not contain polarisation data."
-        raise ValueError(message)
-
-    return -_evaluate_sky_model(
-        dataset,
-        parameters,
-        as_float_array(wavelength),
-        dataset.data_polarisation,
-        dataset.metadata_polarisation,
-    )
+    pass
 
 
 def _compute_transmittance_interpolation(

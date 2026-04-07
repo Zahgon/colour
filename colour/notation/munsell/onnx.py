@@ -166,23 +166,7 @@ def normalization_parameters(
     :class:`dict`
         Dictionary with ``input_parameters`` and ``output_parameters`` keys.
     """
-
-    global _CACHE_NORMALIZATION_PARAMETERS  # noqa: PLW0602
-
-    if filename in _CACHE_NORMALIZATION_PARAMETERS:
-        return _CACHE_NORMALIZATION_PARAMETERS[filename]
-
-    url = f"https://huggingface.co/{HF_REPOSITORY_MUNSELL}/resolve/main/{filename}"
-    file_hash = optional(sha256, {}).get(filename)
-    path = url_download(url, sha256=file_hash)
-    data = np.load(path, allow_pickle=True)
-    parameters = {
-        k: data[k].item() if data[k].ndim == 0 else data[k] for k in data.files
-    }
-
-    _CACHE_NORMALIZATION_PARAMETERS[filename] = parameters
-
-    return parameters
+    pass
 
 
 @required("onnxruntime")
@@ -205,28 +189,7 @@ def onnx_inference_session(
     :class:`onnxruntime.InferenceSession`
         *ONNX* inference session.
     """
-
-    global _CACHE_ONNX_SESSIONS  # noqa: PLW0602
-
-    if filename in _CACHE_ONNX_SESSIONS:
-        return _CACHE_ONNX_SESSIONS[filename]
-
-    import onnxruntime  # noqa: PLC0415
-
-    url = f"https://huggingface.co/{HF_REPOSITORY_MUNSELL}/resolve/main/{filename}"
-    model_hash = optional(sha256, {}).get(filename)
-    model_path = url_download(url, sha256=model_hash)
-
-    # *ONNX* models store weights in a companion ``.onnx.data`` file.
-    data_filename = f"{filename}.data"
-    data_hash = optional(sha256, {}).get(data_filename)
-    url_download(f"{url}.data", sha256=data_hash)
-
-    session = onnxruntime.InferenceSession(model_path)
-
-    _CACHE_ONNX_SESSIONS[filename] = session
-
-    return session
+    pass
 
 
 @required("onnxruntime")
@@ -274,41 +237,7 @@ def munsell_specification_to_xyY_Onnx(
     ... )
     array([...])
     """
-
-    specification = to_domain_10(as_float_array(specification), _munsell_scale_factor())
-    shape = specification.shape
-
-    # Normalize input to [0, 1] using model parameters.
-    sha256 = ONNX_MODELS_TO_XYY.get("sha256")
-    input_parameters = normalization_parameters(
-        ONNX_MODELS_TO_XYY["parameters"], sha256=sha256
-    )["input_parameters"]
-    input_data = np.reshape(specification, (-1, 4)).copy()
-    for i, key in enumerate(["hue_range", "value_range", "chroma_range", "code_range"]):
-        minimum, maximum = input_parameters[key]
-        input_data[..., i] = (input_data[..., i] - minimum) / (maximum - minimum)
-    input_data = input_data.astype(np.float32)
-
-    # Base model prediction.
-    session = onnx_inference_session(ONNX_MODELS_TO_XYY["model"], sha256=sha256)
-    input_name = session.get_inputs()[0].name
-    xyY = np.asarray(session.run(None, {input_name: input_data})[0])
-
-    # Optional error correction.
-    if ONNX_MODELS_TO_XYY.get("error_predictor"):
-        error_session = onnx_inference_session(
-            ONNX_MODELS_TO_XYY["error_predictor"], sha256=sha256
-        )
-        error_input_name = error_session.get_inputs()[0].name
-        combined = np.concatenate([input_data, xyY], axis=1).astype(np.float32)
-        error_correction = np.asarray(
-            error_session.run(None, {error_input_name: combined})[0]
-        )
-        xyY = xyY + error_correction
-
-    xyY = from_range_1(xyY, np.array([1, 1, 100]))
-
-    return np.reshape(xyY, (*shape[:-1], 3))
+    pass
 
 
 @required("onnxruntime")
@@ -341,17 +270,7 @@ def munsell_colour_to_xyY_Onnx(munsell_colour: ArrayLike) -> Range1:
     >>> munsell_colour_to_xyY_Onnx("4.2YR 8.1/5.3")  # doctest: +SKIP
     array([...])
     """
-
-    munsell_colour = np.array(munsell_colour)
-    shape = munsell_colour.shape
-
-    specification = np.array(
-        [munsell_colour_to_munsell_specification(a) for a in np.ravel(munsell_colour)]
-    )
-
-    return munsell_specification_to_xyY_Onnx(
-        from_range_10(np.reshape(specification, (*shape, 4)), _munsell_scale_factor())
-    )
+    pass
 
 
 @required("onnxruntime")
@@ -396,87 +315,7 @@ def xyY_to_munsell_specification_Onnx(xyY: ArrayLike) -> NDArrayFloat:
     >>> xyY_to_munsell_specification_Onnx(xyY)  # doctest: +SKIP
     array([...])
     """
-
-    xyY = as_float_array(xyY)
-    shape = xyY.shape
-
-    # Normalize input to [0, 1] using model parameters.
-    sha256 = ONNX_MODELS_FROM_XYY.get("sha256")
-    input_parameters = normalization_parameters(
-        ONNX_MODELS_FROM_XYY["parameters"], sha256=sha256
-    )["input_parameters"]
-    input_data = np.reshape(to_domain_1(xyY, np.array([1, 1, 100])), (-1, 3)).copy()
-    for i, key in enumerate(["x_range", "y_range", "Y_range"]):
-        minimum, maximum = input_parameters[key]
-        input_data[..., i] = (input_data[..., i] - minimum) / (maximum - minimum)
-    input_data = input_data.astype(np.float32)
-
-    # Base model prediction.
-    base_session = onnx_inference_session(ONNX_MODELS_FROM_XYY["model"], sha256=sha256)
-    base_input_name = base_session.get_inputs()[0].name
-    base_output = np.asarray(base_session.run(None, {base_input_name: input_data})[0])
-
-    output_parameters = normalization_parameters(
-        ONNX_MODELS_FROM_XYY["parameters"], sha256=sha256
-    )["output_parameters"]
-
-    is_class_code = ONNX_MODELS_FROM_XYY.get("type") == "class_code"
-
-    if is_class_code:
-        # Classification code model outputs (N, 13): 3 normalised regression
-        # values (hue, value, chroma) and 10 logits, i.e., raw scores for each
-        # *Munsell* hue family (R, YR, Y, GY, G, BG, B, PB, P, RP). The
-        # predicted code is the index of the highest logit + 1.
-        normalised_regression = base_output[..., :3]
-        code_logits = base_output[..., 3:]
-    else:
-        normalised_regression = base_output
-
-    # Optional error correction.
-    if ONNX_MODELS_FROM_XYY.get("error_predictor"):
-        error_session = onnx_inference_session(
-            ONNX_MODELS_FROM_XYY["error_predictor"], sha256=sha256
-        )
-        error_input_name = error_session.get_inputs()[0].name
-
-        components = [input_data, normalised_regression]
-        if is_class_code and error_session.get_inputs()[0].shape[-1] == 16:
-            code_idx = np.argmax(code_logits, axis=-1)
-            code_onehot = np.zeros((len(code_idx), 10), dtype=np.float32)
-            code_onehot[np.arange(len(code_idx)), code_idx] = 1.0
-            components.append(code_onehot)
-
-        combined = np.concatenate(components, axis=1).astype(np.float32)
-        error_correction = np.asarray(
-            error_session.run(None, {error_input_name: combined})[0]
-        )
-        normalised_regression = normalised_regression + error_correction
-
-    # Denormalize to Munsell specification.
-    regression_keys = ["hue_range", "value_range", "chroma_range"]
-    if not is_class_code:
-        regression_keys.append("code_range")
-
-    specification = np.empty((*normalised_regression.shape[:-1], 4), dtype=np.float64)
-    for i, key in enumerate(regression_keys):
-        minimum, maximum = output_parameters[key]
-        specification[..., i] = (
-            normalised_regression[..., i] * (maximum - minimum) + minimum
-        )
-
-    if is_class_code:
-        # Code from classification: argmax over the 10 logits yields a
-        # 0-based index, + 1 shifts to the 1-based *Munsell* hue code,
-        # e.g., argmax(...) = 5 + 1 = code 6 (BG).
-        specification[..., 3] = np.argmax(code_logits, axis=-1) + 1.0
-
-    # Clamp specification to valid Munsell ranges — regression can
-    # slightly overshoot at boundaries (e.g. 10.08 instead of 10.0).
-    specification = np.clip(specification, [0, 0, 0, 1], [10, 10, 50, 10])
-
-    specification = from_range_10(specification, _munsell_scale_factor())
-
-    return np.reshape(specification, (*shape[:-1], 4))
+    pass
 
 
 @required("onnxruntime")
@@ -520,24 +359,4 @@ def xyY_to_munsell_colour_Onnx(
     >>> xyY_to_munsell_colour_Onnx(xyY)  # doctest: +SKIP
     '...'
     """
-
-    specification = to_domain_10(
-        xyY_to_munsell_specification_Onnx(xyY), _munsell_scale_factor()
-    )
-    shape = specification.shape
-    decimals = (hue_decimals, value_decimals, chroma_decimals)
-
-    specification_flat = np.reshape(specification, (-1, 4)).copy()
-    specification_flat[..., 3] = np.round(specification_flat[..., 3])
-
-    munsell_colour = np.reshape(
-        np.array(
-            [
-                munsell_specification_to_munsell_colour(a, *decimals)
-                for a in specification_flat
-            ]
-        ),
-        shape[:-1],
-    )
-
-    return str(munsell_colour) if shape == (4,) else munsell_colour
+    pass

@@ -307,19 +307,7 @@ def matrix_YCbCr(
     ... # doctest: +SKIP
     array([ 38, 140, 171])
     """
-
-    Kr, Kb = K
-    Cb_scale, Cr_scale = S
-    Y_min, Y_max, C_min, C_max = ranges_YCbCr(bits, is_legal, is_int)
-
-    Y = np.array([Kr, (1 - Kr - Kb), Kb])
-    Cb = Cb_scale * (np.array([0, 0, 1]) - Y) / (1 - Kb)
-    Cr = Cr_scale * (np.array([1, 0, 0]) - Y) / (1 - Kr)
-    Y = Y * (Y_max - Y_min)
-    Cb = Cb * (C_max - C_min)
-    Cr = Cr * (C_max - C_min)
-
-    return np.linalg.inv(np.vstack([Y, Cb, Cr]))
+    pass
 
 
 def offset_YCbCr(
@@ -354,13 +342,7 @@ def offset_YCbCr(
     >>> offset_YCbCr(is_legal=True)  # doctest: +ELLIPSIS
     array([0.0627451..., 0.5019607..., 0.5019607...])
     """
-
-    Y_min, _Y_max, C_min, C_max = ranges_YCbCr(bits, is_legal, is_int)
-
-    Y_offset = Y_min
-    C_offset = (C_min + C_max) / 2
-
-    return np.array([Y_offset, C_offset, C_offset])
+    pass
 
 
 def RGB_to_YCbCr(

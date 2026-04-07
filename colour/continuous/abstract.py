@@ -141,19 +141,12 @@ arithmetical_operation`
         :class:`str`
             Abstract continuous function name.
         """
-
-        return self._name
+        pass
 
     @name.setter
     def name(self, value: str) -> None:
         """Setter for the **self.name** property."""
-
-        attest(
-            isinstance(value, str),
-            f'"name" property: "{value}" type is not "str"!',
-        )
-
-        self._name = value
+        pass
 
     @property
     @abstractmethod
@@ -834,10 +827,7 @@ arithmetical_operation`
             Euclidean distance between independent domain variable :math:`x`
             and specified variable :math:`a`.
         """
-
-        n = closest(self.domain, a)
-
-        return as_float(np.abs(a - n))
+        pass
 
     def is_uniform(self) -> bool:
         """

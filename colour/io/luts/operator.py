@@ -93,19 +93,12 @@ class AbstractLUTSequenceOperator(ABC):
         :class:`str`
             *LUT* name.
         """
-
-        return self._name
+        pass
 
     @name.setter
     def name(self, value: str) -> None:
         """Setter for the **self.name** property."""
-
-        attest(
-            isinstance(value, str),
-            f'"name" property: "{value}" type is not "str"!',
-        )
-
-        self._name = value
+        pass
 
     @property
     def comments(self) -> List[str]:
@@ -122,19 +115,12 @@ class AbstractLUTSequenceOperator(ABC):
         :class:`list`
             *LUT* comments.
         """
-
-        return self._comments
+        pass
 
     @comments.setter
     def comments(self, value: Sequence[str]) -> None:
         """Setter for the **self.comments** property."""
-
-        attest(
-            is_iterable(value),
-            f'"comments" property: "{value}" must be a sequence!',
-        )
-
-        self._comments = list(value)
+        pass
 
     @abstractmethod
     def apply(self, RGB: ArrayLike, *args: Any, **kwargs: Any) -> NDArrayFloat:
@@ -273,36 +259,12 @@ class LUTOperatorMatrix(AbstractLUTSequenceOperator):
         :class:`numpy.ndarray`
             Operator matrix.
         """
-
-        return self._matrix
+        pass
 
     @matrix.setter
     def matrix(self, value: ArrayLike) -> None:
         """Setter for the **self.matrix** property."""
-
-        value = as_float_array(value)
-
-        shape_t = value.shape[-1]
-
-        value = np.reshape(value, (shape_t, shape_t))
-
-        attest(
-            value.shape in [(3, 3), (4, 4)],
-            f'"matrix" property: "{value}" shape is not (3, 3) or (4, 4)!',
-        )
-
-        if shape_t == 4:
-            M = value
-        else:
-            # Embed 3x3 matrix in 4x4 identity
-            M = np.vstack(
-                [
-                    np.hstack([value, np.zeros((3, 1))]),
-                    np.array([[0, 0, 0, 1]]),
-                ]
-            )
-
-        self._matrix = M
+        pass
 
     @property
     def offset(self) -> NDArrayFloat:
@@ -322,23 +284,12 @@ class LUTOperatorMatrix(AbstractLUTSequenceOperator):
         :class:`numpy.ndarray`
             Operator offset vector.
         """
-
-        return self._offset
+        pass
 
     @offset.setter
     def offset(self, value: ArrayLike) -> None:
         """Setter for the **self.offset** property."""
-
-        value = as_float_array(value)
-
-        shape_t = value.shape[-1]
-
-        attest(
-            value.shape in [(3,), (4,)],
-            f'"offset" property: "{value}" shape is not (3, ) or (4, )!',
-        )
-
-        self._offset = value if shape_t == 4 else np.concatenate([value, zeros(1)])
+        pass
 
     def __str__(self) -> str:
         """
@@ -364,8 +315,7 @@ class LUTOperatorMatrix(AbstractLUTSequenceOperator):
 
         def _format(a: ArrayLike) -> str:
             """Format specified array string representation."""
-
-            return str(a).replace(" [", " " * 14 + "[")
+            pass
 
         comments = "\n".join(self._comments)
         comments = f"\n\n{comments}" if self._comments else ""

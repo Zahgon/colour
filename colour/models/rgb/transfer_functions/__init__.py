@@ -799,16 +799,7 @@ def oetf_inverse(
     ... )
     np.float64(0.1...)
     """
-
-    function = validate_method(
-        function,
-        tuple(OETF_INVERSES),
-        '"{0}" inverse "OETF" is invalid, it must be one of {1}!',
-    )
-
-    callable_ = OETF_INVERSES[function]
-
-    return callable_(value, **filter_kwargs(callable_, **kwargs))
+    pass
 
 
 EOTFS: CanonicalMapping = CanonicalMapping(
@@ -940,16 +931,7 @@ def eotf_inverse(
     ... )
     np.float64(0.4090077...)
     """
-
-    function = validate_method(
-        function,
-        tuple(EOTF_INVERSES),
-        '"{0}" inverse "EOTF" is invalid, it must be one of {1}!',
-    )
-
-    callable_ = EOTF_INVERSES[function]
-
-    return callable_(value, **filter_kwargs(callable_, **kwargs))
+    pass
 
 
 __all__ += [
@@ -1209,16 +1191,7 @@ def ootf(
     >>> ootf(0.1, function="ITU-R BT.2100 HLG")  # doctest: +ELLIPSIS
     np.float64(63.0957344...)
     """
-
-    function = validate_method(
-        function,
-        tuple(OOTFS),
-        '"{0}" "OOTF" is invalid, it must be one of {1}!',
-    )
-
-    callable_ = OOTFS[function]
-
-    return callable_(value, **filter_kwargs(callable_, **kwargs))
+    pass
 
 
 OOTF_INVERSES: CanonicalMapping = CanonicalMapping(
@@ -1268,16 +1241,7 @@ def ootf_inverse(
     ... )
     np.float64(0.1000000...)
     """
-
-    function = validate_method(
-        function,
-        tuple(OOTF_INVERSES),
-        '"{0}" inverse "OOTF" is invalid, it must be one of {1}!',
-    )
-
-    callable_ = OOTF_INVERSES[function]
-
-    return callable_(value, **filter_kwargs(callable_, **kwargs))
+    pass
 
 
 __all__ += [

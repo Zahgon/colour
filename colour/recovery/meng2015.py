@@ -187,15 +187,11 @@ def XYZ_to_sd_Meng2015(
 
     def objective_function(a: NDArrayFloat) -> DTypeFloat:
         """Define the objective function."""
-
-        return np.sum(np.square(np.diff(a)))
+        pass
 
     def constraint_function(a: NDArrayFloat) -> NDArrayFloat:
         """Define the constraint function."""
-
-        sd[:] = a
-
-        return sd_to_XYZ_integration(sd, cmfs=cmfs, illuminant=illuminant) - XYZ
+        pass
 
     wavelengths = sd.wavelengths
     bins = wavelengths.size

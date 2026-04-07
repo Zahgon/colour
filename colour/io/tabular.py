@@ -333,34 +333,4 @@ def write_sds_to_csv_file(
     ValueError
         If the specified spectral distributions have different shapes.
     """
-
-    path = str(path)
-
-    if len(sds) != 1:
-        shapes = [sd.shape for sd in sds.values()]
-        if not all(shape == shapes[0] for shape in shapes):
-            error = (
-                "Cannot write spectral distributions "
-                'with different shapes to "CSV" file!'
-            )
-
-            raise ValueError(error)
-
-    wavelengths = next(iter(sds.values())).wavelengths
-    with open(path, "w") as csv_file:
-        fields = sorted(sds.keys())
-        writer = csv.DictWriter(
-            csv_file,
-            delimiter=",",
-            fieldnames=["wavelength", *fields],
-            lineterminator="\n",
-        )
-
-        writer.writeheader()
-
-        for wavelength in wavelengths:
-            row = {"wavelength": wavelength}
-            row.update({field: sds[field][wavelength] for field in fields})
-            writer.writerow(row)
-
-    return True
+    pass

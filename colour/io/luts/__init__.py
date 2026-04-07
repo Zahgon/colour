@@ -347,21 +347,7 @@ def write_LUT(
     ... )
     >>> write_LUT(LUT, "My_LUT.cube")  # doctest: +SKIP
     """
-
-    path = str(path)
-
-    method = (
-        MAPPING_EXTENSION_TO_LUT_FORMAT[os.path.splitext(path)[-1]].lower()
-        if method is None
-        else validate_method(method, tuple(LUT_WRITE_METHODS))
-    )
-
-    if method == "iridas cube" and isinstance(LUT, LUTSequence):
-        method = "resolve cube"
-
-    function = LUT_WRITE_METHODS[method]
-
-    return function(LUT, path, decimals, **filter_kwargs(function, **kwargs))
+    pass
 
 
 __all__ += [

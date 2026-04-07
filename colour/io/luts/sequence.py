@@ -137,20 +137,12 @@ class LUTSequence(MutableSequence):
         :class:`list`
             Underlying *LUT* sequence.
         """
-
-        return self._sequence
+        pass
 
     @sequence.setter
     def sequence(self, value: Sequence[ProtocolLUTSequenceItem]) -> None:
         """Setter for the **self.sequence** property."""
-
-        for item in value:
-            attest(
-                isinstance(item, ProtocolLUTSequenceItem),
-                '"value" items must implement the "ProtocolLUTSequenceItem" protocol!',
-            )
-
-        self._sequence = list(value)
+        pass
 
     def __getitem__(self, index: int | slice) -> Any:
         """
@@ -330,13 +322,7 @@ class LUTSequence(MutableSequence):
         value
             *LUT* to insert into the *LUT* sequence.
         """
-
-        attest(
-            isinstance(value, ProtocolLUTSequenceItem),
-            '"value" items must implement the "ProtocolLUTSequenceItem" protocol!',
-        )
-
-        self._sequence.insert(index, value)
+        pass
 
     def apply(self, RGB: ArrayLike, **kwargs: Any) -> NDArrayFloat:
         """

@@ -1131,20 +1131,7 @@ def delta_E_HyAB(
 dL=np.float64(-13.2067617...), da=np.float64(91.0902353...), \
 db=np.float64(-103.4189749...))
     """
-
-    dLab = to_domain_100(Lab_1) - to_domain_100(Lab_2)
-    dL, da, db = tsplit(dLab)
-    HyAB = as_float(np.abs(dL) + np.hypot(da, db))
-
-    if not additional_data:
-        return HyAB
-
-    return DeltaE_Specification_HyAB(
-        HyAB,
-        dL,
-        da,
-        db,
-    )
+    pass
 
 
 @dataclass
@@ -1259,27 +1246,4 @@ def delta_E_HyCH(
 dL=np.float64(12.7962972...), dC=np.float64(9.6258211...), \
 dH=np.float64(34.5522171...))
     """
-
-    S_L, S_C, S_H, delta_L_p, delta_C_p, delta_H_p, R_T = astuple(
-        intermediate_attributes_CIE2000(Lab_1, Lab_2)
-    )
-
-    k_L = 2 if textiles else 1
-    k_C = 1
-    k_H = 1
-
-    L = delta_L_p / (k_L * S_L)
-    C = delta_C_p / (k_C * S_C)
-    H = delta_H_p / (k_H * S_H)
-
-    HyCH = as_float(np.abs(L) + np.sqrt(C**2 + H**2))
-
-    if not additional_data:
-        return HyCH
-
-    return DeltaE_Specification_HyCH(
-        HyCH,
-        L,
-        C,
-        H,
-    )
+    pass

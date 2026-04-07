@@ -926,11 +926,7 @@ def plot_single_luminance_function(
         :align: center
         :alt: plot_single_luminance_function
     """
-
-    settings: Dict[str, Any] = {"title": f"{function} - Luminance Function"}
-    settings.update(kwargs)
-
-    return plot_multi_luminance_functions((function,), **settings)
+    pass
 
 
 @override_style()
@@ -971,20 +967,7 @@ def plot_multi_luminance_functions(
         :align: center
         :alt: plot_multi_luminance_functions
     """
-
-    functions_filtered = filter_passthrough(LUMINANCE_METHODS, functions)
-
-    settings: Dict[str, Any] = {
-        "bounding_box": (0, 1, 0, 1),
-        "legend": True,
-        "title": f"{', '.join(functions_filtered)} - Luminance Functions",
-        "x_label": "Normalised Munsell Value / Lightness",
-        "y_label": "Normalised Relative Luminance Y",
-    }
-    settings.update(kwargs)
-
-    with domain_range_scale("1"):
-        return plot_multi_functions(functions_filtered, **settings)
+    pass
 
 
 @override_style()

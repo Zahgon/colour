@@ -75,16 +75,7 @@ def log_encoding_DJIDLog(x: Domain1) -> Range1:
     >>> log_encoding_DJIDLog(0.18)  # doctest: +ELLIPSIS
     np.float64(0.3987645...)
     """
-
-    x = to_domain_1(x)
-
-    y = np.where(
-        x <= 0.0078,
-        6.025 * x + 0.0929,
-        (np.log10(x * 0.9892 + 0.0108)) * 0.256663 + 0.584555,
-    )
-
-    return as_float(from_range_1(y))
+    pass
 
 
 def log_decoding_DJIDLog(y: Domain1) -> Range1:
@@ -124,13 +115,4 @@ def log_decoding_DJIDLog(y: Domain1) -> Range1:
     >>> log_decoding_DJIDLog(0.3987645561893306)  # doctest: +ELLIPSIS
     np.float64(0.1799998...)
     """
-
-    y = to_domain_1(y)
-
-    x = np.where(
-        y <= 0.14,
-        (y - 0.0929) / 6.025,
-        (10 ** (3.89616 * y - 2.27752) - 0.0108) / 0.9892,
-    )
-
-    return as_float(from_range_1(x))
+    pass

@@ -200,8 +200,7 @@ class Dataset_Otsu2018:
         :class:`numpy.ndarray` or :py:data:`None`
             Basis functions of the *Otsu et al. (2018)* dataset.
         """
-
-        return self._basis_functions
+        pass
 
     @property
     def means(self) -> NDArrayFloat | None:
@@ -213,8 +212,7 @@ class Dataset_Otsu2018:
         :class:`numpy.ndarray` or :py:data:`None`
             Means of the *Otsu et al. (2018)* dataset.
         """
-
-        return self._means
+        pass
 
     @property
     def selector_array(self) -> NDArrayFloat | None:
@@ -226,8 +224,7 @@ class Dataset_Otsu2018:
         :class:`numpy.ndarray` or :py:data:`None`
             Selector array of the *Otsu et al. (2018)* dataset.
         """
-
-        return self._selector_array
+        pass
 
     def __str__(self) -> str:
         """
@@ -711,27 +708,12 @@ class Data_Otsu2018:
         :class:`numpy.ndarray`
             Reference reflectances.
         """
-
-        return self._reflectances
+        pass
 
     @reflectances.setter
     def reflectances(self, value: ArrayLike | None) -> None:
         """Setter for the **self.reflectances** property."""
-
-        if value is not None:
-            self._reflectances = as_float_array(value)
-            self._XYZ = (
-                msds_to_XYZ_integration(
-                    self._reflectances,
-                    self._cmfs,
-                    self._illuminant,
-                    shape=self._cmfs.shape,
-                )
-                / 100
-            )
-            self._xy = XYZ_to_xy(self._XYZ)
-        else:
-            self._reflectances, self._XYZ, self._xy = None, None, None
+        pass
 
     @property
     def cmfs(self) -> MultiSpectralDistributions:
@@ -743,8 +725,7 @@ class Data_Otsu2018:
         :class:`colour.MultiSpectralDistributions`
             Standard observer colour matching functions.
         """
-
-        return self._cmfs
+        pass
 
     @property
     def illuminant(self) -> SpectralDistribution:
@@ -756,8 +737,7 @@ class Data_Otsu2018:
         :class:`colour.SpectralDistribution`
             Illuminant spectral distribution.
         """
-
-        return self._illuminant
+        pass
 
     @property
     def basis_functions(self) -> NDArrayFloat | None:
@@ -769,8 +749,7 @@ class Data_Otsu2018:
         :class:`numpy.ndarray`
             Basis functions used for spectral representation.
         """
-
-        return self._basis_functions
+        pass
 
     @property
     def mean(self) -> NDArrayFloat | None:
@@ -1059,8 +1038,7 @@ class Node_Otsu2018(TreeNode):
         :class:`colour.recovery.otsu2018.PartitionAxis`
             Node partition axis.
         """
-
-        return self._partition_axis
+        pass
 
     @property
     def row(self) -> Tuple[float, float, Self, Self]:
@@ -1077,18 +1055,7 @@ class Node_Otsu2018(TreeNode):
         ValueError
             If the partition axis is undefined.
         """
-
-        if self._partition_axis is not None:
-            return (
-                self._partition_axis.origin,
-                self._partition_axis.direction,
-                self.children[0],
-                self.children[1],
-            )
-
-        error = 'The "partition axis" is undefined!'
-
-        raise ValueError(error)
+        pass
 
     def split(self, children: Sequence[Self], axis: PartitionAxis) -> None:
         """
@@ -1380,8 +1347,7 @@ class Tree_Otsu2018(Node_Otsu2018):
         :class:`numpy.ndarray`
             Reference reflectances.
         """
-
-        return self._reflectances
+        pass
 
     @property
     def cmfs(self) -> MultiSpectralDistributions:
@@ -1393,8 +1359,7 @@ class Tree_Otsu2018(Node_Otsu2018):
         :class:`colour.MultiSpectralDistributions`
             Standard observer colour matching functions.
         """
-
-        return self._cmfs
+        pass
 
     @property
     def illuminant(self) -> SpectralDistribution:
@@ -1406,8 +1371,7 @@ class Tree_Otsu2018(Node_Otsu2018):
         :class:`colour.SpectralDistribution`
             Test illuminant spectral distribution.
         """
-
-        return self._illuminant
+        pass
 
     def optimise(
         self,

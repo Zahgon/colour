@@ -131,31 +131,7 @@ def logarithmic_function_basic(
     ... )
     np.float64(0.18000000...)
     """
-
-    x = as_float_array(x)
-    style = validate_method(
-        style,
-        ("log10", "antiLog10", "log2", "antiLog2", "logB", "antiLogB"),
-        '"{0}" style is invalid, it must be one of {1}!',
-    )
-
-    if style == "log10":
-        return as_float(np.where(x >= FLT_MIN, np.log10(x), np.log10(FLT_MIN)))
-
-    if style == "antilog10":
-        return as_float(10**x)
-
-    if style == "log2":
-        return as_float(np.where(x >= FLT_MIN, np.log2(x), np.log2(FLT_MIN)))
-
-    if style == "antilog2":
-        return as_float(2**x)
-
-    if style == "logb":
-        return as_float(np.log(x) / np.log(base))
-
-    # style == 'antilogb'
-    return as_float(base**x)
+    pass
 
 
 def logarithmic_function_quasilog(
@@ -213,31 +189,7 @@ def logarithmic_function_quasilog(
     ... )
     np.float64(0.18000000...)
     """
-
-    x = as_float_array(x)
-    style = validate_method(
-        style,
-        ("lintolog", "logtolin"),
-        '"{0}" style is invalid, it must be one of {1}!',
-    )
-
-    if style == "lintolog":
-        y = (
-            log_side_slope
-            * (
-                np.log(np.maximum(lin_side_slope * x + lin_side_offset, FLT_MIN))
-                / np.log(base)
-            )
-            + log_side_offset
-        )
-    else:  # style == 'logtolin'
-        with sdiv_mode():
-            y = sdiv(
-                base ** sdiv(x - log_side_offset, log_side_slope) - lin_side_offset,
-                lin_side_slope,
-            )
-
-    return as_float(y)
+    pass
 
 
 def logarithmic_function_camera(
@@ -308,73 +260,7 @@ def logarithmic_function_camera(
     ... )
     np.float64(0.1800000...)
     """
-
-    x = as_float_array(x)
-    style = validate_method(
-        style,
-        ("cameraLinToLog", "cameraLogToLin"),
-        '"{0}" style is invalid, it must be one of {1}!',
-    )
-
-    log_side_break = (
-        log_side_slope
-        * (np.log(lin_side_slope * lin_side_break + lin_side_offset) / np.log(base))
-        + log_side_offset
-    )
-
-    with sdiv_mode():
-        linear_slope = cast(
-            "float",
-            optional(
-                linear_slope,
-                (
-                    log_side_slope
-                    * (
-                        sdiv(
-                            lin_side_slope,
-                            (lin_side_slope * lin_side_break + lin_side_offset)
-                            * np.log(base),
-                        )
-                    )
-                ),
-            ),
-        )
-
-    linear_offset = log_side_break - linear_slope * lin_side_break
-
-    if style == "cameralintolog":
-        m_x = x <= lin_side_break
-        y = np.where(
-            m_x,
-            linear_slope * x + linear_offset,
-            logarithmic_function_quasilog(
-                x,
-                "linToLog",
-                base,
-                log_side_slope,
-                lin_side_slope,
-                log_side_offset,
-                lin_side_offset,
-            ),
-        )
-    else:  # style == 'cameralogtolin'
-        with sdiv_mode():
-            m_x = x <= log_side_break
-            y = np.where(
-                m_x,
-                sdiv(x - linear_offset, linear_slope),
-                logarithmic_function_quasilog(
-                    x,
-                    "logToLin",
-                    base,
-                    log_side_slope,
-                    lin_side_slope,
-                    log_side_offset,
-                    lin_side_offset,
-                ),
-            )
-
-    return as_float(y)
+    pass
 
 
 def log_encoding_Log2(
@@ -436,13 +322,7 @@ def log_encoding_Log2(
     >>> log_encoding_Log2(0.18)
     np.float64(0.5)
     """
-
-    lin = as_float_array(lin)
-
-    lg2 = np.log2(lin / middle_grey)
-    log_norm = (lg2 - min_exposure) / (max_exposure - min_exposure)
-
-    return as_float(log_norm)
+    pass
 
 
 def log_decoding_Log2(
@@ -505,10 +385,4 @@ def log_decoding_Log2(
     >>> log_decoding_Log2(0.5)  # doctest: +ELLIPSIS
     np.float64(0.18)
     """
-
-    log_norm = as_float_array(log_norm)
-
-    lg2 = log_norm * (max_exposure - min_exposure) + min_exposure
-    lin = (2**lg2) * middle_grey
-
-    return as_float(lin)
+    pass

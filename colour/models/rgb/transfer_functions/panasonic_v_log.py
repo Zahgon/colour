@@ -111,27 +111,7 @@ def log_encoding_VLog(
     *Fig.2.2 V-Log Code Value* table in :cite:`Panasonic2014a` are different
     by a code: [512, 1732, 2408].
     """
-
-    L_in = to_domain_1(L_in)
-    constants = optional(constants, CONSTANTS_VLOG)
-
-    if not in_reflection:
-        L_in = L_in * 0.9
-
-    cut1 = constants.cut1
-    b = constants.b
-    c = constants.c
-    d = constants.d
-
-    V_out = np.where(
-        L_in < cut1,
-        5.6 * L_in + 0.125,
-        c * np.log10(L_in + b) + d,
-    )
-
-    V_out_cv = V_out if out_normalised_code_value else legal_to_full(V_out, bit_depth)
-
-    return as_float(from_range_1(V_out_cv))
+    pass
 
 
 def log_decoding_VLog(
@@ -188,24 +168,4 @@ def log_decoding_VLog(
     >>> log_decoding_VLog(0.423311448760136)  # doctest: +ELLIPSIS
     np.float64(0.1799999...)
     """
-
-    V_out = to_domain_1(V_out)
-    constants = optional(constants, CONSTANTS_VLOG)
-
-    V_out = V_out if in_normalised_code_value else full_to_legal(V_out, bit_depth)
-
-    cut2 = constants.cut2
-    b = constants.b
-    c = constants.c
-    d = constants.d
-
-    L_in = np.where(
-        V_out < cut2,
-        (V_out - 0.125) / 5.6,
-        10 ** ((V_out - d) / c) - b,
-    )
-
-    if not out_reflection:
-        L_in = L_in / 0.9
-
-    return as_float(from_range_1(L_in))
+    pass

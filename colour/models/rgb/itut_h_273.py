@@ -212,8 +212,7 @@ def _clipped_domain_function(
     @functools.wraps(function)
     def wrapped(x: ArrayLike, *args: Any, **kwargs: Any) -> Any:
         """Wrap specified function."""
-
-        return function(np.clip(x, *domain), *args, **kwargs)
+        pass
 
     return wrapped
 
@@ -229,10 +228,7 @@ def _reserved(*args: Any) -> NoReturn:  # noqa: ARG001
     ... except RuntimeError:
     ...     pass
     """
-
-    error = "Reserved; For future use by ITU-T | ISO/IEC."
-
-    raise RuntimeError(error)
+    pass
 
 
 def _unspecified(*args: Any) -> NoReturn:  # noqa: ARG001
@@ -251,13 +247,7 @@ def _unspecified(*args: Any) -> NoReturn:  # noqa: ARG001
     ... except RuntimeError:
     ...     pass
     """
-
-    error = (
-        "Unspecified; Image characteristics are unknown or are determined by "
-        "the application."
-    )
-
-    raise RuntimeError(error)
+    pass
 
 
 COLOUR_PRIMARIES_ITUTH273: Dict[int, NDArrayFloat] = {

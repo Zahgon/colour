@@ -89,42 +89,7 @@ def uv_to_CCT_Krystek1985(
     ... # doctest: +ELLIPSIS
     np.float64(6504.3894290...)
     """
-
-    from scipy.optimize import minimize  # noqa: PLC0415
-
-    uv = as_float_array(uv)
-    shape = uv.shape
-    uv = np.atleast_1d(np.reshape(uv, (-1, 2)))
-
-    def objective_function(CCT: NDArrayFloat, uv: NDArrayFloat) -> DTypeFloat:
-        """Objective function."""
-
-        objective = np.linalg.norm(CCT_to_uv_Krystek1985(CCT) - uv)
-
-        return as_float(objective)
-
-    optimisation_settings = {
-        "method": "Nelder-Mead",
-        "options": {
-            "fatol": 1e-10,
-        },
-    }
-    if optimisation_kwargs is not None:
-        optimisation_settings.update(optimisation_kwargs)
-
-    CCT = as_float_array(
-        [
-            minimize(
-                objective_function,
-                x0=[6500],
-                args=(uv_i,),
-                **optimisation_settings,
-            ).x
-            for uv_i in uv
-        ]
-    )
-
-    return as_float(np.reshape(CCT, shape[:-1]))
+    pass
 
 
 def CCT_to_uv_Krystek1985(CCT: ArrayLike) -> NDArrayFloat:

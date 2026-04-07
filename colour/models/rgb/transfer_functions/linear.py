@@ -58,5 +58,4 @@ def linear_function(a: ArrayLike) -> DTypeFloat | NDArrayFloat:
     >>> linear_function(0.18)  # doctest: +ELLIPSIS
     np.float64(0.18)
     """
-
-    return as_float(a)
+    pass

@@ -62,25 +62,7 @@ def _XYZ_optimal_colour_stimuli(
     :class:`numpy.ndarray`
         *Optimal Colour Stimuli* for the specified illuminant.
     """
-
-    illuminant = validate_method(
-        illuminant,
-        tuple(OPTIMAL_COLOUR_STIMULI_ILLUMINANTS),
-        '"{0}" illuminant is invalid, it must be one of {1}!',
-    )
-
-    optimal_colour_stimuli = OPTIMAL_COLOUR_STIMULI_ILLUMINANTS[illuminant]
-
-    vertices = _CACHE_OPTIMAL_COLOUR_STIMULI_XYZ.get(illuminant)
-
-    if is_caching_enabled() and vertices is not None:
-        return vertices
-
-    _CACHE_OPTIMAL_COLOUR_STIMULI_XYZ[illuminant] = vertices = (
-        xyY_to_XYZ(optimal_colour_stimuli) / 100
-    )
-
-    return vertices
+    pass
 
 
 @required("SciPy")
@@ -124,17 +106,4 @@ def is_within_macadam_limits(
     >>> is_within_macadam_limits(a, "A")
     array([ True, False])
     """
-
-    from scipy.spatial import Delaunay  # noqa: PLC0415
-
-    optimal_colour_stimuli = _XYZ_optimal_colour_stimuli(illuminant)
-    triangulation = _CACHE_OPTIMAL_COLOUR_STIMULI_XYZ_TRIANGULATIONS.get(illuminant)
-
-    if triangulation is None:
-        _CACHE_OPTIMAL_COLOUR_STIMULI_XYZ_TRIANGULATIONS[illuminant] = triangulation = (
-            Delaunay(optimal_colour_stimuli)
-        )
-
-    simplex = triangulation.find_simplex(xyY_to_XYZ(xyY), tol=tolerance)
-
-    return np.where(simplex >= 0, True, False)
+    pass

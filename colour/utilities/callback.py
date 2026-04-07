@@ -99,8 +99,7 @@ class MixinCallback:
             Each key represents an event identifier, and each value contains
             the registered callbacks for that event.
         """
-
-        return self._callbacks
+        pass
 
     def __setattr__(self, name: str, value: Any) -> None:
         """
@@ -148,8 +147,7 @@ class MixinCallback:
         defaultdict(<class 'list'>, {'attribute_a': \
 [Callback(name='callback', function=<function <lambda> at 0x...>)]})
         """
-
-        self._callbacks[attribute].append(Callback(name, function))
+        pass
 
     def unregister_callback(self, attribute: str, name: str) -> None:
         """
@@ -180,15 +178,4 @@ class MixinCallback:
         >>> with_callback.callbacks
         defaultdict(<class 'list'>, {})
         """
-
-        if self._callbacks.get(attribute) is None:  # pragma: no cover
-            return
-
-        self._callbacks[attribute] = [
-            callback
-            for callback in self._callbacks.get(attribute, [])
-            if callback.name != name
-        ]
-
-        if len(self._callbacks[attribute]) == 0:
-            self._callbacks.pop(attribute, None)
+        pass

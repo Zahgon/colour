@@ -88,19 +88,7 @@ def eotf_inverse_BT1886(L: Domain1, L_B: float = 0, L_W: float = 1) -> Range1:
     >>> eotf_inverse_BT1886(0.11699185725296059)  # doctest: +ELLIPSIS
     np.float64(0.4090077...)
     """
-
-    L = to_domain_1(L)
-
-    gamma = 2.40
-    gamma_d = 1 / gamma
-
-    n = L_W**gamma_d - L_B**gamma_d
-    a = n**gamma
-    b = L_B**gamma_d / n
-
-    V = spow(L / a, gamma_d) - b
-
-    return as_float(from_range_1(V))
+    pass
 
 
 def eotf_BT1886(V: Domain1, L_B: float = 0, L_W: float = 1) -> Range1:
